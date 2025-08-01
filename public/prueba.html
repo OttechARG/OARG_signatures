@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Firmar PDF</title>
+  <style>
+    #visorWrapper {
+      position: relative;
+      width: 600px;
+      height: 800px;
+      border: 1px solid #ccc;
+    }
+    #visorPdf {
+      width: 600px;
+      height: 800px;
+      display: block;
+    }
+    #sigCanvas {
+        position: absolute;
+        top: 0; left: 0;
+        border: 1px solid transparent;
+        /* NO le pongas width o height en CSS para no escalar */
+        }
+  </style>
+</head>
+<body>
+
+  <h1>Firmar PDF</h1>
+
+  <input type="file" id="pdfInput" accept="application/pdf" />
+
+  <div id="visorWrapper">
+    <iframe id="visorPdf"></iframe>
+<canvas id="sigCanvas" width="600" height="800" style="position: absolute; top: 0; left: 0;"></canvas>  </div>
+
+  <button onclick="enviar()">Firmar y descargar</button>
+
+  <script>
+    const pdfInput = document.getElementById('pdfInput');
+    const visorPdf = document.getElementById('visorPdf');
+const sigCanvas = document.getElementById('sigCanvas');
+const ctx = sigCanvas.getContext('2d');
+
+function getMousePos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (evt.clientX - rect.left) * (canvas.width / rect.width),
+    y: (evt.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+let dibujando = false;
+
+sigCanvas.addEventListener('mousedown', e => {
+  dibujando = true;
+  const pos = getMousePos(sigCanvas, e);
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+});
+
+sigCanvas.addEventListener('mousemove', e => {
+  if (!dibujando) return;
+  const pos = getMousePos(sigCanvas, e);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+});
+
+sigCanvas.addEventListener('mouseup', e => {
+  dibujando = false;
+});
+
+    // Variables para dibujar firma simple en canvas:
+    
+
+    sigCanvas.addEventListener('mousedown', e => {
+      dibujando = true;
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    });
+
+    sigCanvas.addEventListener('mousemove', e => {
+      if (!dibujando) return;
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)'; // negro semi-transparente
+        ctx.lineWidth = 1.5; // más delgado
+        ctx.lineCap = 'round'; // bordes redondeados, queda más natural
+      
+      ctx.stroke();
+    });
+
+    sigCanvas.addEventListener('mouseup', e => {
+      dibujando = false;
+    });
+
+    pdfInput.addEventListener('change', () => {
+      const file = pdfInput.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        visorPdf.src = url;
+        // Limpiar firma anterior
+        ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      }
+    });
+
+    async function enviar() {
+  const pdfFile = pdfInput.files[0];
+  if (!pdfFile) {
+    alert('Seleccioná un archivo PDF primero');
+    return;
+  }
+
+  // Obtener firma en base64 PNG
+  const firmaBase64 = sigCanvas.toDataURL('image/png');
+
+  const formData = new FormData();
+  formData.append('pdf', pdfFile);
+  formData.append('firma', firmaBase64);
+  formData.append('canvasWidth', sigCanvas.width);
+  formData.append('canvasHeight', sigCanvas.height);
+
+  try {
+    const res = await fetch('/firmar-pdf', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Error en el servidor');
+    const blob = await res.blob();
+
+    // Descargar PDF firmado
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pdf-firmado.pdf';
+    a.click();
+
+  } catch (error) {
+    alert('Error al firmar el PDF: ' + error.message);
+  }
+}
+  </script>
+
+</body>
+</html>
