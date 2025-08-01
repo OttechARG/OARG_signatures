@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Firmar PDF</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <img src="assets/logo-fondo-blanco.jpg" alt="Logo" class="logo" />
+
+  <h1>Firmar PDF</h1>
+
+  <input type="file" id="pdfInput" accept="application/pdf" />
+
+  <iframe id="pdfViewer"></iframe>
+
+  <p>Firma aquí:</p>
+  <canvas id="sigCanvas" width="300" height="100"></canvas>
+
+  <!-- ✅ Agrupación de botones -->
+  <div class="button-group">
+    <button id="clearBtn">Borrar Firma</button>
+    <button id="submitBtn">Firmar y Descargar</button>
+  </div>
+
+  <!-- Signature Pad desde CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+  <!-- Script principal -->
+  <script src="script.js"></script>
+</body>
+</html>
