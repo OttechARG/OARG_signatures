@@ -1,156 +1,188 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Firmar PDF</title>
-  <style>
-    #visorWrapper {
-      position: relative;
-      width: 600px;
-      height: 800px;
-      border: 1px solid #ccc;
-    }
-    #visorPdf {
-      width: 600px;
-      height: 800px;
-      display: block;
-      border: none;
-    }
-    #sigCanvas {
-  position: absolute;
-  top: 50px;
+<meta charset="UTF-8" />
+<title>Firmar PDF con PDF.js</title>
+<style>
+  #pdfContainer {
+    position: relative;
+    border: 1px solid #ccc;
+    /* No fijo ancho ni alto para que crezca según el canvas PDF */
+    display: inline-block; /* Que se ajuste al contenido */
+  }
 
-  /* Nuevo margen visual */
-  right: 30px;
-  bottom: 40px;
+  #pdfCanvas {
+    position: relative; /* Ocupa espacio normalmente */
+    display: block;
+    user-select: none;
+    width: 100%; /* El contenedor toma el tamaño real del canvas */
+    height: auto;
+  }
 
-  /* NO poner width/height en CSS para evitar escalado */
-  border: 1px solid transparent;
-  cursor: crosshair;
-  pointer-events: auto;
-}
-  </style>
+  #sigCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: auto;
+    cursor: crosshair;
+    border: 1px solid transparent;
+    /* Importante: ancho y alto serán ajustados desde JS para coincidir */
+  }
+</style>
 </head>
 <body>
 
-  <h1>Firmar PDF</h1>
+<h1>Firmar PDF con PDF.js</h1>
 
-  <input type="file" id="pdfInput" accept="application/pdf" />
+<input type="file" id="pdfInput" accept="application/pdf" />
 
-  <div id="visorWrapper">
-    <iframe id="visorPdf"></iframe>
-    <canvas id="sigCanvas"></canvas>
-  </div>
+<div id="pdfContainer">
+  <canvas id="pdfCanvas"></canvas>
+  <canvas id="sigCanvas"></canvas>
+</div>
 
-  <button onclick="enviar()" style="margin: 20px;">Firmar y descargar</button>
+<button onclick="enviar()">Firmar y descargar</button>
+<button id="prevPage">Anterior</button>
+<button id="nextPage">Siguiente</button>
+<span>Página: <span id="pageNum">1</span> / <span id="pageCount">--</span></span>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+<script>
+const pdfInput = document.getElementById('pdfInput');
+const pdfCanvas = document.getElementById('pdfCanvas');
+const sigCanvas = document.getElementById('sigCanvas');
+const pdfContainer = document.getElementById('pdfContainer');
+const pdfCtx = pdfCanvas.getContext('2d');
+let sigCtx = sigCanvas.getContext('2d');
 
-  <script>
-    const pdfInput = document.getElementById('pdfInput');
-    const visorPdf = document.getElementById('visorPdf');
-    const sigCanvas = document.getElementById('sigCanvas');
+let pdfDoc = null;
+let currentPage = 1;
+let dibujando = false;
 
-    // Ajustar canvas a resolución de pantalla para trazos suaves
-    function setupCanvas(canvas) {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.parentElement.getBoundingClientRect();
+// Función para obtener posición del mouse sobre el canvas de firma
+function getMousePos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (evt.clientX - rect.left) * scaleX,
+    y: (evt.clientY - rect.top) * scaleY
+  };
+}
+const prevPageBtn = document.getElementById('prevPage');
+const nextPageBtn = document.getElementById('nextPage');
+const pageNumSpan = document.getElementById('pageNum');
+const pageCountSpan = document.getElementById('pageCount');
 
-    const topOffset = 50;     // Igual que en CSS: top: 50px;
-    const bottomOffset = 40;  // Igual que en CSS: bottom: 40px;
-    const rightOffset = 30;   // Igual que en CSS: right: 30px;
+prevPageBtn.addEventListener('click', () => {
+  if (currentPage <= 1) return;
+  currentPage--;
+  renderPage(currentPage);
+});
 
-    const visibleWidth = rect.width - rightOffset;
-    const visibleHeight = rect.height - topOffset - bottomOffset;
+nextPageBtn.addEventListener('click', () => {
+  if (!pdfDoc) return;
+  if (currentPage >= pdfDoc.numPages) return;
+  currentPage++;
+  renderPage(currentPage);
+});
 
-    canvas.width = visibleWidth * dpr;
-    canvas.height = visibleHeight * dpr;
+async function renderPage(pageNum) {
+  const page = await pdfDoc.getPage(pageNum);
+  // (Tu código existente para renderizar la página)
 
-    canvas.style.width = visibleWidth + "px";
-    canvas.style.height = visibleHeight + "px";
+  // Actualiza el texto de la página actual y total
+  pageNumSpan.textContent = currentPage;
+  pageCountSpan.textContent = pdfDoc.numPages;
 
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-    return ctx;
-    }
+  // También limpia la firma para la nueva página
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+}
+// Eventos para dibujar la firma
+sigCanvas.addEventListener('mousedown', e => {
+  dibujando = true;
+  const pos = getMousePos(sigCanvas, e);
+  sigCtx.beginPath();
+  sigCtx.moveTo(pos.x, pos.y);
+});
+sigCanvas.addEventListener('mousemove', e => {
+  if (!dibujando) return;
+  const pos = getMousePos(sigCanvas, e);
+  sigCtx.lineTo(pos.x, pos.y);
+  sigCtx.stroke();
+});
+sigCanvas.addEventListener('mouseup', () => { dibujando = false; });
+sigCanvas.addEventListener('mouseleave', () => { dibujando = false; });
 
-    const ctx = setupCanvas(sigCanvas);
+// Cuando se carga un PDF nuevo
+pdfInput.addEventListener('change', async () => {
+  const file = pdfInput.files[0];
+  if (!file) return;
 
-    let dibujando = false;
+  const fileReader = new FileReader();
+  fileReader.onload = async function() {
+    const typedarray = new Uint8Array(this.result);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.worker.min.js';
+    pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
+    currentPage = 1;
+    renderPage(currentPage);
+  };
+  fileReader.readAsArrayBuffer(file);
+});
 
-    function getMousePos(canvas, evt) {
-      const rect = canvas.getBoundingClientRect();
-      return {
-        x: evt.clientX - rect.left,
-        y: evt.clientY - rect.top
-      };
-    }
+async function renderPage(pageNum) {
+  const page = await pdfDoc.getPage(pageNum);
+  const dpr = window.devicePixelRatio || 1;
 
-    sigCanvas.addEventListener('mousedown', e => {
-      dibujando = true;
-      const pos = getMousePos(sigCanvas, e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-    });
+  // Viewport con escala para alta resolución (pantallas retina)
+  const viewport = page.getViewport({ scale: 1 }); // escala 1 normal para CSS
 
-    sigCanvas.addEventListener('mousemove', e => {
-      if (!dibujando) return;
-      const pos = getMousePos(sigCanvas, e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-      ctx.lineWidth = 1.5;   // línea fina pero visible
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.stroke();
-    });
+  // Ajustamos tamaño del canvas para DPI físico (multiplicamos)
+  pdfCanvas.width = viewport.width * dpr;
+  pdfCanvas.height = viewport.height * dpr;
 
-    function detenerDibujo() {
-      dibujando = false;
-    }
+  // Ajustamos tamaño CSS para que se vea correcto (sin escala dpr)
+  pdfCanvas.style.width = viewport.width + 'px';
+  pdfCanvas.style.height = viewport.height + 'px';
 
-    sigCanvas.addEventListener('mouseup', detenerDibujo);
-    sigCanvas.addEventListener('mouseleave', detenerDibujo);
+  // Igual para canvas firma: tamaño interno y CSS
+  sigCanvas.width = viewport.width * dpr;
+  sigCanvas.height = viewport.height * dpr;
+  sigCanvas.style.width = viewport.width + 'px';
+  sigCanvas.style.height = viewport.height + 'px';
 
-    pdfInput.addEventListener('change', () => {
-      const file = pdfInput.files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        visorPdf.src = url;
-        // Limpiar firma anterior
-        ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-      }
-    });
+  // Ajustamos el contenedor para que tenga el tamaño real del PDF (CSS)
+  pdfContainer.style.width = viewport.width + 'px';
+  pdfContainer.style.height = viewport.height + 'px';
 
-    async function enviar() {
-      const pdfFile = pdfInput.files[0];
-      if (!pdfFile) {
-        alert('Seleccioná un archivo PDF primero');
-        return;
-      }
+  // Limpiamos el canvas PDF y escalamos contexto para dpr
+  pdfCtx.setTransform(1, 0, 0, 1, 0, 0);
+  pdfCtx.scale(dpr, dpr);
 
-      // Obtener firma en base64 PNG
-      const firmaBase64 = sigCanvas.toDataURL('image/png');
+  // Configuramos el contexto de firma
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.lineJoin = 'round';
+  sigCtx.lineCap = 'round';
+  sigCtx.strokeStyle = 'rgba(0,0,0,0.8)';
+  sigCtx.lineWidth = 2;
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
 
-      const formData = new FormData();
-      formData.append('pdf', pdfFile);
-      formData.append('firma', firmaBase64);
-      formData.append('canvasWidth', sigCanvas.width);
-      formData.append('canvasHeight', sigCanvas.height);
+  // Dibujamos la página del PDF
+  const renderContext = {
+    canvasContext: pdfCtx,
+    viewport: viewport
+  };
+  await page.render(renderContext).promise;
+}
 
-      try {
-        const res = await fetch('/firmar-pdf', { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Error en el servidor');
-        const blob = await res.blob();
+async function enviar() {
+  if (!pdfDoc) {
+    alert("Primero cargá un PDF");
+    return;
+  }
+  const firmaBase64 = sigCanvas.toDataURL('image/png');
+  alert("Firma capturada!\nDimensiones: " + sigCanvas.width + "x" + sigCanvas.height);
+}
+</script>
 
-        // Descargar PDF firmado
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'pdf-firmado.pdf';
-        a.click();
-
-      } catch (error) {
-        alert('Error al firmar el PDF: ' + error.message);
-      }
-    }
-  </script>
 
 </body>
 </html>

@@ -9,50 +9,53 @@ const upload = multer({ storage: multer.memoryStorage() });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json({ limit: '10mb' })); // para base64 y JSON
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/firmar-pdf', upload.single('pdf'), async (req, res) => {
   try {
-    // Datos del body
-    const firmaBase64 = req.body.firma; // "data:image/png;base64,..."
+    const firmaBase64 = req.body.firma; // base64 "data:image/png;base64,..."
     const canvasWidth = Number(req.body.canvasWidth);
     const canvasHeight = Number(req.body.canvasHeight);
+    const firmaPosXCanvas = Number(req.body.firmaPosX);
+    const firmaPosYCanvas = Number(req.body.firmaPosY);
+    const firmaBoxWidthCanvas = Number(req.body.firmaBoxWidth);
+    const firmaBoxHeightCanvas = Number(req.body.firmaBoxHeight);
 
     if (!firmaBase64 || !canvasWidth || !canvasHeight) {
       return res.status(400).send('Faltan datos de firma o tamaño canvas');
     }
 
-    // PDF original
     const pdfBytes = req.file.buffer;
     const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
 
-    // Embed de la firma PNG
     const firmaBytes = Buffer.from(firmaBase64.split(',')[1], 'base64');
     const firmaImage = await pdfDoc.embedPng(firmaBytes);
 
-    // Página 1 y su tamaño
     const page = pdfDoc.getPages()[0];
     const { width: pdfWidth, height: pdfHeight } = page.getSize();
 
-    // Escalar la firma para que el canvas (600x800 o lo que sea) se ajuste al PDF proporcionalmente
+    // Escalas entre canvas y PDF
     const scaleX = pdfWidth / canvasWidth;
     const scaleY = pdfHeight / canvasHeight;
-    const scale = Math.min(scaleX, scaleY);
 
-    const firmaWidth = canvasWidth * scale;
-    const firmaHeight = canvasHeight * scale;
+    // Convertir posición y tamaño de la firma de canvas a PDF
+    const firmaPosXPDF = firmaPosXCanvas * scaleX;
+    // Nota: pdf-lib tiene origen abajo-izquierda, canvas arriba-izquierda, por eso invertimos eje Y
+    const firmaPosYPDF = pdfHeight - (firmaPosYCanvas + firmaBoxHeightCanvas) * scaleY;
 
-    // Dibujar la firma arriba (recordá que el origen es abajo-izquierda)
+    const firmaWidthPDF = firmaBoxWidthCanvas * scaleX;
+    const firmaHeightPDF = firmaBoxHeightCanvas * scaleY;
+
+    // Dibujar la firma en la posición correcta
     page.drawImage(firmaImage, {
-      x: 0,
-      y: pdfHeight - firmaHeight,
-      width: firmaWidth,
-      height: firmaHeight,
+      x: firmaPosXPDF,
+      y: firmaPosYPDF,
+      width: firmaWidthPDF,
+      height: firmaHeightPDF,
     });
 
-    // Guardar PDF firmado
     const pdfFinal = await pdfDoc.save();
 
     res.set({
