@@ -2,31 +2,30 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Firmar PDF</title>
+  <title>Firmar PDF directamente</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <img src="assets/logo-fondo-blanco.jpg" alt="Logo" class="logo" />
 
-  <h1>Firmar PDF</h1>
+  <h1>Sign PDF:</h1>
 
   <input type="file" id="pdfInput" accept="application/pdf" />
+  <div id="container">
+    <div id="canvasWrapper">
+      <canvas id="pdfCanvas"></canvas>
+      <canvas id="sigCanvas"></canvas>
+    </div>
+    </div>
 
-  <iframe id="pdfViewer"></iframe>
+    <div id="buttonsWrapper">
+      <button id="clearBtn">Borrar Firma</button>
+      <button id="saveBtn">Confirmar y Descargar</button>
+    </div>
+  
 
-  <p>Firma aquí:</p>
-  <canvas id="sigCanvas" width="300" height="100"></canvas>
-
-  <!-- ✅ Agrupación de botones -->
-  <div class="button-group">
-    <button id="clearBtn">Borrar Firma</button>
-    <button id="submitBtn">Confirmar y Descargar</button>
-  </div>
-
-  <!-- Signature Pad desde CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-
-  <!-- Script principal -->
-  <script src="script.js"></script>
+  
+ <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.9.179/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script src="scripts.js"></script>
 </body>
 </html>

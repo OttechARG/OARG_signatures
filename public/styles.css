@@ -1,80 +1,43 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #ffffff;
-  color: #333;
-  margin: 0;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-}
-
-.logo {
-  max-width: 150px;
-  margin-bottom: 20px;
-}
-
-h1 {
-  font-size: 1.8em;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-#pdfInput {
-  margin-bottom: 15px;
-}
-
-#pdfViewer {
-  width: 100%;
-  max-width: 600px;
-  height: 80vh;
+#container {
+  position: relative;
+  width: fit-content;
+  margin-bottom: 10px;
   border: 1px solid #ccc;
-  margin-bottom: 20px;
 }
 
+#canvasWrapper {
+  display: none; /* Oculto al inicio */
+  position: relative;
+  border: 1px solid transparent;
+}
+
+#canvasWrapper.visible {
+  display: block;
+}
+
+#pdfCanvas,
 #sigCanvas {
-  border: 1px solid #000;
-  width: 300px;
-  height: 100px;
-  margin-bottom: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0; /* PDF */
+  background: #eee;
 }
 
-p {
-  margin-bottom: 10px;
-  text-align: center;
+/* Firma arriba del PDF */
+#sigCanvas {
+  z-index: 1;
+  background: transparent;
 }
 
-.button-group {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
+/* Botones */
+#buttonsWrapper {
+  display: none; /* Oculto inicialmente */
   margin-top: 10px;
-  justify-content: center;
-  flex-wrap: nowrap; /* <- evita que se bajen */
 }
+
 button {
+  margin-right: 10px;
   padding: 10px 15px;
-  font-size: 1em;
-  cursor: pointer;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 4px;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-@media (max-width: 768px) {
-  #pdfViewer {
-    height: 60vh;
-  }
-
-  #sigCanvas {
-    width: 100%;
-    height: 80px;
-  }
-
+  font-size: 16px;
 }
