@@ -17,12 +17,18 @@
       border: none;
     }
     #sigCanvas {
-      position: absolute;
-      top: 0; left: 0;
-      /* NO poner width/height en CSS para evitar escalado */
-      border: 1px solid transparent;
-      cursor: crosshair;
-    }
+  position: absolute;
+  top: 50px;
+
+  /* Nuevo margen visual */
+  right: 30px;
+  bottom: 40px;
+
+  /* NO poner width/height en CSS para evitar escalado */
+  border: 1px solid transparent;
+  cursor: crosshair;
+  pointer-events: auto;
+}
   </style>
 </head>
 <body>
@@ -36,7 +42,7 @@
     <canvas id="sigCanvas"></canvas>
   </div>
 
-  <button onclick="enviar()">Firmar y descargar</button>
+  <button onclick="enviar()" style="margin: 20px;">Firmar y descargar</button>
 
   <script>
     const pdfInput = document.getElementById('pdfInput');
@@ -45,18 +51,25 @@
 
     // Ajustar canvas a resolución de pantalla para trazos suaves
     function setupCanvas(canvas) {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
 
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+    const topOffset = 50;     // Igual que en CSS: top: 50px;
+    const bottomOffset = 40;  // Igual que en CSS: bottom: 40px;
+    const rightOffset = 30;   // Igual que en CSS: right: 30px;
 
-      canvas.style.width = rect.width + "px";
-      canvas.style.height = rect.height + "px";
+    const visibleWidth = rect.width - rightOffset;
+    const visibleHeight = rect.height - topOffset - bottomOffset;
 
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      return ctx;
+    canvas.width = visibleWidth * dpr;
+    canvas.height = visibleHeight * dpr;
+
+    canvas.style.width = visibleWidth + "px";
+    canvas.style.height = visibleHeight + "px";
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    return ctx;
     }
 
     const ctx = setupCanvas(sigCanvas);

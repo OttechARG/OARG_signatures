@@ -26,7 +26,7 @@ app.post('/firmar-pdf', upload.single('pdf'), async (req, res) => {
 
     // PDF original
     const pdfBytes = req.file.buffer;
-    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
 
     // Embed de la firma PNG
     const firmaBytes = Buffer.from(firmaBase64.split(',')[1], 'base64');
