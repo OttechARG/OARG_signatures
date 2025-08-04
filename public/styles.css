@@ -3,18 +3,26 @@
   width: fit-content;
   margin-bottom: 10px;
   border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  background-color: #fafafa;
+  padding: 8px;
 }
 
+/* Wrapper del canvas */
 #canvasWrapper {
   display: none; /* Oculto al inicio */
   position: relative;
   border: 1px solid transparent;
+  border-radius: 4px;
 }
 
+/* Cuando es visible */
 #canvasWrapper.visible {
   display: block;
 }
 
+/* Canvases PDF y firma */
 #pdfCanvas,
 #sigCanvas {
   position: absolute;
@@ -22,22 +30,63 @@
   left: 0;
   z-index: 0; /* PDF */
   background: #eee;
+  border-radius: 4px;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
 
 /* Firma arriba del PDF */
 #sigCanvas {
   z-index: 1;
   background: transparent;
+  cursor: crosshair;
 }
 
-/* Botones */
+/* Contenedor de botones */
 #buttonsWrapper {
   display: none; /* Oculto inicialmente */
   margin-top: 10px;
 }
 
+/* Botones */
 button {
   margin-right: 10px;
   padding: 10px 15px;
   font-size: 16px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:active {
+  background-color: #003f7f;
+}
+
+/* Texto de pagina */
+span {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* espacio uniforme */
+  margin-top: 10px;
+  justify-content: flex-start; /* todo alineado a la izquierda */
+}
+
+/* Ya no usar margin-left: auto en el botón */
+#btnFirmar {
+  margin-left: 0;
+}
+
+
+

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Firmar PDF con PDF.js</title>
+  <link rel="stylesheet" href="../styles.css" />
   <style>
     #pdfContainer {
       position: relative;
@@ -36,10 +37,12 @@
   <canvas id="sigCanvas"></canvas>
 </div>
 
-<button onclick="guardarFirma()">Firmar y descargar</button>
-<button id="prevPage">Anterior</button>
-<button id="nextPage">Siguiente</button>
-<span>Página: <span id="pageNum">1</span> / <span id="pageCount">--</span></span>
+<div id="controls">
+  <button id="prevPage">Anterior</button>
+  <button id="nextPage">Siguiente</button>
+  <span>Página: <span id="pageNum">1</span> / <span id="pageCount">--</span></span>
+  <button onclick="guardarFirma()" id="btnFirmar">Firmar y descargar</button>
+</div>
 
 <!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>

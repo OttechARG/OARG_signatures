@@ -1,0 +1,43 @@
+#container {
+  position: relative;
+  width: fit-content;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+}
+
+#canvasWrapper {
+  display: none; /* Oculto al inicio */
+  position: relative;
+  border: 1px solid transparent;
+}
+
+#canvasWrapper.visible {
+  display: block;
+}
+
+#pdfCanvas,
+#sigCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0; /* PDF */
+  background: #eee;
+}
+
+/* Firma arriba del PDF */
+#sigCanvas {
+  z-index: 1;
+  background: transparent;
+}
+
+/* Botones */
+#buttonsWrapper {
+  display: none; /* Oculto inicialmente */
+  margin-top: 10px;
+}
+
+button {
+  margin-right: 10px;
+  padding: 10px 15px;
+  font-size: 16px;
+}
