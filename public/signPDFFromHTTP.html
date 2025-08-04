@@ -4,33 +4,14 @@
   <meta charset="UTF-8" />
   <title>Firmar PDF con PDF.js</title>
   <link rel="stylesheet" href="../styles.css" />
-  <style>
-    #pdfContainer {
-      position: relative;
-      border: 1px solid #ccc;
-      display: inline-block;
-    }
-
-    #pdfCanvas {
-      position: relative;
-      display: block;
-      user-select: none;
-      width: 100%;
-      height: auto;
-    }
-
-    #sigCanvas {
-      position: absolute;
-      top: 0; left: 0;
-      pointer-events: auto;
-      cursor: crosshair;
-      border: 1px solid transparent;
-    }
-  </style>
 </head>
-<body>
 
-<h1>Firmar PDF con PDF.js</h1>
+
+<body>
+  <div id="main">
+<img src="/assets/logo-fondo-blanco.jpg" alt="Ottech ARG" class="logo" />
+<div class="logo-accent"></div>
+<h1>Sign PDF</h1>
 
 <div id="pdfContainer">
   <canvas id="pdfCanvas"></canvas>
@@ -42,6 +23,7 @@
   <button id="nextPage">Siguiente</button>
   <span>Página: <span id="pageNum">1</span> / <span id="pageCount">--</span></span>
   <button onclick="guardarFirma()" id="btnFirmar">Firmar y descargar</button>
+</div>
 </div>
 
 <!-- PDF.js -->

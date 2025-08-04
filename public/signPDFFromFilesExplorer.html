@@ -3,44 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <title>Firmar PDF con PDF.js</title>
-  <style>
-    #pdfContainer {
-      position: relative;
-      border: 1px solid #ccc;
-      display: inline-block;
-    }
-
-    #pdfCanvas {
-      position: relative;
-      display: block;
-      user-select: none;
-      width: 100%;
-      height: auto;
-    }
-
-    #sigCanvas {
-      position: absolute;
-      top: 0; left: 0;
-      pointer-events: auto;
-      cursor: crosshair;
-      border: 1px solid transparent;
-    }
-  </style>
+  <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
+   <div id="main">
+  <!-- LOGO -->
+  <img src="assets/logo-fondo-blanco.jpg" alt="Ottech ARG" class="logo" />
+  <div class="logo-accent"></div>
 
-<h1>Firmar PDF con PDF.js</h1>
-<input type="file" id="pdfInput" accept="application/pdf" />
+  <!-- TÍTULO -->
+  <h1>Firmar PDF con PDF.js</h1>
 
-<div id="pdfContainer">
-  <canvas id="pdfCanvas"></canvas>
-  <canvas id="sigCanvas"></canvas>
+  <!-- INPUT DE ARCHIVO -->
+  <input type="file" id="pdfInput" accept="application/pdf" />
+
+  <!-- CONTENEDOR DEL PDF -->
+  <div id="pdfContainer">
+    <canvas id="pdfCanvas"></canvas>
+    <canvas id="sigCanvas"></canvas>
+  </div>
+
+  <!-- CONTROLES DE PÁGINA -->
+ <div id="controls" style="display: none;">
+  <button id="prevPage">Anterior</button>
+  <button id="nextPage">Siguiente</button>
+  <span>Página: <span id="pageNum">1</span> / <span id="pageCount">--</span></span>
+  <button onclick="guardarFirma()" id="btnFirmar">Firmar y descargar</button>
 </div>
-
-<button onclick="guardarFirma()">Firmar y descargar</button>
-<button id="prevPage">Anterior</button>
-<button id="nextPage">Siguiente</button>
-<span>Página: <span id="pageNum">1</span> / <span id="pageCount">--</span></span>
+  <!-- SCRIPTS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <!-- tu script aquí abajo... -->
+    
+    </div>
+</body>
 
 <!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
@@ -158,6 +154,7 @@ fileBuffer = typedarray.slice();
   currentPage = 1;
   firmas.length = 0;
   renderPage(currentPage);
+  document.getElementById('controls').style.display = 'block';
 });
 
 function guardarFirmaEnPagina() {
