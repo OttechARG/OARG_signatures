@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Seleccione un puesto</title>
+  <link rel="stylesheet" href="../styles.css">
+
+</head>
+<body>
+  <div id="main">
+    <img src="assets/logo-fondo-blanco.jpg" alt="Ottech ARG" class="logo">
+
+    <div class="form-container">
+      <div id="searchContainer">
+        <input type="text" id="searchInput" class="input-box" placeholder="Seleccione un puesto..." autocomplete="off">
+        <ul id="suggestionsList" class="suggestions" style="display: none;"></ul>
+      </div>
+
+      <!-- Campos especiales para planta -->
+      <div id="plantaFields">
+        <input type="text" id="buscarPlanta" class="input-box" placeholder="Buscar planta...">
+        <div id="remitosAsociados" class="input-box">Remitos asociados: (vacío)</div>
+      </div>
+    </div>
+  </div>
+<script type="module" src="/lib/signMain.js"></script>
+</body>
+</html>
