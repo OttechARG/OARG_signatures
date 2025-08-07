@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-
+import { getConnection } from './configDB.js';
 import https from 'https';
 import fetch from 'node-fetch'; // Necesitás instalar esto con `npm i node-fetch`
 
@@ -78,7 +78,19 @@ app.post('/proxy/xtrem-api', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error en proxy al llamar al servidor externo' });
   }
 });
-
+app.get('/test-db', async (req, res) => {
+  try {
+    const pool = await getConnection();
+    const result = await pool.request().query('SELECT TOP 5 * FROM COMPANY'); // Cambia "TuTabla"
+    res.json(result.recordset);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: 'Error desconocido' });
+    }
+  }
+});
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
