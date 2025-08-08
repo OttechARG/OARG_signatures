@@ -62,9 +62,149 @@ suggestionsList.addEventListener("click", (event) => {
     } else {
       ocultarCampoBuscarCompania();
     }
+
+    const recuperarBtn = document.getElementById("recuperarDocumentoBtn") as HTMLButtonElement;
+    if (recuperarBtn) {
+      recuperarBtn.style.display = "inline-block"; // mostrar botón
+
+      // Agregar listener solo una vez para evitar múltiples suscripciones
+      if (!recuperarBtn.hasAttribute("data-listener-added")) {
+
+        async function fetchWithTimeout(url: string, timeout = 9000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(id);
+                if (!response.ok) throw new Error(`Error en la respuesta: ${response.statusText}`);
+                const blob = await response.blob();
+                return blob;
+            } catch (error) {
+                clearTimeout(id);
+                throw error;
+            }
+            }
+
+            async function recuperarDocumentoConReintentos(url: string, maxIntentos = 3) {
+  for (let i = 0; i < maxIntentos; i++) {
+    try {
+      console.log(`Intento ${i + 1} con ${url}`);
+      const blob = await fetchWithTimeout(url, 9000); // ahora es Blob
+      console.log("Respuesta recibida en intento", i + 1);
+
+      // Leer los primeros bytes para detectar PDF
+      const headerArrayBuffer = await blob.slice(0, 5).arrayBuffer();
+      const header = new TextDecoder("utf-8").decode(headerArrayBuffer);
+
+      if (header === '%PDF-') {
+        mostrarPdfConOpciones(blob);  // correcto: pasamos Blob
+      } else {
+        alert("Documento recuperado correctamente (no es PDF).");
+      }
+      return blob;
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        console.warn(`Timeout en intento ${i + 1}`);
+      } else {
+        console.warn(`Error en intento ${i + 1}:`, (error as Error).message);
+      }
+    }
+  }
+  throw new Error(`No se pudo recuperar el documento tras ${maxIntentos} intentos.`);
+}  
+        recuperarBtn.addEventListener("click", async () => {
+          if (!remitosInput || !remitosInput.value) {
+            alert("Por favor seleccione un remito antes de recuperar el documento.");
+            return;
+          }
+          const pcle = remitosInput.value.trim();
+          const url = `/proxy-getrpt?PCLE=${encodeURIComponent(pcle)}`;
+
+          try {
+            await recuperarDocumentoConReintentos(url);
+          } catch (error) {
+            console.error(error);
+            alert((error as Error).message);
+          }
+        });
+
+        recuperarBtn.setAttribute("data-listener-added", "true");
+      }
+    }
   }
 });
+// Función para convertir texto a Uint8Array (para el PDF)
+function textToUint8Array(text: string) {
+  const buf = new ArrayBuffer(text.length);
+  const bufView = new Uint8Array(buf);
+  for (let i = 0; i < text.length; i++) {
+    bufView[i] = text.charCodeAt(i);
+  }
+  return bufView;
+}
 
+// Función para mostrar el PDF con botones Aceptar y Cancelar
+function mostrarPdfConOpciones(blob: Blob) {
+  const pdfUrl = URL.createObjectURL(blob);
+
+  let modal = document.getElementById('pdfModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'pdfModal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '10000';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background:#fff; padding:20px; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;">
+<embed src="${pdfUrl}" type="application/pdf" width="600" height="800" />      <div style="margin-top:10px; text-align:center;">
+        <button id="btnAceptar" style="margin-right:20px; padding:10px 20px;">Aceptar</button>
+        <button id="btnCancelar" style="padding:10px 20px;">Cancelar</button>
+      </div>
+    </div>
+  `;
+
+  const btnAceptar = document.getElementById('btnAceptar');
+  const btnCancelar = document.getElementById('btnCancelar');
+
+  btnAceptar?.addEventListener('click', () => {
+    alert('Remito aceptado');
+    modal!.style.display = 'none';
+    URL.revokeObjectURL(pdfUrl);
+  });
+
+  btnCancelar?.addEventListener('click', () => {
+    modal!.style.display = 'none';
+    URL.revokeObjectURL(pdfUrl);
+  });
+
+  modal.style.display = 'flex';
+}
+async function fetchPdf(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+  const blob = await response.blob();
+
+  // Opcional: verifica que sea PDF
+  if (blob.type !== 'application/pdf') {
+    alert('El archivo recibido no es un PDF.');
+    return;
+  }
+
+  mostrarPdfConOpciones(blob);
+}
 function ocultarCampoBuscarCompania() {
   const cont = document.getElementById("buscarCompaniaContainer");
   if (cont) {

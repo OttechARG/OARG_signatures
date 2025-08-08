@@ -93,3 +93,7 @@
 .suggestions-list li:hover {
   background-color: #eee;
 }
+#pdfModal {
+  display: none;
+  /* y otros estilos de posicionamiento */
+}

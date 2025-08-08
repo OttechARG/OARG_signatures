@@ -5,7 +5,6 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { getConnection } from './configDB.js';
 import https from 'https';
-import sql from 'mssql';
 import { graphqlHTTP } from 'express-graphql';
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { companyResolvers } from "./graphql/resolvers/CompanyResolvers.js";
@@ -68,6 +67,34 @@ app.post('/subir', upload.single('archivo'), (req: Request, res: Response) => {
 
 app.get('/firmar/:archivo', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public', 'signPDFFromHTTP.html'));
+});
+
+app.get("/proxy-getrpt", async (req: Request, res: Response) => {
+  const { PCLE } = req.query;
+  if (!PCLE || typeof PCLE !== "string") {
+    return res.status(400).send("Falta parámetro PCLE");
+  }
+
+  const url = `http://localhost:3111/getrpt/getrpt?PRPT=ZREMITOAI&POBJ=SDH&POBJORI=SDH&PCLE=${encodeURIComponent(PCLE)}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return res.status(response.status).send(response.statusText);
+    }
+
+    // Leer como buffer para datos binarios (PDF)
+    const buffer = await response.arrayBuffer();
+
+    // Setear header correcto para PDF
+    res.set("Content-Type", "application/pdf");
+
+    // Enviar el buffer como respuesta
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error("Error proxy /proxy-getrpt:", error);
+    res.status(500).send("Error en proxy");
+  }
 });
 
 // Proxy a servidor externo
