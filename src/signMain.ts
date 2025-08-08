@@ -1,4 +1,4 @@
-import { GET_COMPANIES } from "./graphql/queries.js";
+import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
 
 const puestos = Puestos.lista;
@@ -305,49 +305,77 @@ async function consultarCompanias() {
   }
 }
    
-    async function cargarFacilities() {
-            try {
-                if (!buscarCompaniaInput) return;
+   async function cargarFacilities() {
+        try {
+            if (!buscarCompaniaInput) return;
 
-                const cpyCode = buscarCompaniaInput.dataset.selectedCpy;
-                if (!cpyCode) {
-                console.warn("No se seleccionó un código válido para la compañía");
-                return;
-                }
-
-                const response = await fetch(`/api/facilities?legcpy=${encodeURIComponent(cpyCode)}`);
-                if (!response.ok) throw new Error("Error al cargar facilities");
-
-                listaCompletaFacilities = await response.json();
-                
-            } catch (err) {
-                console.error("Error cargarFacilities:", err);
-            }
+            const cpyCode = buscarCompaniaInput.dataset.selectedCpy;
+            if (!cpyCode) {
+            console.warn("No se seleccionó un código válido para la compañía");
+            return;
             }
 
+            const response = await fetch('/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: queryFacilities,
+                variables: { legcpy: cpyCode }
+            })
+            });
+
+            const { data, errors } = await response.json();
+            if (errors) {
+            console.error('GraphQL errors:', errors);
+            listaCompletaFacilities = [];
+            return;
+            }
+
+            listaCompletaFacilities = data.facilities || [];
+
+        } catch (err) {
+            console.error('Error cargarFacilities:', err);
+        }
+        }
             async function cargarRemitos(cpyNombre: string, facilityCodigo: string) {
-  try {
-    const cpyObj = listaCompletaCompanias.find(c => c.CPYNAM_0 === cpyNombre);
-    const facilityObj = listaCompletaFacilities.find(f => f.FCY_0 === facilityCodigo);
-    if (!cpyObj || !facilityObj) {
-      console.warn("No se encontró compañía o facility válido para remitos");
-      listaRemitos.innerHTML = "";
-      listaRemitos.style.display = "none";
-      remitosInput!.value = "";
-      return;
-    }
+                try {
+                    const cpyObj = listaCompletaCompanias.find(c => c.CPYNAM_0 === cpyNombre);
+                    const facilityObj = listaCompletaFacilities.find(f => f.FCY_0 === facilityCodigo);
+                    if (!cpyObj || !facilityObj) {
+                    console.warn("No se encontró compañía o facility válido para remitos");
+                    listaRemitos.innerHTML = "";
+                    listaRemitos.style.display = "none";
+                    remitosInput!.value = "";
+                    return;
+                    }
 
-    const response = await fetch(`/api/remitos?cpy=${encodeURIComponent(cpyObj.CPY_0)}&stofcy=${encodeURIComponent(facilityObj.FCY_0)}`);
-    if (!response.ok) throw new Error("Error al cargar remitos");
-    listaCompletaRemitos = await response.json();
+                    const response = await fetch('/graphql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: queryRemitos,
+                        variables: { cpy: cpyObj.CPY_0, stofcy: facilityObj.FCY_0 }
+                    }),
+                    });
 
-  } catch (err) {
-    console.error("Error cargarRemitos:", err);
-    listaRemitos.innerHTML = "";
-    listaRemitos.style.display = "none";
-    remitosInput!.value = "";
-  }
-}
+                    const { data, errors } = await response.json();
+                    if (errors) {
+                    console.error('GraphQL errors:', errors);
+                    listaCompletaRemitos = [];
+                    // NO mostrar la lista aquí
+                    return;
+                    }
+
+                    listaCompletaRemitos = data.remitos || [];
+                    // NO llamar mostrarRemitosEnLista acá para que no se muestre automático
+
+                } catch (err) {
+                    console.error("Error cargarRemitos:", err);
+                    listaRemitos.innerHTML = "";
+                    listaRemitos.style.display = "none";
+                    remitosInput!.value = "";
+                }
+                }
     // --- FIN NUEVO ---
 
     // Eventos para buscarCompaniaInput
@@ -410,8 +438,7 @@ async function consultarCompanias() {
         }
       }, 150);
     });
-    remitosInput.addEventListener("focus", () => {
-        console.log("remitosInput focus");
+    remitosInput!.addEventListener("focus", () => {
         if (listaCompletaRemitos.length > 0) {
             mostrarRemitosEnLista(listaCompletaRemitos);
         }
