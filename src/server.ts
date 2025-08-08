@@ -56,11 +56,61 @@ app.get('/api/companias', async (req, res) => {
     res.status(500).json({ error: 'Error al consultar base de datos' });
   }
 });
+
+app.get('/api/facilities', async (req, res) => {
+  try {
+    const { legcpy } = req.query; // Obtengo el parámetro legcpy desde la query string
+
+    const pool = await getConnection();
+    const request = pool.request();
+
+    // Para evitar inyección SQL, usá parámetros en la consulta:
+    request.input('legcpyParam', legcpy || 'BP'); // si no envían, usa 'BP' por defecto
+
+    const result = await request.query(`
+      SELECT FCY_0, FCYSHO_0 
+      FROM FACILITY 
+      WHERE WRHFLG_0 = 2 AND LEGCPY_0 = @legcpyParam
+    `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al consultar base de datos' });
+  }
+});
+
+app.get('/api/remitos', async (req, res) => {
+  const { cpy, stofcy } = req.query; // Pasamos CPY_0 y STOFCY_0 para filtrar
+
+  if (!cpy || !stofcy) {
+    return res.status(400).json({ error: "Parámetros 'cpy' y 'stofcy' son requeridos" });
+  }
+
+  try {
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('cpy', sql.VarChar, cpy)
+      .input('stofcy', sql.VarChar, stofcy)
+      .query(`
+        SELECT TOP 20 CPY_0, STOFCY_0, SDHNUM_0, BPCORD_0, BPDNAM_0
+        FROM SDELIVERY
+        WHERE CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy
+      `);
+
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Error al consultar remitos:', error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 app.post('/subir', upload.single('archivo'), (req: Request, res: Response) => {
   if (!req.file) return res.status(400).json({ error: 'No se subió archivo' });
   const urlFirma = `http://localhost:${PORT}/firmar/${req.file.filename}`;
   res.json({ url: urlFirma });
 });
+
 
 app.get('/firmar/:archivo', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public', 'signPDFFromHTTP.html'));
