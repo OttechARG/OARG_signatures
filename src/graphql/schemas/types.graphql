@@ -1,0 +1,25 @@
+type Company {
+  CPY_0: String!
+  CPYNAM_0: String!
+}
+
+type Facility {
+  FCY_0: String!
+  FCYSHO_0: String!
+}
+
+type Remito {
+  CPY_0: String!
+  STOFCY_0: String!
+  SDHNUM_0: String!
+  BPCORD_0: String!
+  BPDNAM_0: String!
+}
+
+
+type Query {
+  companies(search: String): [Company!]!
+  facilities(legcpy: String): [Facility!]!
+  remitos(cpy: String!, stofcy: String!): [Remito!]!
+  testDB: [Company!]!
+}

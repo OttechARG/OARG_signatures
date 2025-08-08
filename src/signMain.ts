@@ -1,3 +1,4 @@
+import { GET_COMPANIES } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
 
 const puestos = Puestos.lista;
@@ -192,6 +193,7 @@ function showFieldsAssociatedWithPlanta() {
       formContainer.appendChild(divRemitos); // agregado remitos
     }
 
+    
     // Función para mostrar lista de compañías
     function mostrarCompaniasEnLista(companias: { CPY_0: string; CPYNAM_0: string }[]) {
   console.log("Mostrar compañías:", companias);
@@ -276,20 +278,32 @@ function showFieldsAssociatedWithPlanta() {
     }
 
     // Función para consultar todas las compañías (sin filtro)
-    async function consultarCompanias() {
-      try {
-        console.log("Consultando compañías...");
-        const response = await fetch('/api/companias');
-        console.log("Respuesta compañías status:", response.status);
-        if (!response.ok) throw new Error("Error al cargar compañías");
-        listaCompletaCompanias = await response.json();
-        console.log("Compañías recibidas:", listaCompletaCompanias);
-        mostrarCompaniasEnLista(listaCompletaCompanias);
-      } catch (err) {
-        console.error("Error consultarCompanias:", err);
-      }
+    
+async function consultarCompanias() {
+  try {
+    const response = await fetch('/graphql', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: GET_COMPANIES }),
+    });
+
+    const { data, errors } = await response.json();
+    if (errors) {
+      console.error("GraphQL errors:", errors);
+      listaCompletaCompanias = [];
+      mostrarCompaniasEnLista([]);
+      return;
     }
 
+    listaCompletaCompanias = data.companies || [];
+    mostrarCompaniasEnLista(listaCompletaCompanias);
+
+  } catch (err) {
+    console.error("Error consultarCompanias:", err);
+    listaCompletaCompanias = [];
+    mostrarCompaniasEnLista([]);
+  }
+}
    
     async function cargarFacilities() {
             try {

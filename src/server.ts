@@ -5,8 +5,20 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { getConnection } from './configDB.js';
 import https from 'https';
-import fetch from 'node-fetch'; // Necesitás instalar esto con `npm i node-fetch`}
 import sql from 'mssql';
+import { graphqlHTTP } from 'express-graphql';
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { companyResolvers } from "./graphql/resolvers/CompanyResolvers.js";
+import { facilityResolvers } from "./graphql/resolvers/FacilityResolvers.js";
+import { remitoResolvers } from "./graphql/resolvers/RemitoResolvers.js"
+
+export const resolvers = {
+  Query: {
+    ...companyResolvers.Query,
+    ...facilityResolvers.Query,
+    ...remitoResolvers.Query
+  }
+};
 
 const app = express();
 const PORT = 3000;
@@ -44,18 +56,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public', 'signMain.html'));
 });
-app.get('/api/companias', async (req, res) => {
-  const search = req.query.search || '';
-  try {
-    const pool = await getConnection();
-    const result = await pool.request()
-      .query('SELECT CPY_0, CPYNAM_0 FROM COMPANY');
-    res.json(result.recordset);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al consultar base de datos' });
-  }
-});
+
 
 app.get('/api/facilities', async (req, res) => {
   try {
@@ -119,31 +120,10 @@ app.get('/firmar/:archivo', (_req: Request, res: Response) => {
 // Proxy a servidor externo
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-app.post('/proxy/xtrem-api', async (req: Request, res: Response) => {
-  try {
-    const body = req.body;
-
-    const response = await fetch('https://131.0.232.130:8443/xtrem/api', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + Buffer.from('admin:S@geX3_R0cks').toString('base64'),
-      },
-      body: JSON.stringify(body),
-      agent: httpsAgent,
-    });
-
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    console.error('Error en proxy:', error);
-    res.status(500).json({ error: 'Error en proxy al llamar al servidor externo' });
-  }
-});
 app.get('/test-db', async (req, res) => {
   try {
     const pool = await getConnection();
-    const result = await pool.request().query('SELECT TOP 5 * FROM COMPANY'); // Cambia "TuTabla"
+    const result = await pool.request().query('SELECT TOP 5 * FROM COMPANY'); 
     res.json(result.recordset);
   } catch (err: unknown) {
     if (err instanceof Error) {
@@ -153,7 +133,22 @@ app.get('/test-db', async (req, res) => {
     }
   }
 });
-// Iniciar servidor
+
+
+const schemaString = fs.readFileSync(path.join(process.cwd(), "src/graphql/schemas/types.graphql"), "utf-8");
+
+const schema = makeExecutableSchema({
+  typeDefs: schemaString,
+  resolvers
+});
+
+
+app.use("/graphql", graphqlHTTP({
+  schema,
+  graphiql: true, // habilita interfaz para pruebas
+}));
+
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`Servidor en http://localhost:${PORT}`);
+  console.log(`GraphQL listo en http://localhost:${PORT}/graphql`);
 });
