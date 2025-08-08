@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { getConnection } from './configDB.js';
 import https from 'https';
-import fetch from 'node-fetch'; // Necesitás instalar esto con `npm i node-fetch`
+import fetch from 'node-fetch'; // Necesitás instalar esto con `npm i node-fetch`}
+import sql from 'mssql';
 
 const app = express();
 const PORT = 3000;
@@ -43,7 +44,18 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public', 'signMain.html'));
 });
-
+app.get('/api/companias', async (req, res) => {
+  const search = req.query.search || '';
+  try {
+    const pool = await getConnection();
+    const result = await pool.request()
+      .query('SELECT CPY_0, CPYNAM_0 FROM COMPANY');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al consultar base de datos' });
+  }
+});
 app.post('/subir', upload.single('archivo'), (req: Request, res: Response) => {
   if (!req.file) return res.status(400).json({ error: 'No se subió archivo' });
   const urlFirma = `http://localhost:${PORT}/firmar/${req.file.filename}`;
