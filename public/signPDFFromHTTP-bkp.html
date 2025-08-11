@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Firmar PDF con PDF.js</title>
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+  <div id="main">
+  <img src="/assets/logo-fondo-blanco.jpg" alt="Ottech ARG" class="logo" />
+  <div class="logo-accent"></div>
+  <h1>Sign PDF</h1>
+  <div id="pdfContainer">
+    <canvas id="pdfCanvas"></canvas>
+    <canvas id="sigCanvas"></canvas>
+  </div>
+  <div id="controls">
+    <button id="prevPage">Anterior</button>
+    <button id="nextPage">Siguiente</button>
+    <span>Página: <span id="pageNum">1</span> / <span id="pageCount">--</span></span>
+    <button onclick="guardarFirma()" id="btnFirmar">Firmar y descargar</button>
+  </div>
+</div>
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+<!-- PDF-lib -->
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script>
+  const pdfCanvas = document.getElementById('pdfCanvas');
+  const sigCanvas = document.getElementById('sigCanvas');
+  const pdfContainer = document.getElementById('pdfContainer');
+  const pdfCtx = pdfCanvas.getContext('2d');
+  let sigCtx = sigCanvas.getContext('2d');
+
+  let pdfDoc = null;
+  let currentPage = 1;
+  let dibujando = false;
+  let fileBuffer = null; // ← Guardamos el buffer original
+  const firmas = {};     // ← Firmas por página (base64)
+
+  function getMousePos(canvas, evt) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (evt.clientX - rect.left) * scaleX,
+      y: (evt.clientY - rect.top) * scaleY
+    };
+  }
+
+  document.getElementById('prevPage').onclick = () => {
+    if (currentPage > 1) {
+      guardarFirmaEnPagina();
+      currentPage--;
+      renderPage(currentPage);
+    }
+  };
+  document.getElementById('nextPage').onclick = () => {
+    if (pdfDoc && currentPage < pdfDoc.numPages) {
+      guardarFirmaEnPagina();
+      currentPage++;
+      renderPage(currentPage);
+    }
+  };
+
+  async function renderPage(pageNum) {
+    const page = await pdfDoc.getPage(pageNum);
+    const dpr = window.devicePixelRatio || 1;
+    const viewport = page.getViewport({ scale: 1 });
+
+    pdfCanvas.width = viewport.width * dpr;
+    pdfCanvas.height = viewport.height * dpr;
+    pdfCanvas.style.width = viewport.width + 'px';
+    pdfCanvas.style.height = viewport.height + 'px';
+
+    sigCanvas.width = viewport.width * dpr;
+    sigCanvas.height = viewport.height * dpr;
+    sigCanvas.style.width = viewport.width + 'px';
+    sigCanvas.style.height = viewport.height + 'px';
+
+    pdfContainer.style.width = viewport.width + 'px';
+    pdfContainer.style.height = viewport.height + 'px';
+
+    pdfCtx.setTransform(1, 0, 0, 1, 0, 0);
+    pdfCtx.scale(dpr, dpr);
+
+    sigCtx = sigCanvas.getContext('2d');
+    sigCtx.lineJoin = 'round';
+    sigCtx.lineCap = 'round';
+    sigCtx.strokeStyle = 'rgba(0,0,0,0.8)';
+    sigCtx.lineWidth = 2;
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+
+    if (firmas[pageNum]) {
+      const img = new Image();
+      img.onload = () => {
+        sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height);
+      };
+      img.src = firmas[pageNum];
+    }
+
+    const renderContext = {
+      canvasContext: pdfCtx,
+      viewport: viewport
+    };
+    await page.render(renderContext).promise;
+
+    document.getElementById('pageNum').textContent = currentPage;
+    document.getElementById('pageCount').textContent = pdfDoc.numPages;
+  }
+
+  sigCanvas.addEventListener('mousedown', e => {
+    dibujando = true;
+    const pos = getMousePos(sigCanvas, e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(pos.x, pos.y);
+  });
+  sigCanvas.addEventListener('mousemove', e => {
+    if (!dibujando) return;
+    const pos = getMousePos(sigCanvas, e);
+    sigCtx.lineTo(pos.x, pos.y);
+    sigCtx.stroke();
+  });
+  sigCanvas.addEventListener('mouseup', () => dibujando = false);
+  sigCanvas.addEventListener('mouseleave', () => dibujando = false);
+
+  // Aquí cargamos el PDF desde la URL, leyendo el nombre del archivo de la ruta
+  window.addEventListener('DOMContentLoaded', async () => {
+    const nombreArchivo = window.location.pathname.split('/').pop();
+    const url = `/uploads/${nombreArchivo}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      alert('No se pudo cargar el PDF');
+      return;
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const typedarray = new Uint8Array(arrayBuffer);
+    fileBuffer = typedarray.slice();
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.worker.min.js';
+    pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
+    currentPage = 1;
+    firmas.length = 0;
+    renderPage(currentPage);
+  });
+
+  function guardarFirmaEnPagina() {
+    const imgData = sigCanvas.toDataURL('image/png');
+    firmas[currentPage] = imgData;
+  }
+
+  async function guardarFirma() {
+    if (!fileBuffer) return;
+    guardarFirmaEnPagina();
+
+    const pdfDocLib = await PDFLib.PDFDocument.load(fileBuffer);
+    const pages = pdfDocLib.getPages();
+
+    const dpr = window.devicePixelRatio || 1;
+
+    for (let i = 0; i < pages.length; i++) {
+      const imgData = firmas[i + 1];
+      if (!imgData) continue;
+
+      const pngImage = await pdfDocLib.embedPng(imgData);
+      const { width, height } = pages[i].getSize();
+
+      pages[i].drawImage(pngImage, {
+        x: 0,
+        y: 0,
+        width: width,
+        height: height
+      });
+    }
+
+    const pdfBytes = await pdfDocLib.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pdf_firmado.pdf';
+    a.click();
+  }
+</script>
+</body>
+</html>

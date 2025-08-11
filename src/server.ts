@@ -11,22 +11,24 @@ import { companyResolvers } from "./graphql/resolvers/CompanyResolvers.js";
 import { facilityResolvers } from "./graphql/resolvers/FacilityResolvers.js";
 import { remitoResolvers } from "./graphql/resolvers/RemitoResolvers.js"
 
+const app = express();
+const PORT = 3000;
+
 export const resolvers = {
   Query: {
     ...companyResolvers.Query,
     ...facilityResolvers.Query,
     ...remitoResolvers.Query
+  },
+  Mutation:{
+    ...remitoResolvers.Mutation
   }
 };
-
-const app = express();
-const PORT = 3000;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -56,13 +58,35 @@ app.get('/', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public', 'signMain.html'));
 });
 
+app.use(express.json({ limit: '50mb' }));
+app.post('/firmar', (req: Request, res: Response) => {
+  const pdfBase64 = req.body.pdfBase64 as string;
+  if (!pdfBase64) return res.status(400).json({ error: 'No se envió Base64' });
 
+  // Extraemos solo la parte Base64 si viene con data uri: "data:application/pdf;base64,...."
+  const base64Data = pdfBase64.split(',').pop() ?? pdfBase64;
 
-app.post('/subir', upload.single('archivo'), (req: Request, res: Response) => {
+  // Nombre único para el archivo, ej:
+  const fileName = `pdf_${Date.now()}.pdf`;
+  const filePath = path.join(__dirname, '../uploads', fileName);
+
+  // Guardar archivo (buffer desde Base64)
+  fs.writeFile(filePath, base64Data, { encoding: 'base64' }, (err) => {
+    if (err) {
+      console.error('Error guardando archivo:', err);
+      return res.status(500).json({ error: 'Error guardando archivo' });
+    }
+
+    const urlArchivo = `http://localhost:${PORT}/firmar/${fileName}`;
+    res.json({ url: urlArchivo });
+  });
+});
+
+/*app.post('/subir', upload.single('archivo'), (req: Request, res: Response) => {
   if (!req.file) return res.status(400).json({ error: 'No se subió archivo' });
   const urlFirma = `http://localhost:${PORT}/firmar/${req.file.filename}`;
   res.json({ url: urlFirma });
-});
+});*/
 
 
 app.get('/firmar/:archivo', (_req: Request, res: Response) => {

@@ -1,3 +1,4 @@
+
 import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
 
@@ -83,36 +84,105 @@ suggestionsList.addEventListener("click", (event) => {
             } catch (error) {
                 clearTimeout(id);
                 throw error;
+                }
+            }
+
+        /*async function recuperarDocumentoConReintentos(url: string, maxIntentos = 3) {
+            for (let i = 0; i < maxIntentos; i++) {
+                    try {
+                        console.log(`Intento ${i + 1} con ${url}`);
+                        const blob = await fetchWithTimeout(url, 9000); // ahora es Blob
+                        console.log("Respuesta recibida en intento", i + 1);
+
+                        // Leer los primeros bytes para detectar PDF
+                        const headerArrayBuffer = await blob.slice(0, 5).arrayBuffer();
+                        const header = new TextDecoder("utf-8").decode(headerArrayBuffer);
+
+                        if (header === '%PDF-') {
+                            mostrarPdfConOpciones(blob);  // correcto: pasamos Blob
+                        } else {
+                            alert("Documento recuperado correctamente (no es PDF).");
+                        }
+                        return blob;
+                    } catch (error) {
+                        if ((error as Error).name === 'AbortError') {
+                            console.warn(`Timeout en intento ${i + 1}`);
+                        } else {
+                            console.warn(`Error en intento ${i + 1}:`, (error as Error).message);
+                        }
+                    }
+                }
+                throw new Error(`No se pudo recuperar el documento tras ${maxIntentos} intentos.`);
+                }  
+*/
+            async function recuperarDocumentoBase64ConReintentos(
+            url: string, 
+            maxIntentos = 3
+            ) {
+            for (let i = 0; i < maxIntentos; i++) {
+                try {
+                console.log(`Intento ${i + 1} con ${url}`);
+                
+                // Obtener Blob (binario)
+                const blob = await fetchWithTimeout(url, 9000);
+
+                // Leer los primeros bytes para detectar PDF
+                const headerArrayBuffer = await blob.slice(0, 5).arrayBuffer();
+                const header = new TextDecoder("utf-8").decode(headerArrayBuffer);
+
+                // Convertir Blob a Base64
+                const base64 = await blobToBase64(blob);
+
+                if (header === '%PDF-') {
+                    console.log("Es PDF, procesando...");
+                } else {
+                    alert("Documento recuperado correctamente (no es PDF).");
+                }
+
+                // Llamada al resolver ficticio para guardar base64
+                const urlHTMLFirmarPDF = await llamarMutationSubirPdfBase64(base64);
+                console.log("PDF recibido (URL):", urlHTMLFirmarPDF);
+                window.location.href = urlHTMLFirmarPDF;
+                // Hacemos fetch para obtener el contenido HTML desde la URL recibida
+                
+                return base64;
+
+                } catch (error) {
+                if ((error as Error).name === 'AbortError') {
+                    console.warn(`Timeout en intento ${i + 1}`);
+                } else {
+                    console.warn(`Error en intento ${i + 1}:`, (error as Error).message);
+                }
+                }
+            }
+            throw new Error(`No se pudo recuperar el documento tras ${maxIntentos} intentos.`);
+            }
+
+            // Función auxiliar para convertir Blob a Base64
+            function blobToBase64(blob: Blob): Promise<string> {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                const base64data = reader.result as string;
+                // reader.result viene como data:<tipo>;base64,<base64>, queremos solo la parte Base64
+                const base64 = base64data.split(',')[1];
+                resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+            }
+
+            // Resolver ficticio (ejemplo)
+            // Esto estaría en RemitoResolvers.ts
+            class RemitoResolvers {
+            static async firmarDocumentoBase64(base64: string, url: string) {
+                // Aquí harías lógica para guardar el base64 en DB, enviarlo, etc.
+                console.log(`Procesando para firmar documento base64 de ${url}, tamaño: ${base64.length} caracteres`);
+                // Simulamos async
+                return new Promise(resolve => setTimeout(resolve, 200));
             }
             }
-
-            async function recuperarDocumentoConReintentos(url: string, maxIntentos = 3) {
-  for (let i = 0; i < maxIntentos; i++) {
-    try {
-      console.log(`Intento ${i + 1} con ${url}`);
-      const blob = await fetchWithTimeout(url, 9000); // ahora es Blob
-      console.log("Respuesta recibida en intento", i + 1);
-
-      // Leer los primeros bytes para detectar PDF
-      const headerArrayBuffer = await blob.slice(0, 5).arrayBuffer();
-      const header = new TextDecoder("utf-8").decode(headerArrayBuffer);
-
-      if (header === '%PDF-') {
-        mostrarPdfConOpciones(blob);  // correcto: pasamos Blob
-      } else {
-        alert("Documento recuperado correctamente (no es PDF).");
-      }
-      return blob;
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        console.warn(`Timeout en intento ${i + 1}`);
-      } else {
-        console.warn(`Error en intento ${i + 1}:`, (error as Error).message);
-      }
-    }
-  }
-  throw new Error(`No se pudo recuperar el documento tras ${maxIntentos} intentos.`);
-}  
         recuperarBtn.addEventListener("click", async () => {
           if (!remitosInput || !remitosInput.value) {
             alert("Por favor seleccione un remito antes de recuperar el documento.");
@@ -122,7 +192,7 @@ suggestionsList.addEventListener("click", (event) => {
           const url = `/proxy-getrpt?PCLE=${encodeURIComponent(pcle)}`;
 
           try {
-            await recuperarDocumentoConReintentos(url);
+            await recuperarDocumentoBase64ConReintentos(url);
           } catch (error) {
             console.error(error);
             alert((error as Error).message);
@@ -143,7 +213,38 @@ function textToUint8Array(text: string) {
   }
   return bufView;
 }
+async function llamarMutationSubirPdfBase64(base64: string) {
+      console.log("Inicio de llamada a subirPdfBase64");
+  console.log("Tamaño del base64 recibido:", base64.length);
+  const query = `
+    mutation SubirPdfBase64($pdfBase64: String!) {
+      subirPdfBase64(pdfBase64: $pdfBase64) {
+        url
+      }
+    }
+  `;
+ console.log("Preparando fetch a /graphql");
+  const response = await fetch('/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query,
+      variables: { pdfBase64: base64 }
+    }),
+    
+  });
+  console.log("Fetch completado. Status:", response.status);
 
+  const { data, errors } = await response.json();
+  
+  if (errors) {
+    
+      console.error("Errores en la respuesta GraphQL:", errors);
+      throw new Error(errors.map((e:any) => e.message).join(', '));
+}
+console.log("URL recibida:", data.subirPdfBase64.url);
+  return data.subirPdfBase64.url;
+}
 // Función para mostrar el PDF con botones Aceptar y Cancelar
 function mostrarPdfConOpciones(blob: Blob) {
   const pdfUrl = URL.createObjectURL(blob);
