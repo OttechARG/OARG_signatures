@@ -1,3 +1,3 @@
 export class Puestos {
-  static lista: string[] = ["Planta"];
+  static lista: string[] = ["Punto de Venta Entregas", "Hoja de ruta"];
 }

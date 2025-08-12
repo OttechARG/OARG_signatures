@@ -51,14 +51,6 @@ input.addEventListener("blur", () => {
   }, 150);
 });
 
-const menuToggle = document.getElementById('menuToggle');
-const sideMenu = document.getElementById('sideMenu');
-
-if (menuToggle && sideMenu) {
-  menuToggle.addEventListener('click', () => {
-    sideMenu.classList.toggle('active');
-  });
-}
 suggestionsList.addEventListener("click", (event) => {
   const target = event.target as HTMLElement;
   if (target && target.tagName === "LI") {
@@ -66,7 +58,7 @@ suggestionsList.addEventListener("click", (event) => {
     suggestionsList.style.display = "none";
     suggestionsList.innerHTML = "";
 
-    if (input.value === Puestos.lista[0]) { //punto de venta entregas es actualmente.
+    if (input.value === "Planta") {
       showFieldsAssociatedWithPlanta();
     } else {
       ocultarCampoBuscarCompania();

@@ -16,11 +16,17 @@ type Remito {
   BPDNAM_0: String!
 }
 
-type Mutation {
-  subirPdfBase64(pdfBase64: String!): PdfUploadResponse!
-}
-type PdfUploadResponse {
+#type Mutation {
+#  subirPdfBase64(pdfBase64: String!): PdfUploadResponse!
+#}
+#type PdfUploadResponse {
+#  url: String!
+#}-->
+type UrlResponse {
   url: String!
+}
+type Mutation {
+  subirPdfBase64(pdfBase64: String!): UrlResponse!
 }
 type Query {
   companies(search: String): [Company!]!

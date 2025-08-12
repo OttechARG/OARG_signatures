@@ -51,6 +51,7 @@
   width: 100%;         /* que ocupe todo el ancho disponible en #main */
   max-width: 600px;    /* límite para que no sea demasiado ancho */
   box-sizing: border-box;
+  z-index: 10;
 }
 
 .input-box {
@@ -96,4 +97,77 @@
 #pdfModal {
   display: none;
   /* y otros estilos de posicionamiento */
+}
+
+/*boton hamburguesa*/
+.menu-btn {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 25px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  padding: 0;
+}
+
+.menu-btn .bar {
+  width: 100%;
+  height: 3px;
+  background-color: #333;
+  border-radius: 2px;
+}
+
+/* Menú lateral */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -100vw;    /* oculto */
+  width: 100vw;
+  height: 100vh;
+  background-color: #eee;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+  padding: 20px;
+
+  /* Centrado con flexbox */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centra verticalmente */
+  align-items: center;     /* centra horizontalmente */
+
+  transition: left 0.3s ease;
+  z-index: 1000;
+  max-width: 90vw;
+  overflow-y: auto;
+}
+
+.side-menu.active {
+  left: 0; /* aparece */
+}
+
+.side-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.side-menu > * {
+  width: 100%;
+  max-width: 600px; /* o 90% si preferís */
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
+.side-menu li {
+  margin: 15px 0;
+}
+
+.side-menu a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
 }

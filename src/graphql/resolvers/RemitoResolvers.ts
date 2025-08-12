@@ -1,4 +1,10 @@
 import { getConnection } from "../../configDB.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const remitoResolvers = {
   Query: {
@@ -14,7 +20,7 @@ export const remitoResolvers = {
         `);
       return result.recordset;
     }
-  }, Mutation: {
+  }, /*Mutation: {
     async subirPdfBase64(_: any, { pdfBase64 }: { pdfBase64: string }) {
       // Llamamos al endpoint REST que guarda el pdf y devuelve la URL
         console.log("Recibido pdfBase64 tamaño:", pdfBase64.length);
@@ -32,7 +38,32 @@ export const remitoResolvers = {
       const data = await response.json();
       return {
         url: data.url
-      };
+      };*/
+      Mutation: {
+    async subirPdfBase64(_: any, { pdfBase64 }: { pdfBase64: string }) {
+      if (!pdfBase64) {
+        throw new Error("No se recibió pdfBase64");
+      }
+
+      // Extraer sólo base64 (si viene con data URI)
+      const base64Data = pdfBase64.split(',').pop() ?? pdfBase64;
+
+      // Crear carpeta uploads si no existe
+      const uploadsDir = path.join(__dirname, '../../../uploads');
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+      // Nombre único para el archivo
+      const fileName = `pdf_${Date.now()}_${Math.floor(Math.random() * 1e6)}.pdf`;
+      const filePath = path.join(uploadsDir, fileName);
+
+      // Guardar archivo como base64
+      await fs.promises.writeFile(filePath, base64Data, { encoding: 'base64' });
+
+      // URL pública (ajustar según tu host y puerto)
+      const url = `http://localhost:3000/firmar/${fileName}`;
+
+      return { url };
     }
   }
 };
+   

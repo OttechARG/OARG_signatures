@@ -7,29 +7,40 @@
 </head>
 <body>
   <div id="main">
+    <!-- Botón hamburguesa -->
+    <button id="menuToggle" aria-label="Abrir menú" class="menu-btn" type="button">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
     <img src="assets/logo-fondo-blanco.jpg" alt="Ottech ARG" class="logo" />
 
-    <div class="form-container">
-      <div id="searchContainer">
-        <input
-          type="text"
-          id="searchInput"
-          class="input-box"
-          placeholder="Seleccione un puesto..."
-          autocomplete="off"
-        />
-        <ul id="suggestionsList" class="suggestions" style="display: none;"></ul>
-      </div>
+    <!-- Menú lateral oculto que ahora incluye TODO el contenido que quieres mostrar -->
+    <nav id="sideMenu" class="side-menu" aria-label="Menú lateral">
 
-      <div id="formContainer">
-        
+      <div class="form-container">
+        <div id="searchContainer">
+          <input
+            type="text"
+            id="searchInput"
+            class="input-box"
+            placeholder="Seleccione un puesto..."
+            autocomplete="off"
+          />
+          <ul id="suggestionsList" class="suggestions" style="display: none;"></ul>
+        </div>
+
+        <div id="formContainer">
+          <!-- contenido dinámico -->
+        </div>
+
+        <button id="recuperarDocumentoBtn" class="btn" style="display:none;">Recuperar documento</button>
       </div>
-       
-<button id="recuperarDocumentoBtn" class="btn" style="display:none;">Recuperar documento</button>    </div>
+    </nav>
+
   </div>
 
   <script type="module" src="/lib/signMain.js"></script>
 </body>
 </html>
-
-  
