@@ -339,7 +339,7 @@ function showFieldsAssociatedWithPlanta() {
     facilityInput.type = "text";
     facilityInput.id = "facility";
     facilityInput.name = "facility";
-    facilityInput.placeholder = "Ingrese facility";
+    facilityInput.placeholder = "Ingrese planta";
     facilityInput.classList.add("input-box");
 
     const listaFacilities = document.createElement("ul");

@@ -171,3 +171,50 @@
   color: #333;
   font-weight: bold;
 }
+#remitosTable {
+  width: 100%;
+  max-width: 900px;
+  margin: 1.5rem auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: Arial, sans-serif;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#remitosTable thead {
+  background-color: var(--blue);
+  color: var(--gray-light);
+}
+
+#remitosTable th, 
+#remitosTable td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+#remitosTable tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#remitosTable tbody tr:hover {
+  background-color: var(--blue-light);
+  color: var(--gray-light);
+  cursor: default;
+  transition: background-color 0.3s ease;
+}
+
+.signed-true {
+  color: green;
+  font-weight: bold;
+  text-align: center;
+}
+
+.signed-false {
+  color: red;
+  font-weight: bold;
+  text-align: center;
+}
