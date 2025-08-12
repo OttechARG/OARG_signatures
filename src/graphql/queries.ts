@@ -21,6 +21,7 @@ export const queryRemitos = `
   query Remitos($cpy: String!, $stofcy: String!) {
     remitos(cpy: $cpy, stofcy: $stofcy) {
       CPY_0
+      DLVDAT_0
       STOFCY_0
       SDHNUM_0
       BPCORD_0

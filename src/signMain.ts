@@ -1,6 +1,7 @@
 
 import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
+import { blobToBase64, llamarMutationSubirPdfBase64, mostrarPdfConOpciones, recuperarDocumentoBase64ConReintentos } from "./pdfHandler.js";
 
 const puestos = Puestos.lista;
 window.puestoSeleccionado = null;
@@ -73,212 +74,32 @@ suggestionsList.addEventListener("click", (event) => {
     }
 
     const recuperarBtn = document.getElementById("recuperarDocumentoBtn") as HTMLButtonElement;
-    if (recuperarBtn) {
-      recuperarBtn.style.display = "inline-block"; // mostrar botón
+if (recuperarBtn) {
+  recuperarBtn.style.display = "inline-block";
 
-      // Agregar listener solo una vez para evitar múltiples suscripciones
-      if (!recuperarBtn.hasAttribute("data-listener-added")) {
-
-        async function fetchWithTimeout(url: string, timeout = 9000) {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeout);
-
-            try {
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(id);
-                if (!response.ok) throw new Error(`Error en la respuesta: ${response.statusText}`);
-                const blob = await response.blob();
-                return blob;
-            } catch (error) {
-                clearTimeout(id);
-                throw error;
-                }
-            }
-
-
-            async function recuperarDocumentoBase64ConReintentos(
-            url: string, 
-            maxIntentos = 3
-            ) {
-            for (let i = 0; i < maxIntentos; i++) {
-                try {
-                console.log(`Intento ${i + 1} con ${url}`);
-                
-                // Obtener Blob (binario)
-                const blob = await fetchWithTimeout(url, 9000);
-
-                // Leer los primeros bytes para detectar PDF
-                const headerArrayBuffer = await blob.slice(0, 5).arrayBuffer();
-                const header = new TextDecoder("utf-8").decode(headerArrayBuffer);
-
-                // Convertir Blob a Base64
-                const base64 = await blobToBase64(blob);
-
-                if (header === '%PDF-') {
-                    console.log("Es PDF, procesando...");
-                } else {
-                    alert("Documento recuperado correctamente (no es PDF).");
-                }
-
-                // Llamada al resolver ficticio para guardar base64
-                const urlHTMLFirmarPDF = await llamarMutationSubirPdfBase64(base64);
-                console.log("PDF recibido (URL):", urlHTMLFirmarPDF);
-                window.location.href = urlHTMLFirmarPDF;
-                // Hacemos fetch para obtener el contenido HTML desde la URL recibida
-                
-                return base64;
-
-                } catch (error) {
-                if ((error as Error).name === 'AbortError') {
-                    console.warn(`Timeout en intento ${i + 1}`);
-                } else {
-                    console.warn(`Error en intento ${i + 1}:`, (error as Error).message);
-                }
-                }
-            }
-            throw new Error(`No se pudo recuperar el documento tras ${maxIntentos} intentos.`);
-            }
-
-            // Función auxiliar para convertir Blob a Base64
-            function blobToBase64(blob: Blob): Promise<string> {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                const base64data = reader.result as string;
-                // reader.result viene como data:<tipo>;base64,<base64>, queremos solo la parte Base64
-                const base64 = base64data.split(',')[1];
-                resolve(base64);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-            }
-
-            // Resolver ficticio (ejemplo)
-            // Esto estaría en RemitoResolvers.ts
-            class RemitoResolvers {
-            static async firmarDocumentoBase64(base64: string, url: string) {
-                // Aquí harías lógica para guardar el base64 en DB, enviarlo, etc.
-                console.log(`Procesando para firmar documento base64 de ${url}, tamaño: ${base64.length} caracteres`);
-                // Simulamos async
-                return new Promise(resolve => setTimeout(resolve, 200));
-            }
-            }
-        recuperarBtn.addEventListener("click", async () => {
-          if (!remitosInput || !remitosInput.value) {
-            alert("Por favor seleccione un remito antes de recuperar el documento.");
-            return;
-          }
-          const pcle = remitosInput.value.trim();
-          const url = `/proxy-getrpt?PCLE=${encodeURIComponent(pcle)}`;
-
-          try {
-            await recuperarDocumentoBase64ConReintentos(url);
-          } catch (error) {
-            console.error(error);
-            alert((error as Error).message);
-          }
-        });
-
-        recuperarBtn.setAttribute("data-listener-added", "true");
+  if (!recuperarBtn.hasAttribute("data-listener-added")) {
+    recuperarBtn.addEventListener("click", async () => {
+      if (!remitoSeleccionado) {
+        alert("Por favor seleccione un remito en la tabla antes de recuperar el documento.");
+        return;
       }
-    }
+
+      const url = `/proxy-getrpt?PCLE=${encodeURIComponent(remitoSeleccionado.remito)}`;
+
+      try {
+        await recuperarDocumentoBase64ConReintentos(url);
+      } catch (error) {
+        console.error(error);
+        alert((error as Error).message);
+      }
+    });
+
+    recuperarBtn.setAttribute("data-listener-added", "true");
+  }
+}
   }
 });
 
-async function llamarMutationSubirPdfBase64(base64: string) {
-      console.log("Inicio de llamada a subirPdfBase64");
-  console.log("Tamaño del base64 recibido:", base64.length);
-  const query = `
-    mutation SubirPdfBase64($pdfBase64: String!) {
-      subirPdfBase64(pdfBase64: $pdfBase64) {
-        url
-      }
-    }
-  `;
- console.log("Preparando fetch a /graphql");
-  const response = await fetch('/graphql', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query,
-      variables: { pdfBase64: base64 }
-    }),
-    
-  });
-  console.log("Fetch completado. Status:", response.status);
-
-  const { data, errors } = await response.json();
-  
-  if (errors) {
-    
-      console.error("Errores en la respuesta GraphQL:", errors);
-      throw new Error(errors.map((e:any) => e.message).join(', '));
-}
-console.log("URL recibida:", data.subirPdfBase64.url);
-  return data.subirPdfBase64.url;
-}
-// Función para mostrar el PDF con botones Aceptar y Cancelar
-function mostrarPdfConOpciones(blob: Blob) {
-  const pdfUrl = URL.createObjectURL(blob);
-
-  let modal = document.getElementById('pdfModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'pdfModal';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100vw';
-    modal.style.height = '100vh';
-    modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
-    modal.style.display = 'flex';
-    modal.style.flexDirection = 'column';
-    modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'center';
-    modal.style.zIndex = '10000';
-    document.body.appendChild(modal);
-  }
-
-  modal.innerHTML = `
-    <div style="background:#fff; padding:20px; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;">
-<embed src="${pdfUrl}" type="application/pdf" width="600" height="800" />      <div style="margin-top:10px; text-align:center;">
-        <button id="btnAceptar" style="margin-right:20px; padding:10px 20px;">Aceptar</button>
-        <button id="btnCancelar" style="padding:10px 20px;">Cancelar</button>
-      </div>
-    </div>
-  `;
-
-  const btnAceptar = document.getElementById('btnAceptar');
-  const btnCancelar = document.getElementById('btnCancelar');
-
-  btnAceptar?.addEventListener('click', () => {
-    alert('Remito aceptado');
-    modal!.style.display = 'none';
-    URL.revokeObjectURL(pdfUrl);
-  });
-
-  btnCancelar?.addEventListener('click', () => {
-    modal!.style.display = 'none';
-    URL.revokeObjectURL(pdfUrl);
-  });
-
-  modal.style.display = 'flex';
-}
-async function fetchPdf(url: string) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-
-  const blob = await response.blob();
-
-  // Opcional: verifica que sea PDF
-  if (blob.type !== 'application/pdf') {
-    alert('El archivo recibido no es un PDF.');
-    return;
-  }
-
-  mostrarPdfConOpciones(blob);
-}
 function ocultarCampoBuscarCompania() {
   const cont = document.getElementById("buscarCompaniaContainer");
   if (cont) {
@@ -393,6 +214,9 @@ function showFieldsAssociatedWithPuesto1() {
 
       sessionStorage.setItem("seleccionUsuario", JSON.stringify(dataGuardar));
       alert("Selección guardada en sesión.");
+      if (company && facility) {
+        cargarRemitosEnTabla(company, facility);
+      }
     });
     // --- NUEVO: Contenedor para Remitos asociados ---
     const divRemitos = document.createElement("div");
@@ -741,4 +565,84 @@ function crearBotonGuardar() {
   btnGuardar.addEventListener("click", guardarSeleccion);
 
   formContainer.appendChild(btnGuardar);
+}
+// Variable global para guardar la selección
+let remitoSeleccionado: { company: string; facility: string; remito: string } | null = null;
+
+document.querySelector("#remitosTable")?.addEventListener("click", (e) => {
+  const fila = (e.target as HTMLElement).closest("tr");
+  if (!fila) return;
+  // Sacar clase selected de otras filas
+  const tabla = document.getElementById("remitosTable");
+  tabla?.querySelectorAll("tr.selected").forEach(tr => tr.classList.remove("selected"));
+
+  // Poner clase selected a la fila clickeada
+  fila.classList.add("selected");
+  const company = fila.dataset.company;
+  const facility = fila.dataset.facility;
+  const remito = fila.dataset.remito;
+
+  if (company && facility && remito) {
+    remitoSeleccionado = { company, facility, remito };
+    console.log("Remito seleccionado:", remitoSeleccionado);
+  }
+});
+async function cargarRemitosEnTabla(company: string, facility: string) {
+  try {
+    const response = await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: queryRemitos,
+        variables: { cpy: company, stofcy: facility }
+      })
+    });
+
+    const { data, errors } = await response.json();
+    console.log("Respuesta completa de GraphQL:", data);
+    if (errors) {
+      console.error('GraphQL errors:', errors);
+      return;
+    }
+
+    const remitos = data.remitos || [];
+    console.log("Remitos obtenidos:", remitos);
+
+    const tabla = document.getElementById('remitosTable') as HTMLTableElement;
+    const tbody = tabla.querySelector('tbody')!;
+    tbody.innerHTML = ""; // Limpia tabla
+
+    for (const r of remitos) {
+      const tr = document.createElement('tr');
+
+      // Asumiendo que en r están las propiedades adecuadas:
+      const numero = r.SDHNUM_0 || "";
+      const fecha = r.DLVDAT_0 || "";      
+      const codCliente = r.BPCORD_0 || "";
+      const razonSocial = r.BPDNAM_0 || "";
+
+      // Para la columna firmado, si tienes un campo booleano o estado, adaptá:
+      const firmado = r.FIRMADO_0 || false;
+      // <-- aquí seteás los data-attributes que usa el click
+      tr.dataset.company = r.CPY_0 || r.CPY || "";
+      tr.dataset.facility = r.STOFCY_0 || r.STOFAC || ""; // según como venga en tu query
+      tr.dataset.remito = String(numero);
+
+      tr.style.cursor = "pointer"; // opcional, para que parezca clickeable
+      tr.innerHTML = `
+        <td>${numero}</td>
+        <td>${fecha}</td>
+        <td>${codCliente}</td>
+        <td>${razonSocial}</td>
+        <td class="${firmado ? 'signed-true' : 'signed-false'}">${firmado ? '✓' : '✗'}</td>
+      `;
+
+      tbody.appendChild(tr);
+      
+    }
+    
+
+  } catch (err) {
+    console.error('Error cargando remitos:', err);
+  }
 }

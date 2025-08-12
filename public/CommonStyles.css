@@ -218,3 +218,7 @@
   font-weight: bold;
   text-align: center;
 }
+tr.selected {
+  background-color: #444;   /* gris oscuro */
+  color: white;             /* texto blanco para contraste */
+}
