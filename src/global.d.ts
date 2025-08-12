@@ -10,3 +10,5 @@ declare const pdfjsLib: any;
 declare const PDFLib: {
   PDFDocument: any;
 };
+
+

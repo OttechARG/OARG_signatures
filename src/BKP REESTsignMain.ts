@@ -3,7 +3,7 @@ import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.
 import { Puestos } from "./HiddenValues.js";
 
 const puestos = Puestos.lista;
-window.puestoSeleccionado = null;
+
 const input = document.getElementById("searchInput") as HTMLInputElement;
 const suggestionsList = document.getElementById("suggestionsList") as HTMLUListElement;
 const formContainer = document.getElementById("formContainer") as HTMLDivElement;
@@ -65,9 +65,9 @@ suggestionsList.addEventListener("click", (event) => {
     input.value = target.textContent || "";
     suggestionsList.style.display = "none";
     suggestionsList.innerHTML = "";
-    window.puestoSeleccionado = input.value; 
-    if (window.puestoSeleccionado === Puestos.lista[0]) { //punto de venta entregas es actualmente.
-      showFieldsAssociatedWithPuesto1();
+
+    if (input.value === Puestos.lista[0]) { //punto de venta entregas es actualmente.
+      showFieldsAssociatedWithPlanta();
     } else {
       ocultarCampoBuscarCompania();
     }
@@ -290,7 +290,7 @@ let listaCompletaCompanias: { CPY_0: string; CPYNAM_0: string }[] = [];
 let listaCompletaFacilities: { FCY_0: string; FCYSHO_0: string }[] = [];
 let listaCompletaRemitos: { CPY_0: string; STOFCY_0: string; SDHNUM_0: string; BPCORD_0: string; BPDNAM_0: string }[] = [];  // NUEVO
 
-function showFieldsAssociatedWithPuesto1() {
+function showFieldsAssociatedWithPlanta() {
   if (!buscarCompaniaInput) {
     // Contenedor para buscar compañía + lista
     const divBuscarCompania = document.createElement("div");
@@ -361,39 +361,7 @@ function showFieldsAssociatedWithPuesto1() {
     divFacility.appendChild(labelFacility);
     divFacility.appendChild(facilityInput);
     divFacility.appendChild(listaFacilities);
-     // Crear botón Guardar
-    const btnGuardar = document.createElement("button");
-    btnGuardar.textContent = "Guardar selección";
-    btnGuardar.style.marginTop = "10px";
-    btnGuardar.style.padding = "8px 16px";
-    btnGuardar.style.alignSelf = "center";
 
-    // Agregar botón al final del formContainer (o donde quieras)
- 
-
-
-    // Evento click para guardar en sessionStorage
-    btnGuardar.addEventListener("click", () => {
-      // Asumiendo que tienes una variable global o alguna forma de saber el puesto
-      const puesto = window.puestoSeleccionado || null; // reemplazar según tu lógica
-      
-      const company = buscarCompaniaInput!.dataset.selectedCpy || null;
-      const facility = facilityInput!.dataset.facilityCode || null;
-
-      if (!puesto || !company || !facility) {
-        alert("Debe seleccionar puesto, compañía y planta para guardar.");
-        return;
-      }
-
-      const dataGuardar = {
-        puesto,
-        company,
-        facility,
-      };
-
-      sessionStorage.setItem("seleccionUsuario", JSON.stringify(dataGuardar));
-      alert("Selección guardada en sesión.");
-    });
     // --- NUEVO: Contenedor para Remitos asociados ---
     const divRemitos = document.createElement("div");
     divRemitos.style.position = "relative";
@@ -433,12 +401,11 @@ function showFieldsAssociatedWithPuesto1() {
 
     // Agrego los tres divs al contenedor principal
     if (formContainer) {
-        formContainer.innerHTML = ""; // limpio todo
-        formContainer.appendChild(divBuscarCompania);
-        formContainer.appendChild(divFacility);
-        formContainer.appendChild(divRemitos);
-        formContainer.appendChild(btnGuardar);  // <--- Agregalo acá al final
-        }
+      formContainer.innerHTML = ""; // limpio si había algo
+      formContainer.appendChild(divBuscarCompania);
+      formContainer.appendChild(divFacility);
+      formContainer.appendChild(divRemitos); // agregado remitos
+    }
 
     
     // Función para mostrar lista de compañías
@@ -706,39 +673,4 @@ async function consultarCompanias() {
     // Si ya existe el input, podrías resetear o simplemente mostrar (depende tu lógica)
     console.log("Inputs ya creados, no se crean nuevamente");
   }
-  
-}
-// Cuando haces click en botón Guardar
-
-function guardarSeleccion() {
-  const puesto = window.puestoSeleccionado;
-  const company = buscarCompaniaInput?.dataset.selectedCpy || null;
-  const facility = facilityInput?.dataset.facilityCode || null;
-
-  if (!puesto || !company || !facility) {
-    alert("Debe seleccionar puesto, compañía y planta para guardar");
-    return;
-  }
-
-  sessionStorage.setItem("seleccionUsuario", JSON.stringify({ puesto, company, facility }));
-  alert("Datos guardados en sesión");
-}
-
-function crearBotonGuardar() {
-  const formContainer = document.getElementById("formContainer");
-  if (!formContainer) return;
-
-  if (document.getElementById("btnGuardar")) return;
-
-  const btnGuardar = document.createElement("button");
-  btnGuardar.id = "btnGuardar";
-  btnGuardar.type = "button";
-  btnGuardar.textContent = "Guardar Selección";
-  btnGuardar.style.marginTop = "15px";
-  btnGuardar.style.padding = "10px 20px";
-
-  // Aquí llamamos a la función que maneja la lógica del guardado
-  btnGuardar.addEventListener("click", guardarSeleccion);
-
-  formContainer.appendChild(btnGuardar);
 }
