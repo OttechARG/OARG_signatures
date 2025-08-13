@@ -1,8 +1,8 @@
 
 import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
-import { blobToBase64, llamarMutationSubirPdfBase64, mostrarPdfConOpciones, recuperarDocumentoBase64ConReintentos } from "./pdfHandler.js";
-
+import { blobToBase64, llamarMutationSubirPdfBase64, mostrarPdfConOpciones, recuperarDocumentoBase64ConReintentos } from "./PDFHandler.js";
+import { TableHandler } from './TableHandler.js';
 const puestos = Puestos.lista;
 window.puestoSeleccionado = null;
 const input = document.getElementById("searchInput") as HTMLInputElement;
@@ -645,4 +645,9 @@ async function cargarRemitosEnTabla(company: string, facility: string) {
   } catch (err) {
     console.error('Error cargando remitos:', err);
   }
+    const filterManager = new TableHandler('remitosTable');
+    filterManager.setupColumnFilters();
 }
+
+  
+

@@ -8,12 +8,13 @@ import { graphqlHTTP } from 'express-graphql';
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { companyResolvers } from "./graphql/resolvers/CompanyResolvers.js";
 import { facilityResolvers } from "./graphql/resolvers/FacilityResolvers.js";
-import { remitoResolvers } from "./graphql/resolvers/RemitoResolvers.js"
+import { remitoResolvers, GraphQLDate} from "./graphql/resolvers/RemitoResolvers.js"
 
 const app = express();
 const PORT = 3000;
 
 export const resolvers = {
+  Date: GraphQLDate,
   Query: {
     ...companyResolvers.Query,
     ...facilityResolvers.Query,

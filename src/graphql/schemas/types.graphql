@@ -7,10 +7,10 @@ type Facility {
   FCY_0: String!
   FCYSHO_0: String!
 }
-
+scalar Date
 type Remito {
   CPY_0: String!
-  DLVDAT_0: String!
+  DLVDAT_0: Date!
   STOFCY_0: String!
   SDHNUM_0: String!
   BPCORD_0: String!

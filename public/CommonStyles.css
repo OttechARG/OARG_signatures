@@ -207,6 +207,24 @@
   transition: background-color 0.3s ease;
 }
 
+#remitosTable thead tr#filterRow {
+  background-color: white;
+  color: black;
+}
+
+#remitosTable thead tr#filterRow th {
+  background-color: white;
+  color: black;
+}
+
+#remitosTable thead tr#filterRow th input.filter-input {
+  background-color: white;
+  color: black;
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 3px;
+}
+
 .signed-true {
   color: green;
   font-weight: bold;
