@@ -137,7 +137,7 @@ function showFieldsAssociatedWithPuesto1() {
     listaCompanias.style.backgroundColor = "white";
     listaCompanias.style.border = "1px solid #ccc";
     listaCompanias.style.maxHeight = "150px";
-    listaCompanias.style.overflowY = "auto";
+    listaCompanias.style.overflowY = "scroll";
     listaCompanias.style.zIndex = "1000";
     listaCompanias.style.listStyle = "none";
     listaCompanias.style.padding = "0";
@@ -172,7 +172,7 @@ function showFieldsAssociatedWithPuesto1() {
     listaFacilities.style.backgroundColor = "white";
     listaFacilities.style.border = "1px solid #ccc";
     listaFacilities.style.maxHeight = "150px";
-    listaFacilities.style.overflowY = "auto";
+    listaFacilities.style.overflowY = "scroll";
     listaFacilities.style.zIndex = "1000";
     listaFacilities.style.listStyle = "none";
     listaFacilities.style.padding = "0";
