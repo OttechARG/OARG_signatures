@@ -1,5 +1,5 @@
 import { queryRemitos } from "./graphql/queries.js";
-import { TableHandler } from "./TableHandler.js";
+
 
 export class RemitosHandler {
   async fetchRemitos(company: string, facility: string) {
@@ -11,10 +11,19 @@ export class RemitosHandler {
         variables: { cpy: company, stofcy: facility }
       })
     });
+
     const { data, errors } = await response.json();
     if (errors) throw new Error(JSON.stringify(errors));
-    return data.remitos || [];
-  }
 
-  
+    const remitos = data.remitos || [];
+
+    // Convertir DLVDAT_0 a dd/mm/yyyy
+    return remitos.map((r: any) => ({
+      ...r,
+      DLVDAT_0: (() => {
+        const [yyyy, mm, dd] = r.DLVDAT_0.split('-'); // GraphQLDate viene como yyyy-mm-dd
+        return `${dd}/${mm}/${yyyy}`;
+      })()
+    }));
+  }
 }
