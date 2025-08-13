@@ -2,7 +2,10 @@
 import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
 import { blobToBase64, llamarMutationSubirPdfBase64, mostrarPdfConOpciones, recuperarDocumentoBase64ConReintentos } from "./PDFHandler.js";
-import { TableHandler } from './TableHandler.js';
+import { SettingsMenuHandler } from './SettingsMenuHandler.js';
+import { RemitosHandler } from './RemitosHandler.js';
+import { TableHandler } from "./TableHandler.js";
+
 
 const puestos = Puestos.lista;
 window.puestoSeleccionado = null;
@@ -13,6 +16,9 @@ const formContainer = document.getElementById("formContainer") as HTMLDivElement
 let buscarCompaniaInput: HTMLInputElement | null = null;
 let facilityInput: HTMLInputElement | null = null;
 
+const menuHandler = new SettingsMenuHandler('menuToggle', 'sideMenu');
+const remitosHandler = new RemitosHandler();
+const tableHandler = new TableHandler("remitosTable");
 
 input.addEventListener("input", () => {
   const query = input.value.toLowerCase();
@@ -22,21 +28,10 @@ input.addEventListener("input", () => {
     suggestionsList.innerHTML = "";
     return;
   }
-
-  const filtered = puestos.filter(puesto =>
-    puesto.toLowerCase().includes(query)
-  );
-
-  if (filtered.length > 0) {
-    suggestionsList.innerHTML = filtered
-      .map(puesto => `<li class="suggestion-item">${puesto}</li>`)
-      .join("");
-    suggestionsList.style.display = "block";
-  } else {
-    suggestionsList.style.display = "none";
-    suggestionsList.innerHTML = "";
-  }
+  const filtrados = menuHandler.filtrarPuestos(query);
+  menuHandler.mostrarSugerenciasPuestos(filtrados, suggestionsList);
 });
+
 
 input.addEventListener("focus", () => {
   if (!input.value) {
@@ -53,14 +48,6 @@ input.addEventListener("blur", () => {
   }, 150);
 });
 
-const menuToggle = document.getElementById('menuToggle');
-const sideMenu = document.getElementById('sideMenu');
-
-if (menuToggle && sideMenu) {
-  menuToggle.addEventListener('click', () => {
-    sideMenu.classList.toggle('active');
-  });
-}
 suggestionsList.addEventListener("click", (event) => {
   const target = event.target as HTMLElement;
   if (target && target.tagName === "LI") {
@@ -71,7 +58,7 @@ suggestionsList.addEventListener("click", (event) => {
     if (window.puestoSeleccionado === Puestos.lista[0]) { //punto de venta entregas es actualmente.
       showFieldsAssociatedWithPuesto1();
     } else {
-      ocultarCampoBuscarCompania();
+      menuHandler.setVisibleCompanyField(false);
     }
 
     const recuperarBtn = document.getElementById("recuperarDocumentoBtn") as HTMLButtonElement;
@@ -80,12 +67,12 @@ if (recuperarBtn) {
 
   if (!recuperarBtn.hasAttribute("data-listener-added")) {
     recuperarBtn.addEventListener("click", async () => {
-      if (!remitoSeleccionado) {
+      if (!tableHandler.remitoSeleccionado) {
         alert("Por favor seleccione un remito en la tabla antes de recuperar el documento.");
         return;
       }
 
-      const url = `/proxy-getrpt?PCLE=${encodeURIComponent(remitoSeleccionado.remito)}`;
+      const url = `/proxy-getrpt?PCLE=${encodeURIComponent(tableHandler.remitoSeleccionado.remito)}`;
 
       try {
         await recuperarDocumentoBase64ConReintentos(url);
@@ -101,12 +88,6 @@ if (recuperarBtn) {
   }
 });
 
-function ocultarCampoBuscarCompania() {
-  const cont = document.getElementById("buscarCompaniaContainer");
-  if (cont) {
-    cont.style.display = "none";
-  }
-}
 
 let listaCompletaCompanias: { CPY_0: string; CPYNAM_0: string }[] = [];
 let listaCompletaFacilities: { FCY_0: string; FCYSHO_0: string }[] = [];
@@ -194,7 +175,7 @@ function showFieldsAssociatedWithPuesto1() {
 
 
     // Evento click para guardar en sessionStorage
-    btnGuardar.addEventListener("click", () => {
+    btnGuardar.addEventListener("click",async () => {
       // Asumiendo que tienes una variable global o alguna forma de saber el puesto
       const puesto = window.puestoSeleccionado || null; // reemplazar según tu lógica
       
@@ -211,11 +192,13 @@ function showFieldsAssociatedWithPuesto1() {
         company,
         facility,
       };
+      const remitos = await remitosHandler.fetchRemitos(company, facility);
 
       sessionStorage.setItem("seleccionUsuario", JSON.stringify(dataGuardar));
       alert("Selección guardada en sesión.");
       if (company && facility) {
-        cargarRemitosEnTabla(company, facility);
+        
+        tableHandler.renderTable(remitos);
       }
     });
     
@@ -431,88 +414,7 @@ function crearBotonGuardar() {
 
   formContainer.appendChild(btnGuardar);
 }
-// Variable global para guardar la selección
-let remitoSeleccionado: { company: string; facility: string; remito: string } | null = null;
 
-document.querySelector("#remitosTable")?.addEventListener("click", (e) => {
-  const fila = (e.target as HTMLElement).closest("tr");
-  if (!fila) return;
-  // Sacar clase selected de otras filas
-  const tabla = document.getElementById("remitosTable");
-  tabla?.querySelectorAll("tr.selected").forEach(tr => tr.classList.remove("selected"));
-
-  // Poner clase selected a la fila clickeada
-  fila.classList.add("selected");
-  const company = fila.dataset.company;
-  const facility = fila.dataset.facility;
-  const remito = fila.dataset.remito;
-
-  if (company && facility && remito) {
-    remitoSeleccionado = { company, facility, remito };
-    console.log("Remito seleccionado:", remitoSeleccionado);
-  }
-});
-async function cargarRemitosEnTabla(company: string, facility: string) {
-  try {
-    const response = await fetch('/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: queryRemitos,
-        variables: { cpy: company, stofcy: facility }
-      })
-    });
-
-    const { data, errors } = await response.json();
-    console.log("Respuesta completa de GraphQL:", data);
-    if (errors) {
-      console.error('GraphQL errors:', errors);
-      return;
-    }
-
-    const remitos = data.remitos || [];
-    console.log("Remitos obtenidos:", remitos);
-
-    const tabla = document.getElementById('remitosTable') as HTMLTableElement;
-    const tbody = tabla.querySelector('tbody')!;
-    tbody.innerHTML = ""; // Limpia tabla
-
-    for (const r of remitos) {
-      const tr = document.createElement('tr');
-
-      // Asumiendo que en r están las propiedades adecuadas:
-      const numero = r.SDHNUM_0 || "";
-      const fecha = r.DLVDAT_0 || "";      
-      const codCliente = r.BPCORD_0 || "";
-      const razonSocial = r.BPDNAM_0 || "";
-
-      // Para la columna firmado, si tienes un campo booleano o estado, adaptá:
-      const firmado = r.FIRMADO_0 || false;
-      // <-- aquí seteás los data-attributes que usa el click
-      tr.dataset.company = r.CPY_0 || r.CPY || "";
-      tr.dataset.facility = r.STOFCY_0 || r.STOFAC || ""; // según como venga en tu query
-      tr.dataset.remito = String(numero);
-
-      tr.style.cursor = "pointer"; // opcional, para que parezca clickeable
-      tr.innerHTML = `
-        <td>${numero}</td>
-        <td>${fecha}</td>
-        <td>${codCliente}</td>
-        <td>${razonSocial}</td>
-        <td class="${firmado ? 'signed-true' : 'signed-false'}">${firmado ? '✓' : '✗'}</td>
-      `;
-
-      tbody.appendChild(tr);
-      
-    }
-    
-
-  } catch (err) {
-    console.error('Error cargando remitos:', err);
-  }
-    const filterManager = new TableHandler('remitosTable');
-    filterManager.setupColumnFilters();
-}
 
 
   
