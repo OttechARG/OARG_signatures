@@ -1,3 +1,24 @@
+/* ============================= */
+/* 🎨 Variables globales y estilos base */
+/* ============================= */
+:root {
+  --blue: #003e7e;
+  --blue-light: #1c5fbf;
+  --gray-light: #ffffff;
+}
+
+body {
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+  color: var(--blue);
+  padding: 2rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* ============================= */
+/* 📦 Contenedor principal */
+/* ============================= */
 #main {
   display: flex;
   flex-direction: column;
@@ -10,6 +31,9 @@
   box-sizing: border-box; /* importante para que padding no afecte el ancho total */
 }
 
+/* ============================= */
+/* 🖼️ Logotipos y acentos */
+/* ============================= */
 .logo {
   width: 90%;           /* Ocupa hasta el 80% del contenedor o pantalla */
   max-width: 240px;     /* No se hace más grande que 160px */
@@ -23,22 +47,7 @@
   transform: scale(1.05);
 }
 
-
-:root {
-      --blue: #003e7e;
-      --blue-light: #1c5fbf;
-      --gray-light: #ffffff;
-    }
-
-    body {
-      background: #ffffff;
-      font-family: Arial, sans-serif;
-      color: var(--blue);
-      padding: 2rem;
-      text-align: center;
-      margin: 0;
-    }
-    .logo-accent {
+.logo-accent {
   width: 80%;         /* que tome el 80% del ancho del contenedor */
   max-width: 240px;   /* límite máximo para que no crezca demasiado */
   height: 3px;
@@ -47,6 +56,9 @@
   border-radius: 2px;
 }
 
+/* ============================= */
+/* 📋 Formularios e inputs */
+/* ============================= */
 .form-container {
   width: 100%;         /* que ocupe todo el ancho disponible en #main */
   max-width: 600px;    /* límite para que no sea demasiado ancho */
@@ -73,6 +85,9 @@
   }
 }
 
+/* ============================= */
+/* 📜 Listas de sugerencias */
+/* ============================= */
 .suggestions-list {
   border: 1px solid #ccc;
   max-height: 150px;
@@ -94,12 +109,18 @@
 .suggestions-list li:hover {
   background-color: #eee;
 }
+
+/* ============================= */
+/* 📄 Modal PDF */
+/* ============================= */
 #pdfModal {
   display: none;
   /* y otros estilos de posicionamiento */
 }
 
-/*boton hamburguesa*/
+/* ============================= */
+/* 🍔 Botón hamburguesa */
+/* ============================= */
 .menu-btn {
   position: fixed;
   top: 10px;
@@ -123,38 +144,38 @@
   border-radius: 2px;
 }
 
-/* Menú lateral */
+/* ============================= */
+/* 📂 Menú lateral */
+/* ============================= */
 .side-menu {
   position: fixed;
   top: 0;
-  left: -100vw;    /* oculto */
-  width: 100vw;
-  height: 100vh;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: #eee;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.3);
-  padding: 20px;
+  padding: 60px 20px 20px 20px;
 
-  /* Centrado con flexbox */
   display: flex;
   flex-direction: column;
-  justify-content: center; /* centra verticalmente */
-  align-items: center;     /* centra horizontalmente */
+  justify-content: flex-start;
+  align-items: center;
 
-  transition: left 0.3s ease;
+  transform: translateX(-100%); /* inicialmente oculto */
+  transition: transform 0.3s ease;
   z-index: 1000;
-  max-width: 90vw;
   overflow-y: auto;
 }
 
 .side-menu.active {
-  left: 0; /* aparece */
+  transform: translateX(0); /* se despliega */
 }
-
 .side-menu ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
+
 .side-menu > * {
   width: 100%;
   max-width: 600px; /* o 90% si preferís */
@@ -171,10 +192,14 @@
   color: #333;
   font-weight: bold;
 }
+
+/* ============================= */
+/* 📊 Tabla de remitos */
+/* ============================= */
 #remitosTable {
   width: 100%;
-  max-width: 900px;
-  margin: 1.5rem auto;
+  max-width: 100%; /* antes era 900px */
+  margin: 0.8rem;
   border-collapse: separate;
   border-spacing: 0;
   font-family: Arial, sans-serif;
@@ -182,6 +207,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
+  box-sizing: border-box; /* importante */
 }
 
 #remitosTable thead {
@@ -191,7 +217,7 @@
 
 #remitosTable th, 
 #remitosTable td {
-  padding: 12px 16px;
+padding: 6px 8px;
   text-align: left;
   border-bottom: 1px solid #ddd;
 }
@@ -225,6 +251,9 @@
   border-radius: 3px;
 }
 
+/* ============================= */
+/* ✅ Estado de firma */
+/* ============================= */
 .signed-true {
   color: green;
   font-weight: bold;
@@ -236,6 +265,10 @@
   font-weight: bold;
   text-align: center;
 }
+
+/* ============================= */
+/* 🎯 Selección de fila */
+/* ============================= */
 tr.selected {
   background-color: #444;   /* gris oscuro */
   color: white;             /* texto blanco para contraste */

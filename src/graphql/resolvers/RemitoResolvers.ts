@@ -6,7 +6,7 @@ import { GraphQLDate } from 'graphql-scalars';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const filterDate = '2025-01-01';
+const filterDate = '2022-01-01';
 export const remitoResolvers = {
   Date: GraphQLDate,
   Query: {

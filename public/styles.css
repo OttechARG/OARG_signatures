@@ -1,3 +1,24 @@
+/* ============================= */
+/* 🎨 Variables globales y estilos base */
+/* ============================= */
+:root {
+  --blue: #003e7e;
+  --blue-light: #1c5fbf;
+  --gray-light: #ffffff;
+}
+
+body {
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+  color: var(--blue);
+  padding: 2rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* ============================= */
+/* 📦 Contenedor principal */
+/* ============================= */
 #main {
   display: flex;
   flex-direction: column;
@@ -5,30 +26,10 @@
   justify-content: center;
   padding: 20px;
 }
-:root {
-      --blue: #003e7e;
-      --blue-light: #1c5fbf;
-      --gray-light: #ffffff;
-    }
 
-    body {
-      background: #ffffff;
-      font-family: Arial, sans-serif;
-      color: var(--blue);
-      padding: 2rem;
-      text-align: center;
-      margin: 0;
-    }
-    .logo-accent {
-  width: 80%;         /* que tome el 80% del ancho del contenedor */
-  max-width: 240px;   /* límite máximo para que no crezca demasiado */
-  height: 3px;
-  background: var(--blue);
-  margin: 0 auto 2rem auto;
-  border-radius: 2px;
-}
-
-    /* Logo */
+/* ============================= */
+/* 🖼️ Logotipos y acentos */
+/* ============================= */
 .logo {
   width: 90%;           /* Ocupa hasta el 80% del contenedor o pantalla */
   max-width: 240px;     /* No se hace más grande que 160px */
@@ -42,15 +43,28 @@
   transform: scale(1.05);
 }
 
-/* Línea decorativa debajo del logo */
+.logo-accent {
+  width: 80%;         /* que tome el 80% del ancho del contenedor */
+  max-width: 240px;   /* límite máximo para que no crezca demasiado */
+  height: 3px;
+  background: var(--blue);
+  margin: 0 auto 2rem auto;
+  border-radius: 2px;
+}
 
-    /* Título */
-    h1 {
-      font-weight: 700;
-      color: var(--blue);
-      margin-bottom: 2rem;
-      font-size: 1.8rem;
-    }
+/* ============================= */
+/* 🏷️ Títulos */
+/* ============================= */
+h1 {
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+}
+
+/* ============================= */
+/* 📄 Contenedores de PDF y Canvas */
+/* ============================= */
 #pdfContainer {
   position: relative;
   border: 1px solid #ccc;
@@ -106,7 +120,9 @@
   display: block;
 }
 
-
+/* ============================= */
+/* 🎛️ Controles y botones */
+/* ============================= */
 #buttonsWrapper {
   display: none; /* Oculto inicialmente */
   margin-top: 10px;
@@ -150,6 +166,9 @@ span {
   margin-left: 0;
 }
 
+/* ============================= */
+/* 📋 Listas de sugerencias */
+/* ============================= */
 .suggestions {
   position: absolute;
   top: 100%;
@@ -173,6 +192,9 @@ span {
   background-color: #f0f0f0;
 }
 
+/* ============================= */
+/* ✏️ Inputs de texto */
+/* ============================= */
 .input-box {
   color: #333333;
   width: 100%;
