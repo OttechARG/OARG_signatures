@@ -26,7 +26,7 @@ body {
   justify-content: center;
   padding: 20px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box; /* importante para que padding no afecte el ancho total */
 }
@@ -200,7 +200,7 @@ body {
   width: 100%;
   max-width: 100%; /* antes era 900px */
   margin: 0.8rem;
-  border-collapse: separate;
+  border-collapse: collapse;
   border-spacing: 0;
   font-family: Arial, sans-serif;
   font-size: 0.95rem;
@@ -214,10 +214,20 @@ body {
   background-color: var(--blue);
   color: var(--gray-light);
 }
+#remitosTable thead input {
+  padding: 2px 4px;
+  font-size: 0.85rem;         /* un poco más pequeño que el texto de la tabla */
+  width: 100%;                /* ocupa toda la celda */
+  box-sizing: border-box;     /* que el padding no aumente el ancho total */
+}
+#remitosTable th + th,
+#remitosTable td + td {
+  border-left: 1px solid #ddd; /* línea fina entre columnas */
+}
 
 #remitosTable th, 
 #remitosTable td {
-padding: 6px 8px;
+padding: 4px 6px;
   text-align: left;
   border-bottom: 1px solid #ddd;
 }
@@ -272,4 +282,44 @@ padding: 6px 8px;
 tr.selected {
   background-color: #444;   /* gris oscuro */
   color: white;             /* texto blanco para contraste */
+}
+
+/* Contenedor scroll horizontal para tablas */
+.table-container {
+   width: 100vw;
+  max-width: 100%; 
+  -webkit-overflow-scrolling: touch; /* suaviza en iOS */
+  overflow-x: auto;
+  display: block;      /* importante */
+  
+}
+.table-container table {
+  width: 100%;           /* ocupar todo el contenedor */
+  min-width: 0;          /* quitar restricción mínima para pantallas grandes */
+  border-collapse: collapse;
+  table-layout: fixed;   /* hace que las columnas se distribuyan proporcionalmente */
+}
+
+/* Columna de botón centrada y con ancho fijo */
+.recover-doc-cell {
+  width: 140px; /* ajustá según tamaño del botón */
+  text-align: center;
+}
+
+/* Botones dentro de la tabla responsivos */
+.recover-doc-cell button {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+
+/* Responsive: en móviles ajustamos fuente y padding */
+@media (max-width: 768px) {
+  #remitosTable th,
+  #remitosTable td {
+    padding: 3px 6px;  /* menos vertical y horizontal */
+  font-size: 0.9rem; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;  /* evita que se rompa el contenido */
+}
 }

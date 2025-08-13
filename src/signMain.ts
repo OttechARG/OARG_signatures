@@ -1,4 +1,4 @@
-
+import { createButton } from './ButtonsHandler.js';
 import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
 import { blobToBase64, llamarMutationSubirPdfBase64, mostrarPdfConOpciones, recuperarDocumentoBase64ConReintentos } from "./PDFHandler.js";
@@ -57,36 +57,11 @@ suggestionsList.addEventListener("click", (event) => {
     window.puestoSeleccionado = input.value; 
     if (window.puestoSeleccionado === Puestos.lista[0]) { //punto de venta entregas es actualmente.
       showFieldsAssociatedWithPuesto1();
+      
     } else {
       menuHandler.setVisibleCompanyField(false);
     }
-
-    const recuperarBtn = document.getElementById("recuperarDocumentoBtn") as HTMLButtonElement;
-if (recuperarBtn) {
-  recuperarBtn.style.display = "inline-block";
-
-  if (!recuperarBtn.hasAttribute("data-listener-added")) {
-    recuperarBtn.addEventListener("click", async () => {
-      if (!tableHandler.remitoSeleccionado) {
-        alert("Por favor seleccione un remito en la tabla antes de recuperar el documento.");
-        return;
-      }
-
-      const url = `/proxy-getrpt?PCLE=${encodeURIComponent(tableHandler.remitoSeleccionado.remito)}`;
-
-      try {
-        await recuperarDocumentoBase64ConReintentos(url);
-      } catch (error) {
-        console.error(error);
-        alert((error as Error).message);
-      }
-    });
-
-    recuperarBtn.setAttribute("data-listener-added", "true");
-  }
-}
-  }
-});
+  }});
 
 
 let listaCompletaCompanias: { CPY_0: string; CPYNAM_0: string }[] = [];
@@ -163,53 +138,42 @@ function showFieldsAssociatedWithPuesto1() {
     divFacility.appendChild(labelFacility);
     divFacility.appendChild(facilityInput);
     divFacility.appendChild(listaFacilities);
-     // Crear botón Guardar
-    const btnGuardar = document.createElement("button");
-    btnGuardar.textContent = "Guardar selección";
-    btnGuardar.style.marginTop = "10px";
-    btnGuardar.style.padding = "8px 16px";
-    btnGuardar.style.alignSelf = "center";
 
-    // Agregar botón al final del formContainer (o donde quieras)
- 
-
-
-    // Evento click para guardar en sessionStorage
-    btnGuardar.addEventListener("click",async () => {
-      // Asumiendo que tienes una variable global o alguna forma de saber el puesto
-      const puesto = window.puestoSeleccionado || null; // reemplazar según tu lógica
-      
-      const company = buscarCompaniaInput!.dataset.selectedCpy || null;
-      const facility = facilityInput!.dataset.facilityCode || null;
-
-      if (!puesto || !company || !facility) {
-        alert("Debe seleccionar puesto, compañía y planta para guardar.");
-        return;
-      }
-
-      const dataGuardar = {
-        puesto,
-        company,
-        facility,
-      };
-      const remitos = await remitosHandler.fetchRemitos(company, facility);
-
-      sessionStorage.setItem("seleccionUsuario", JSON.stringify(dataGuardar));
-      alert("Selección guardada en sesión.");
-      if (company && facility) {
-        
-        tableHandler.renderTable(remitos);
-      }
-    });
-    
-
-    // Agrego los tres divs al contenedor principal
+     // Agrego los divs al contenedor principal
     if (formContainer) {
         formContainer.innerHTML = ""; // limpio todo
         formContainer.appendChild(divBuscarCompania);
         formContainer.appendChild(divFacility);
-        formContainer.appendChild(btnGuardar);  // <--- Agregalo acá al final
         }
+
+     // Crear botón Guardar
+    createButton(formContainer, {
+      id: "btnSaveSelection",
+      text: "Save Selection",
+      onClick: async () => {
+        const puesto = window.puestoSeleccionado || null;
+        const company = buscarCompaniaInput!.dataset.selectedCpy || null;
+        const facility = facilityInput!.dataset.facilityCode || null;
+
+        if (!puesto || !company || !facility) {
+          alert("You must select a position, company, and facility to save.");
+          return;
+        }
+
+        const dataToSave = { puesto, company, facility };
+        const remitos = await remitosHandler.fetchRemitos(company, facility);
+
+        sessionStorage.setItem("userSelection", JSON.stringify(dataToSave));
+        alert("Selection saved in session.");
+        if (company && facility) {
+          tableHandler.renderTable(remitos);
+        }
+      },
+      style: { marginTop: "10px", padding: "8px 16px", alignSelf: "center" }
+    });
+    
+
+   
 
     
     // Función para mostrar lista de compañías
@@ -379,40 +343,6 @@ async function consultarCompanias() {
     console.log("Inputs ya creados, no se crean nuevamente");
   }
   
-}
-// Cuando haces click en botón Guardar
-
-function guardarSeleccion() {
-  const puesto = window.puestoSeleccionado;
-  const company = buscarCompaniaInput?.dataset.selectedCpy || null;
-  const facility = facilityInput?.dataset.facilityCode || null;
-
-  if (!puesto || !company || !facility) {
-    alert("Debe seleccionar puesto, compañía y planta para guardar");
-    return;
-  }
-
-  sessionStorage.setItem("seleccionUsuario", JSON.stringify({ puesto, company, facility }));
-  alert("Datos guardados en sesión");
-}
-
-function crearBotonGuardar() {
-  const formContainer = document.getElementById("formContainer");
-  if (!formContainer) return;
-
-  if (document.getElementById("btnGuardar")) return;
-
-  const btnGuardar = document.createElement("button");
-  btnGuardar.id = "btnGuardar";
-  btnGuardar.type = "button";
-  btnGuardar.textContent = "Guardar Selección";
-  btnGuardar.style.marginTop = "15px";
-  btnGuardar.style.padding = "10px 20px";
-
-  // Aquí llamamos a la función que maneja la lógica del guardado
-  btnGuardar.addEventListener("click", guardarSeleccion);
-
-  formContainer.appendChild(btnGuardar);
 }
 
 

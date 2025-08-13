@@ -16,29 +16,32 @@
 
     <img src="assets/logo-fondo-blanco.jpg" alt="Ottech ARG" class="logo" />
        <!-- Tabla de remitos en contenido principal -->
-        
-    <table id="remitosTable">
-      <thead>
-        <tr>
-          <th>Remito</th>
-          <th>Fecha</th>
-          <th>Cod. Cliente</th>
-          <th>Razón Social</th>
-          <th>Firmado</th>
-        </tr>
-        <tr id="filterRow">
-          <th><input type="search" placeholder="Buscar Remito" class="filter-input" data-col="0" /></th>
-          <th><input type="search" placeholder="Buscar Fecha" class="filter-input" data-col="1" /></th>
-          <th><input type="search" placeholder="Buscar Código" class="filter-input" data-col="2" /></th>
-          <th><input type="search" placeholder="Buscar Razón" class="filter-input" data-col="3" /></th>
-          <th><input type="search" placeholder="Buscar Firmado" class="filter-input" data-col="4" /></th>
-        </tr>
-      </thead>
-      <tbody>
-        
-      </tbody>
-    </table>
-    <button id="recuperarDocumentoBtn" class="btn" style="display:none;">Recuperar documento</button>
+    <div class="table-container"> 
+  <table id="remitosTable">
+    <!-- Colgroup para definir ancho máximo de columnas -->
+    <thead>
+      <tr>
+        <th>Remito</th>
+        <th>Fecha</th>
+        <th>Cod. Cliente</th>
+        <th>Razón Social</th>
+        <th>Firmado</th>
+        <th class="action-col"></th>
+      </tr>
+      <tr id="filterRow">
+        <th><input type="search" placeholder="Buscar Remito" class="filter-input" data-col="0" /></th>
+        <th><input type="search" placeholder="Buscar Fecha" class="filter-input" data-col="1" /></th>
+        <th><input type="search" placeholder="Buscar Código" class="filter-input" data-col="2" /></th>
+        <th><input type="search" placeholder="Buscar Razón" class="filter-input" data-col="3" /></th>
+        <th><input type="search" placeholder="Buscar Firmado" class="filter-input" data-col="4" /></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Filas dinámicas -->
+    </tbody>
+  </table>
+</div>
 
     <!-- Menú lateral oculto que ahora incluye TODO el contenido que quieres mostrar -->
     <nav id="sideMenu" class="side-menu" aria-label="Menú lateral">

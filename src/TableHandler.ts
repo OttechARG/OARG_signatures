@@ -1,3 +1,6 @@
+import { createButton } from "./ButtonsHandler.js";
+import { recuperarDocumentoBase64ConReintentos } from "./PDFHandler.js";
+
 export class TableHandler {
   private tableId: string;
   public remitoSeleccionado: { company: string; facility: string; remito: string } | null = null;
@@ -59,10 +62,26 @@ export class TableHandler {
         <td>${r.BPCORD_0 || ""}</td>
         <td>${r.BPDNAM_0 || ""}</td>
         <td class="${r.FIRMADO_0 ? 'signed-true' : 'signed-false'}">
-          ${r.FIRMADO_0 ? '✓' : '✗'}
+            ${r.FIRMADO_0 ? '✓' : '✗'}
         </td>
-      `;
+        <td class="recover-doc-cell"></td> <!-- columna para el botón -->
+        `;
       tbody.appendChild(tr);
+        const tdBoton = tr.querySelector(".recover-doc-cell") as HTMLElement;
+      createButton(tdBoton, {
+        id: `recuperarDocumentoBtn-${r.SDHNUM_0}`, // ID único por remito
+        text: "Firmar",
+        onClick: async () => {
+        const url = `/proxy-getrpt?PCLE=${encodeURIComponent(r.SDHNUM_0)}`;
+        try {
+            await recuperarDocumentoBase64ConReintentos(url);
+        } catch (error) {
+            console.error(error);
+            alert((error as Error).message);
+        }
+        },
+        style: { padding: "4px 8px" }
+        });
     }
 
     // Volver a configurar los filtros después de renderizar
