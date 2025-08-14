@@ -45,7 +45,19 @@
 
     <!-- Menú lateral oculto que ahora incluye TODO el contenido que quieres mostrar -->
     <nav id="sideMenu" class="side-menu" aria-label="Menú lateral">
-
+      <div id="formContainer">
+           <div id="fixedFields">
+              <!-- Campo fijo "Remitos desde" -->
+              <div id="divFechaDesde" style="position: relative;">
+                <input 
+                  type="date" 
+                  id="fechaDesde" 
+                  name="fechaDesde" 
+                  class="input-box" 
+                  placeholder="Remitos desde"
+                />
+              </div>
+            </div>
       <div class="form-container">
         <div id="searchContainer">
           <input
@@ -58,7 +70,11 @@
           <ul id="suggestionsList" class="suggestions" style="display: none;"></ul>
         </div>
 
-        <div id="formContainer">
+        
+
+            <div id="dynamicFields">
+              <!-- Campos dinámicos según puesto -->
+            </div>
           <!-- contenido dinámico -->
         </div>
 

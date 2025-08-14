@@ -19,6 +19,7 @@ let facilityInput: HTMLInputElement | null = null;
 const menuHandler = new SettingsMenuHandler('menuToggle', 'sideMenu');
 const remitosHandler = new RemitosHandler();
 const tableHandler = new TableHandler("remitosTable");
+const fechaDesdeInput = document.getElementById("fechaDesde") as HTMLInputElement;
 
 input.addEventListener("input", () => {
   const query = input.value.toLowerCase();
@@ -76,7 +77,7 @@ function showFieldsAssociatedWithPuesto1() {
     const labelBuscarCompania = document.createElement("label");
     labelBuscarCompania.htmlFor = "buscarCompania";
     // labelBuscarCompania.textContent = "Compañía:"; // opcional
-
+    
     buscarCompaniaInput = document.createElement("input");
     buscarCompaniaInput.type = "text";
     buscarCompaniaInput.id = "buscarCompania";
@@ -140,11 +141,12 @@ function showFieldsAssociatedWithPuesto1() {
     divFacility.appendChild(listaFacilities);
 
      // Agrego los divs al contenedor principal
-    if (formContainer) {
-        formContainer.innerHTML = ""; // limpio todo
-        formContainer.appendChild(divBuscarCompania);
-        formContainer.appendChild(divFacility);
-        }
+    const dynamicFields = document.getElementById("dynamicFields");
+    if (dynamicFields) {
+        dynamicFields.innerHTML = ""; // limpio solo lo dinámico
+        dynamicFields.appendChild(divBuscarCompania);
+        dynamicFields.appendChild(divFacility);
+    }
 
      // Crear botón Guardar
     createButton(formContainer, {
@@ -154,6 +156,7 @@ function showFieldsAssociatedWithPuesto1() {
         const puesto = window.puestoSeleccionado || null;
         const company = buscarCompaniaInput!.dataset.selectedCpy || null;
         const facility = facilityInput!.dataset.facilityCode || null;
+        const fechaDesde = fechaDesdeInput?.value || null;
 
         if (!puesto || !company || !facility) {
           alert("You must select a position, company, and facility to save.");
