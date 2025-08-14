@@ -33,7 +33,7 @@ const pdfCanvas = document.getElementById("pdfCanvas") as HTMLCanvasElement;
 const sigCanvas = document.getElementById("sigCanvas") as HTMLCanvasElement;
 
 // Get the div element with id "pdfContainer" and assert its type as HTMLDivElement
-const pdfContainer = document.getElementById("pdfContainer") as HTMLDivElement;
+
 
 // Get the 2D drawing context from the PDF canvas for rendering the PDF pages
 const pdfCtx = pdfCanvas.getContext("2d")!;
@@ -116,8 +116,8 @@ async function renderPage(pageNum: number): Promise<void> {
     sigCanvas.style.width = viewport.width + "px";
     sigCanvas.style.height = viewport.height + "px";
 
-    pdfContainer.style.width = viewport.width + "px";
-    pdfContainer.style.height = viewport.height + "px";
+    container.style.width = viewport.width + "px";
+    container.style.height = viewport.height + "px";
 
     pdfCtx.setTransform(1, 0, 0, 1, 0, 0);
     pdfCtx.scale(dpr, dpr);
@@ -197,6 +197,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   currentPage = 1;
   const nuevaCaja = agregarCajaDeTexto(50, 100, 200, 30, 1);
   crearInputParaCaja(nuevaCaja);
+  const nuevaCaja2 = agregarCajaDeTexto(50, 50,100, 30, 2);
+  crearInputParaCaja(nuevaCaja2);
   renderPage(currentPage);                                           // Render the first page of the PDF
 });
 
