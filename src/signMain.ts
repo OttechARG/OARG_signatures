@@ -156,16 +156,17 @@ function showFieldsAssociatedWithPuesto1() {
         const puesto = window.puestoSeleccionado || null;
         const company = buscarCompaniaInput!.dataset.selectedCpy || null;
         const facility = facilityInput!.dataset.facilityCode || null;
-        const fechaDesde = fechaDesdeInput?.value || null;
-
+        const fechaDesde: string | undefined = fechaDesdeInput?.value || undefined;
+         console.log("Datos a enviar:", { puesto, company, facility, fechaDesde }); // <--- aquí
         if (!puesto || !company || !facility) {
           alert("You must select a position, company, and facility to save.");
           return;
         }
 
         const dataToSave = { puesto, company, facility };
-        const remitos = await remitosHandler.fetchRemitos(company, facility);
-
+        
+        
+        const remitos = await remitosHandler.fetchRemitos(company, facility, fechaDesde);
         sessionStorage.setItem("userSelection", JSON.stringify(dataToSave));
         alert("Selection saved in session.");
         if (company && facility) {

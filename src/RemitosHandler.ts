@@ -2,13 +2,13 @@ import { queryRemitos } from "./graphql/queries.js";
 
 
 export class RemitosHandler {
-  async fetchRemitos(company: string, facility: string) {
+  async fetchRemitos(company: string, facility: string, desde?: string) {
     const response = await fetch('/graphql', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: queryRemitos,
-        variables: { cpy: company, stofcy: facility }
+        variables: { cpy: company, stofcy: facility, desde: desde  }
       })
     });
 

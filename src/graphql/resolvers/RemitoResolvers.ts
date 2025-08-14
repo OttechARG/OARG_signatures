@@ -10,20 +10,25 @@ const filterDate = '2022-01-01';
 export const remitoResolvers = {
   Date: GraphQLDate,
   Query: {
-    async remitos(_: any, { cpy, stofcy }: { cpy: string; stofcy: string }) {
-      const pool = await getConnection();
-      const result = await pool.request()
-        .input("cpy", cpy)
-        .input("stofcy", stofcy)
-        .input("dlvdat", filterDate) 
-        .query(`
-          SELECT TOP 20 CPY_0, DLVDAT_0, STOFCY_0, SDHNUM_0, BPCORD_0, BPDNAM_0
-          FROM SDELIVERY
-          WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy
-        `);
-      return result.recordset;
-    }
-  }, 
+  async remitos(
+    _: any, 
+    { cpy, stofcy, desde }: { cpy: string; stofcy: string; desde?: string }
+  ) {
+    console.log("Parametros recibidos en resolver remitos:", { cpy, stofcy, desde });
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input("cpy", cpy)
+      .input("stofcy", stofcy)
+      .input("dlvdat", desde ?? '2022-01-01') // si no viene fecha, usamos valor por defecto
+      .query(`
+        SELECT TOP 20 CPY_0, DLVDAT_0, STOFCY_0, SDHNUM_0, BPCORD_0, BPDNAM_0
+        FROM SDELIVERY
+        WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy
+      `);
+          console.log("Resultado SQL:", result.recordset);
+    return result.recordset;
+  }
+},
       Mutation: {
     async subirPdfBase64(_: any, { pdfBase64 }: { pdfBase64: string }) {
       if (!pdfBase64) {
