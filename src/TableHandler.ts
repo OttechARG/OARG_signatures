@@ -44,52 +44,52 @@ export class TableHandler {
     });
   }
 
-  // Método separado para renderizar la tabla
-  public renderTable(remitos: any[]): void {
-    const tabla = document.getElementById(this.tableId) as HTMLTableElement;
-    const tbody = tabla.querySelector('tbody')!;
-    tbody.innerHTML = "";
+ public renderTable(remitos: any[]): void {
+  const tabla = document.getElementById(this.tableId) as HTMLTableElement;
+  const tbody = tabla.querySelector('tbody')!;
+  tbody.innerHTML = "";
 
-    for (const r of remitos) {
-      const tr = document.createElement('tr');
-      tr.dataset.company = r.CPY_0 || r.CPY || "";
-      tr.dataset.facility = r.STOFCY_0 || r.STOFAC || "";
-      tr.dataset.remito = String(r.SDHNUM_0 || "");
-      tr.style.cursor = "pointer";
-      tr.innerHTML = `
-        <td>${r.SDHNUM_0 || ""}</td>
-        <td>${r.DLVDAT_0 || ""}</td>
-        <td>${r.BPCORD_0 || ""}</td>
-        <td>${r.BPDNAM_0 || ""}</td>
-        <td class="${r.FIRMADO_0 ? 'signed-true' : 'signed-false'}">
-            ${r.FIRMADO_0 ? '✓' : '✗'}
-        </td>
-        <td class="recover-doc-cell"></td> <!-- columna para el botón -->
-        `;
-      tbody.appendChild(tr);
-        const tdBoton = tr.querySelector(".recover-doc-cell") as HTMLElement;
-        if (!r.FIRMADO_0) {
-            createButton(tdBoton, {
-                id: `recuperarDocumentoBtn-${r.SDHNUM_0}`, // ID único por remito
-                text: "Firmar",
-                onClick: async () => {
-                const url = `/proxy-getrpt?PCLE=${encodeURIComponent(r.SDHNUM_0)}`;
-                try {
-                    await recuperarDocumentoBase64ConReintentos(url);
-                } catch (error) {
-                    console.error(error);
-                    alert((error as Error).message);
-                }
-                },
-                style: { padding: "4px 8px" }
-                });
-            }
+  for (const r of remitos) {
+    const tr = document.createElement('tr');
+    tr.dataset.company = r.CPY_0 || r.CPY || "";
+    tr.dataset.facility = r.STOFCY_0 || r.STOFAC || "";
+    tr.dataset.remito = String(r.SDHNUM_0 || "");
+    tr.style.cursor = "pointer";
+    tr.innerHTML = `
+      <td>${r.SDHNUM_0 || ""}</td>
+      <td>${r.DLVDAT_0 || ""}</td>
+      <td>${r.BPCORD_0 || ""}</td>
+      <td>${r.BPDNAM_0 || ""}</td>
+      <td class="${r.FIRMADO_0 ? 'signed-true' : 'signed-false'}">
+          ${r.FIRMADO_0 ? '✓' : '✗'}
+      </td>
+      <td class="recover-doc-cell"></td>
+    `;
+    tbody.appendChild(tr);
 
-    // Volver a configurar los filtros después de renderizar
-    this.setupColumnFilters();
-  this.setupRowSelection(); // <<-- agregamos selección de fila
+    const tdBoton = tr.querySelector(".recover-doc-cell") as HTMLElement;
+    if (!r.FIRMADO_0) {
+      createButton(tdBoton, {
+        id: `recuperarDocumentoBtn-${r.SDHNUM_0}`,
+        text: "Firmar",
+        onClick: async () => {
+          const url = `/proxy-getrpt?PCLE=${encodeURIComponent(r.SDHNUM_0)}`;
+          try {
+            await recuperarDocumentoBase64ConReintentos(url);
+          } catch (error) {
+            console.error(error);
+            alert((error as Error).message);
+          }
+        },
+        style: { padding: "4px 8px" }
+      });
+    }
   }
-  }
+
+  // Estas llamadas SOLO una vez por render
+  this.setupColumnFilters();
+  this.setupRowSelection();
+}
   private setupRowSelection(): void {
     const table = document.getElementById(this.tableId) as HTMLTableElement;
     if (!table) return;
