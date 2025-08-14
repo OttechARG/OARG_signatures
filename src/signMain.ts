@@ -1,11 +1,13 @@
 import { createButton } from './ButtonsHandler.js';
 import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
 import { Puestos } from "./HiddenValues.js";
-import { blobToBase64, llamarMutationSubirPdfBase64, mostrarPdfConOpciones, recuperarDocumentoBase64ConReintentos } from "./PDFHandler.js";
 import { SettingsMenuHandler } from './SettingsMenuHandler.js';
 import { RemitosHandler } from './RemitosHandler.js';
 import { TableHandler } from "./TableHandler.js";
+import { setPdfContainer, setCurrentPage } from './PDFHandler.js';
 
+const pdfContainerEl = document.getElementById("pdfContainer") as HTMLDivElement;
+setPdfContainer(pdfContainerEl);
 
 const puestos = Puestos.lista;
 window.puestoSeleccionado = null;

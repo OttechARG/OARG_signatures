@@ -1,3 +1,15 @@
+import { cajas, CajaTexto } from "./TextBox.js";
+
+export let currentPage = 1;
+
+export function setCurrentPage(page: number) {
+  currentPage = page;
+}
+export let pdfContainer: HTMLDivElement;
+
+export function setPdfContainer(container: HTMLDivElement) {
+  pdfContainer = container;
+}
 export async function llamarMutationSubirPdfBase64(base64: string) {
       console.log("Inicio de llamada a subirPdfBase64");
   console.log("Tamaño del base64 recibido:", base64.length);
@@ -151,4 +163,59 @@ export async function recuperarDocumentoBase64ConReintentos(
                 clearTimeout(id);
                 throw error;
                 }
+                
             }
+
+//---------------------------------------------------------------------------------------------
+// AGREGAR CAJAS DE TEXTO SOBRE EL PDF
+//---------------------------------------------------------------------------------------------
+export class BoxText {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  page: number;
+  texto: string;
+
+  constructor(x: number, y: number, width: number, height: number, page: number, texto: string = "") {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.page = page;
+    this.texto = texto;
+  }
+}
+const cajasTexto: CajaTexto[] = []; // array global de cajas de texto
+
+export function agregarCajaDeTexto(x: number, y: number, width: number, height: number, pageNum: number, texto: string = ""): CajaTexto {
+  const caja = new CajaTexto(x, y, width, height, texto, pageNum);
+  cajas.push(caja);
+  return caja; // ✅ ahora devuelve la caja
+}
+
+// Renderizar cajas de texto visibles para la página actual
+export function renderCajasTexto(pageNum: number) {
+  // Eliminar inputs existentes
+  pdfContainer.querySelectorAll<HTMLInputElement>('.pdf-textbox').forEach(el => el.remove());
+
+  // Filtrar solo las cajas de esta página
+  const cajas = cajasTexto.filter(c => c.page === pageNum);
+  const dpr = window.devicePixelRatio || 1;
+
+  cajas.forEach(c => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'pdf-textbox';
+    input.style.position = 'absolute';
+    input.style.left = `${c.x}px`;
+    input.style.top = `${c.y}px`;
+    input.style.width = `${c.width}px`;
+    input.style.height = `${c.height}px`;
+    input.style.fontSize = '14px';
+    input.style.border = '1px solid #000';
+    input.style.background = 'rgba(255,255,255,0.8)';
+    input.style.zIndex = '1000';
+    pdfContainer.appendChild(input);
+  });
+}

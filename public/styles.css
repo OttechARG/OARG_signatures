@@ -78,8 +78,6 @@ h1 {
   z-index: 0; /* PDF */
   display: block;
   user-select: none;
-  width: 100%;
-  height: auto;
   background: #eee;
   border-radius: 4px;
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
@@ -90,6 +88,7 @@ h1 {
   top: 0;
   left: 0;
   z-index: 1;
+  display: block;
   pointer-events: auto;
   cursor: crosshair;
   background: transparent;
@@ -208,4 +207,13 @@ span {
   box-sizing: border-box;
   font-family: inherit;
   resize: vertical;
+}
+
+.caja-texto {
+  position: absolute;
+  z-index: 2;          /* siempre arriba de los canvas */
+  font-size: 14px;
+  border: 1px solid #000;
+  padding: 2px;
+  background: rgba(255,255,255,0.8);
 }
