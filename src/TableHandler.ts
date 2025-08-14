@@ -68,27 +68,28 @@ export class TableHandler {
         `;
       tbody.appendChild(tr);
         const tdBoton = tr.querySelector(".recover-doc-cell") as HTMLElement;
-      createButton(tdBoton, {
-        id: `recuperarDocumentoBtn-${r.SDHNUM_0}`, // ID único por remito
-        text: "Firmar",
-        onClick: async () => {
-        const url = `/proxy-getrpt?PCLE=${encodeURIComponent(r.SDHNUM_0)}`;
-        try {
-            await recuperarDocumentoBase64ConReintentos(url);
-        } catch (error) {
-            console.error(error);
-            alert((error as Error).message);
-        }
-        },
-        style: { padding: "4px 8px" }
-        });
-    }
+        if (!r.FIRMADO_0) {
+            createButton(tdBoton, {
+                id: `recuperarDocumentoBtn-${r.SDHNUM_0}`, // ID único por remito
+                text: "Firmar",
+                onClick: async () => {
+                const url = `/proxy-getrpt?PCLE=${encodeURIComponent(r.SDHNUM_0)}`;
+                try {
+                    await recuperarDocumentoBase64ConReintentos(url);
+                } catch (error) {
+                    console.error(error);
+                    alert((error as Error).message);
+                }
+                },
+                style: { padding: "4px 8px" }
+                });
+            }
 
     // Volver a configurar los filtros después de renderizar
     this.setupColumnFilters();
   this.setupRowSelection(); // <<-- agregamos selección de fila
   }
-
+  }
   private setupRowSelection(): void {
     const table = document.getElementById(this.tableId) as HTMLTableElement;
     if (!table) return;
