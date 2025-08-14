@@ -195,10 +195,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Load the PDF document into pdfDoc object and set the first page as current
   pdfDoc = await (pdfjsLib as any).getDocument(typedarray).promise;
   currentPage = 1;
-  const nuevaCaja = agregarCajaDeTexto(50, 100, 200, 30, 1);
-  crearInputParaCaja(nuevaCaja);
-  const nuevaCaja2 = agregarCajaDeTexto(50, 50,100, 30, 2);
-  crearInputParaCaja(nuevaCaja2);
+  const nombre = agregarCajaDeTexto(130, 600, 140, 15, 1);
+  crearInputParaCaja(nombre);
+  const dni = agregarCajaDeTexto(300, 600, 100, 15, 1);
+  crearInputParaCaja(dni);
   renderPage(currentPage);                                           // Render the first page of the PDF
 });
 
