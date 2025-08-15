@@ -1,46 +1,78 @@
 /* ============================= */
-/* 🎨 Variables globales y estilos base */
+/* 🎨 Global Variables & Base Styles */
 /* ============================= */
 :root {
+  /* Primary Colors */
   --blue: #003e7e;
   --blue-light: #1c5fbf;
+  --blue-hover: #002d5e;
   --gray-light: #ffffff;
+  --gray-medium: #f9f9f9;
+  --gray-border: #ddd;
+  --text-primary: #333;
+  --text-secondary: #666;
+  
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-xxl: 3rem;
+  
+  /* Sizes */
+  --container-max: 1400px;
+  --form-max: 600px;
+  --logo-max: 240px;
+  
+  /* Borders */
+  --border-radius: 5px;
+  --border-radius-sm: 3px;
+  --border-width: 1px;
+  
+  /* Shadows */
+  --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
 }
 
 body {
-  background: #ffffff;
+  background: var(--gray-light);
   font-family: Arial, sans-serif;
   color: var(--blue);
-  padding: 2rem;
+  padding: var(--space-xl);
   text-align: center;
   margin: 0;
 }
 
 /* ============================= */
-/* 📦 Contenedor principal */
+/* 📦 Main Container */
 /* ============================= */
 #main {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--space-lg);
   width: 100%;
-  max-width: 1400px;
+  max-width: var(--container-max);
   margin: 0 auto;
-  box-sizing: border-box; /* importante para que padding no afecte el ancho total */
+  box-sizing: border-box;
 }
 
 /* ============================= */
-/* 🖼️ Logotipos y acentos */
+/* 🖼️ Logos & Accents */
 /* ============================= */
 .logo {
-  width: 90%;           /* Ocupa hasta el 80% del contenedor o pantalla */
-  max-width: 240px;     /* No se hace más grande que 160px */
-  height: auto;         /* Mantiene la proporción */
-  margin: 0 auto 0.5rem auto;
+  width: 90%;
+  max-width: var(--logo-max);
+  height: auto;
+  margin: 0 auto var(--space-sm) auto;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-normal);
 }
 
 .logo:hover {
@@ -48,74 +80,84 @@ body {
 }
 
 .logo-accent {
-  width: 80%;         /* que tome el 80% del ancho del contenedor */
-  max-width: 240px;   /* límite máximo para que no crezca demasiado */
+  width: 80%;
+  max-width: var(--logo-max);
   height: 3px;
   background: var(--blue);
-  margin: 0 auto 2rem auto;
-  border-radius: 2px;
+  margin: 0 auto var(--space-xl) auto;
+  border-radius: var(--border-radius-sm);
 }
 
 /* ============================= */
-/* 📋 Formularios e inputs */
+/* 📋 Forms & Inputs */
 /* ============================= */
 .form-container {
-  width: 100%;         /* que ocupe todo el ancho disponible en #main */
-  max-width: 600px;    /* límite para que no sea demasiado ancho */
+  width: 100%;
+  max-width: var(--form-max);
   box-sizing: border-box;
   z-index: 10;
 }
 
 .input-box {
-  width: 100%;         /* ocupa todo el ancho del padre .form-container */
-  margin-bottom: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 0.75rem 1rem;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin-bottom: var(--space-sm);
+  border: var(--border-width) solid var(--gray-border);
+  border-radius: var(--border-radius);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: inset var(--shadow-light);
   font-size: 1rem;
   box-sizing: border-box;
   font-family: inherit;
   resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+
+.input-box:focus {
+  outline: none;
+  border-color: var(--blue-light);
+  box-shadow: inset var(--shadow-light), 0 0 0 2px rgba(28, 95, 191, 0.1);
 }
 
 @media (max-width: 600px) {
   .form-container {
-    max-width: 90%;    /* que reduzca el ancho en pantallas chicas */
+    max-width: 90%;
   }
 }
 
 /* ============================= */
-/* 📜 Listas de sugerencias */
+/* 📜 Suggestion Lists */
 /* ============================= */
 .input-wrapper {
-  position: relative; /* necesario para que la lista se posicione respecto a este contenedor */
+  position: relative;
   width: 100%;
 }
 
 .suggestions-list {
   position: absolute;
-  top: 100%; /* justo debajo del input */
+  top: 100%;
   left: 0;
-  width: 100%; /* igual ancho que el input */
+  width: 100%;
   box-sizing: border-box;
   max-height: 150px;
   overflow-y: auto;
-  border: 1px solid #ccc;
-  background: #fff;
+  border: var(--border-width) solid var(--gray-border);
+  background: var(--gray-light);
   list-style: none;
   margin: 0;
   padding: 0;
   z-index: 1000;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-medium);
 }
 
 .suggestions-list li {
-  padding: 8px;
+  padding: var(--space-sm);
   cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
 .suggestions-list li:hover {
-  background-color: #eee;
+  background-color: var(--gray-medium);
 }
 
 /* ============================= */
@@ -127,12 +169,12 @@ body {
 }
 
 /* ============================= */
-/* 🍔 Botón hamburguesa */
+/* 🍔 Hamburger Button */
 /* ============================= */
 .menu-btn {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  top: var(--space-xs);
+  left: var(--space-xs);
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -143,17 +185,23 @@ body {
   cursor: pointer;
   z-index: 1001;
   padding: 0;
+  transition: transform var(--transition-fast);
+}
+
+.menu-btn:hover {
+  transform: scale(1.1);
 }
 
 .menu-btn .bar {
   width: 100%;
   height: 3px;
-  background-color: #333;
-  border-radius: 2px;
+  background-color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-fast);
 }
 
 /* ============================= */
-/* 📂 Menú lateral */
+/* 📂 Side Menu */
 /* ============================= */
 .side-menu {
   position: fixed;
@@ -161,23 +209,24 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #eee;
-  padding: 60px 20px 20px 20px;
+  background-color: var(--gray-medium);
+  padding: var(--space-xxl) var(--space-lg) var(--space-lg) var(--space-lg);
 
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
 
-  transform: translateX(-100%); /* inicialmente oculto */
-  transition: transform 0.3s ease;
+  transform: translateX(-100%);
+  transition: transform var(--transition-normal);
   z-index: 1000;
   overflow-y: auto;
 }
 
 .side-menu.active {
-  transform: translateX(0); /* se despliega */
+  transform: translateX(0);
 }
+
 .side-menu ul {
   list-style: none;
   padding: 0;
@@ -186,36 +235,41 @@ body {
 
 .side-menu > * {
   width: 100%;
-  max-width: 600px; /* o 90% si preferís */
+  max-width: var(--form-max);
   box-sizing: border-box;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
 }
 
 .side-menu li {
-  margin: 15px 0;
+  margin: var(--space-md) 0;
 }
 
 .side-menu a {
   text-decoration: none;
-  color: #333;
+  color: var(--text-primary);
   font-weight: bold;
+  transition: color var(--transition-fast);
+}
+
+.side-menu a:hover {
+  color: var(--blue-light);
 }
 
 /* ============================= */
-/* 📊 Tabla de remitos */
+/* 📊 Table Styles */
 /* ============================= */
 #remitosTable {
   width: 100%;
-  max-width: 100%; /* antes era 900px */
-  margin: 0.8rem;
+  max-width: 100%;
+  margin: var(--space-sm);
   border-collapse: collapse;
   border-spacing: 0;
   font-family: Arial, sans-serif;
   font-size: 0.95rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: var(--shadow-medium);
+  border-radius: var(--border-radius);
   overflow: hidden;
-  box-sizing: border-box; /* importante */
+  box-sizing: border-box;
 }
 
 #remitosTable thead {
@@ -223,111 +277,133 @@ body {
   color: var(--gray-light);
 }
 #remitosTable thead input {
-  padding: 2px 4px;
-  font-size: 0.85rem;         /* un poco más pequeño que el texto de la tabla */
-  width: 100%;                /* ocupa toda la celda */
-  box-sizing: border-box;     /* que el padding no aumente el ancho total */
+  padding: var(--space-xs) var(--space-xs);
+  font-size: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 #remitosTable th + th,
 #remitosTable td + td {
-  border-left: 1px solid #ddd; /* línea fina entre columnas */
+  border-left: var(--border-width) solid var(--gray-border);
 }
 
 #remitosTable th, 
 #remitosTable td {
-padding: 4px 6px;
+  padding: var(--space-xs) var(--space-sm);
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: var(--border-width) solid var(--gray-border);
 }
 
 #remitosTable tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: var(--gray-medium);
 }
 
 #remitosTable tbody tr:hover {
   background-color: var(--blue-light);
   color: var(--gray-light);
   cursor: default;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--transition-normal);
 }
 
 #remitosTable thead tr#filterRow {
-  background-color: white;
-  color: black;
+  background-color: var(--gray-light);
+  color: var(--text-primary);
 }
 
 #remitosTable thead tr#filterRow th {
-  background-color: white;
-  color: black;
+  background-color: var(--gray-light);
+  color: var(--text-primary);
 }
 
 #remitosTable thead tr#filterRow th input.filter-input {
-  background-color: white;
-  color: black;
-  border: 1px solid #ccc;
-  padding: 5px;
-  border-radius: 3px;
+  background-color: var(--gray-light);
+  color: var(--text-primary);
+  border: var(--border-width) solid var(--gray-border);
+  padding: var(--space-xs);
+  border-radius: var(--border-radius-sm);
+  transition: border-color var(--transition-fast);
+}
+
+#remitosTable thead tr#filterRow th input.filter-input:focus {
+  outline: none;
+  border-color: var(--blue-light);
 }
 
 /* ============================= */
-/* ✅ Estado de firma */
+/* ✅ Signature Status */
 /* ============================= */
 .signed-true {
-  color: green;
+  color: #28a745;
   font-weight: bold;
   text-align: center;
 }
 
 .signed-false {
-  color: red;
+  color: #dc3545;
   font-weight: bold;
   text-align: center;
 }
 
 /* ============================= */
-/* 🎯 Selección de fila */
+/* 🎯 Row Selection */
 /* ============================= */
 tr.selected {
-  background-color: #444;   /* gris oscuro */
-  color: white;             /* texto blanco para contraste */
+  background-color: var(--text-primary);
+  color: var(--gray-light);
 }
 
-/* Contenedor scroll horizontal para tablas */
+/* Table Container with Horizontal Scroll */
 .table-container {
-   width: 100vw;
+  width: 100vw;
   max-width: 100%; 
-  -webkit-overflow-scrolling: touch; /* suaviza en iOS */
+  -webkit-overflow-scrolling: touch;
   overflow-x: auto;
-  display: block;      /* importante */
-  
-}
-.table-container table {
-  width: 100%;           /* ocupar todo el contenedor */
-  min-width: 0;          /* quitar restricción mínima para pantallas grandes */
-  border-collapse: collapse;
-  table-layout: fixed;   /* hace que las columnas se distribuyan proporcionalmente */
+  display: block;
 }
 
-/* Columna de botón centrada y con ancho fijo */
+.table-container table {
+  width: 100%;
+  min-width: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Button Column */
 .recover-doc-cell {
-  width: 140px; /* ajustá según tamaño del botón */
+  width: 140px;
   text-align: center;
 }
 
-/* Botones dentro de la tabla responsivos */
+/* Responsive Table Buttons */
 .recover-doc-cell button {
-  padding: 4px 8px;
+  padding: var(--space-xs) var(--space-sm);
   font-size: 0.8rem;
+  border: var(--border-width) solid var(--blue);
+  background-color: var(--blue);
+  color: var(--gray-light);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-/* Responsive: en móviles ajustamos fuente y padding */
+.recover-doc-cell button:hover {
+  background-color: var(--blue-hover);
+  transform: translateY(-1px);
+}
+
+/* Responsive Mobile Styles */
 @media (max-width: 768px) {
   #remitosTable th,
   #remitosTable td {
-    padding: 3px 6px;  /* menos vertical y horizontal */
-  font-size: 0.9rem; 
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;  /* evita que se rompa el contenido */
-}
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.9rem; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  body {
+    padding: var(--space-md);
+  }
 }
