@@ -23,6 +23,29 @@ const remitosHandler = new RemitosHandler();
 const tableHandler = new TableHandler("remitosTable");
 const fechaDesdeInput = document.getElementById("fechaDesde") as HTMLInputElement;
 
+
+window.addEventListener('message', async (event) => {
+  if (event.data.type === 'PDF_SIGNED') {
+    console.log('PDF firmado, actualizando tabla...', event.data);
+    
+    // Obtener selección actual del usuario
+    const savedSelection = sessionStorage.getItem("userSelection");
+    if (savedSelection) {
+      const { company, facility } = JSON.parse(savedSelection);
+      const fechaDesde = fechaDesdeInput?.value || undefined;
+      
+      // Refrescar la tabla con datos actualizados
+      try {
+        const remitos = await remitosHandler.fetchRemitos(company, facility, fechaDesde);
+        tableHandler.renderTable(remitos);
+        console.log('Tabla actualizada exitosamente');
+      } catch (error) {
+        console.error('Error actualizando tabla:', error);
+      }
+    }
+  }
+});
+
 input.addEventListener("input", () => {
   const query = input.value.toLowerCase();
 

@@ -88,16 +88,24 @@ body {
 /* ============================= */
 /* 📜 Listas de sugerencias */
 /* ============================= */
+.input-wrapper {
+  position: relative; /* necesario para que la lista se posicione respecto a este contenedor */
+  width: 100%;
+}
+
 .suggestions-list {
-  border: 1px solid #ccc;
+  position: absolute;
+  top: 100%; /* justo debajo del input */
+  left: 0;
+  width: 100%; /* igual ancho que el input */
+  box-sizing: border-box;
   max-height: 150px;
   overflow-y: auto;
-  padding: 0;
-  margin: 0;
+  border: 1px solid #ccc;
+  background: #fff;
   list-style: none;
-  position: absolute;
-  background: white;
-  width: 300px;
+  margin: 0;
+  padding: 0;
   z-index: 1000;
 }
 
