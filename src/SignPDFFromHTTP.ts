@@ -126,7 +126,7 @@ async function renderPage(pageNum: number): Promise<void> {
     sigCtx.lineJoin = "round";
     sigCtx.lineCap = "round";
     sigCtx.strokeStyle = "rgba(0,0,0,0.8)";
-    sigCtx.lineWidth = viewport.height * 0.005;
+    sigCtx.lineWidth = 3 * dpr;
     sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
 
     if (signs[pageNum]) {
