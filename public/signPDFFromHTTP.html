@@ -11,18 +11,18 @@
     <div class="logo-accent"></div>
     <h1>Sign PDF</h1>
 
-    <div id="pdfContainer">
-      <canvas id="pdfCanvas"></canvas>
-      <canvas id="sigCanvas"></canvas>
+    <div id="pdf-viewer-container">
+      <canvas id="pdf-display-canvas"></canvas>
+      <canvas id="signature-canvas"></canvas>
     </div>
 
-    <div id="controls">
+    <div id="pdf-controls">
       <button id="prevPage">Anterior</button>
       <button id="nextPage">Siguiente</button>
       <span>
         Página: <span id="pageNum">1</span> / <span id="pageCount">--</span>
       </span>
-      <button id="btnFirmar" onclick="guardarFirma()">Firmar y descargar</button>
+      <button id="btn-sign" onclick="guardarFirma()">Firmar y descargar</button>
     </div>
   </div>
 

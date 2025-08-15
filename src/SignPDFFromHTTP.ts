@@ -18,7 +18,7 @@ const rgb = (window as any).PDFLib.rgb;
 // library (PDFLib), also loaded as an external script. This class
 // allows us to create and modify PDF files programmatically.
 const PDFDocument = window.PDFLib.PDFDocument;
-const container = document.getElementById("pdfContainer") as HTMLDivElement;
+const container = document.getElementById("pdf-viewer-container") as HTMLDivElement;
 if (!container) throw new Error("No se encontró el contenedor PDF");
 setPdfContainer(container);
 
@@ -27,10 +27,10 @@ setPdfContainer(container);
 //---------------------------------------------------------------------------------------------
 
 // Get the canvas element with id "pdfCanvas" and tell TypeScript it's an HTMLCanvasElement
-const pdfCanvas = document.getElementById("pdfCanvas") as HTMLCanvasElement;
+const pdfCanvas = document.getElementById("pdf-display-canvas") as HTMLCanvasElement;
 
 // Get the canvas element with id "sigCanvas" and assert its type as HTMLCanvasElement
-const sigCanvas = document.getElementById("sigCanvas") as HTMLCanvasElement;
+const sigCanvas = document.getElementById("signature-canvas") as HTMLCanvasElement;
 
 // Get the div element with id "pdfContainer" and assert its type as HTMLDivElement
 

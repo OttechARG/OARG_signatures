@@ -1,5 +1,5 @@
 /* ============================= */
-/* 🎨 Variables globales y estilos base */
+/* 🎨 Global variables and base styles */
 /* ============================= */
 :root {
   --blue: #003e7e;
@@ -17,7 +17,7 @@ body {
 }
 
 /* ============================= */
-/* 📦 Contenedor principal */
+/* 📦 Main container */
 /* ============================= */
 #main {
   display: flex;
@@ -28,12 +28,12 @@ body {
 }
 
 /* ============================= */
-/* 🖼️ Logotipos y acentos */
+/* 🖼️ Logos and accents */
 /* ============================= */
 .logo {
-  width: 90%;           /* Ocupa hasta el 80% del contenedor o pantalla */
-  max-width: 240px;     /* No se hace más grande que 160px */
-  height: auto;         /* Mantiene la proporción */
+  width: 90%;           /* Takes up to 90% of container or screen */
+  max-width: 240px;     /* Maximum size limit */
+  height: auto;         /* Maintains aspect ratio */
   margin: 0 auto 0.5rem auto;
   display: block;
   transition: transform 0.3s ease;
@@ -44,8 +44,8 @@ body {
 }
 
 .logo-accent {
-  width: 80%;         /* que tome el 80% del ancho del contenedor */
-  max-width: 240px;   /* límite máximo para que no crezca demasiado */
+  width: 80%;         /* takes 80% of container width */
+  max-width: 240px;   /* maximum limit to prevent oversizing */
   height: 3px;
   background: var(--blue);
   margin: 0 auto 2rem auto;
@@ -53,7 +53,7 @@ body {
 }
 
 /* ============================= */
-/* 🏷️ Títulos */
+/* 🏷️ Titles */
 /* ============================= */
 h1 {
   font-weight: 700;
@@ -63,15 +63,15 @@ h1 {
 }
 
 /* ============================= */
-/* 📄 Contenedores de PDF y Canvas */
+/* 📄 PDF and Canvas containers */
 /* ============================= */
-#pdfContainer {
+#pdf-viewer-container {
   position: relative;
   display: inline-block;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-#pdfCanvas {
+#pdf-display-canvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -82,7 +82,7 @@ h1 {
   border-radius: 4px;
 }
 
-#sigCanvas {
+#signature-canvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -95,7 +95,7 @@ h1 {
   border-radius: 4px;
 }
 
-#container {
+#pdf-wrapper-container {
   position: relative;
   width: fit-content;
   margin-bottom: 10px;
@@ -106,22 +106,22 @@ h1 {
   padding: 8px;
 }
 
-#canvasWrapper {
-  display: none; /* Oculto al inicio */
+#canvas-wrapper {
+  display: none; /* Hidden initially */
   position: relative;
   border: 1px solid transparent;
   border-radius: 4px;
 }
 
-#canvasWrapper.visible {
+#canvas-wrapper.visible {
   display: block;
 }
 
 /* ============================= */
-/* 🎛️ Controles y botones */
+/* 🎛️ Controls and buttons */
 /* ============================= */
-#buttonsWrapper {
-  display: none; /* Oculto inicialmente */
+#buttons-wrapper {
+  display: none; /* Hidden initially */
   margin-top: 10px;
 }
 
@@ -129,7 +129,7 @@ button {
   margin-right: 10px;
   padding: 10px 15px;
   font-size: 16px;
-  background-color: #007bff;
+  background-color: var(--blue-light);
   border: none;
   border-radius: 4px;
   color: white;
@@ -138,11 +138,21 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: var(--blue);
 }
 
 button:active {
-  background-color: #003f7f;
+  background-color: var(--blue);
+  filter: brightness(0.8);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+button:focus {
+  outline: none;
 }
 
 span {
@@ -151,7 +161,7 @@ span {
   color: #333;
 }
 
-#controls {
+#pdf-controls {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -159,12 +169,12 @@ span {
   justify-content: flex-start;
 }
 
-#btnFirmar {
+#btn-sign {
   margin-left: 0;
 }
 
 /* ============================= */
-/* 📋 Listas de sugerencias */
+/* 📋 Suggestion lists */
 /* ============================= */
 .suggestions {
   position: absolute;
@@ -190,12 +200,12 @@ span {
 }
 
 /* ============================= */
-/* ✏️ Inputs de texto */
+/* ✏️ Text inputs */
 /* ============================= */
 .input-box {
   color: #333333;
   width: 100%;
-  max-width: 900px; /* mismo ancho máximo que el formulario grande */
+  max-width: 900px; /* same maximum width as main form */
   margin-bottom: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -205,11 +215,18 @@ span {
   box-sizing: border-box;
   font-family: inherit;
   resize: vertical;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.caja-texto {
+.input-box:focus {
+  outline: none;
+  border-color: var(--blue-light);
+  box-shadow: 0 0 0 3px rgba(28, 95, 191, 0.1);
+}
+
+.text-overlay {
   position: absolute;
-  z-index: 2;          /* siempre arriba de los canvas */
+  z-index: 2;          /* always above canvas layers */
   font-size: 14px;
   border: 1px solid #000;
   padding: 2px;

@@ -34,7 +34,7 @@ export function obtenerCajasDeTexto(pageNum: number) {
 // Crea un input DOM para la caja y sincroniza su texto
 export function crearInputParaCaja(caja: CajaTexto) {
   const input = document.createElement("input");
-  input.className = "caja-texto";
+  input.className = "text-overlay";
   input.type = "text";
   input.value = caja.text || "";
   input.dataset.page = String(caja.page); // <-- importante
@@ -47,7 +47,7 @@ export function crearInputParaCaja(caja: CajaTexto) {
   input.addEventListener("input", () => {
     caja.text = input.value; // sincroniza el texto
   });
-  document.getElementById("pdfContainer")?.appendChild(input);
+  document.getElementById("pdf-viewer-container")?.appendChild(input);
 }
 export function setPdfContainer(container: HTMLDivElement) {
   pdfContainer = container;

@@ -196,7 +196,7 @@ export function agregarCajaDeTexto(x: number, y: number, width: number, height: 
 
 export function renderCajasTexto(pageNum: number) {
   // eliminar inputs existentes
-  const inputs = document.querySelectorAll<HTMLInputElement>("#pdfContainer input[data-page]");
+  const inputs = document.querySelectorAll<HTMLInputElement>("#pdf-viewer-container input[data-page]");
   inputs.forEach(i => i.remove());
 
   const cajasPagina = obtenerCajasDeTexto(pageNum);
