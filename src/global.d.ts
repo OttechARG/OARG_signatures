@@ -4,6 +4,7 @@ interface Window {
     PDFDocument: any;
     // si usás más cosas, agregalas acá
   };
+  userPreferences: any;
 }
 
 declare const pdfjsLib: any;

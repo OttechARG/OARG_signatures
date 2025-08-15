@@ -2,7 +2,7 @@
 /* 🎨 Global Variables & Base Styles */
 /* ============================= */
 :root {
-  /* Primary Colors */
+  /* Primary Colors - Can be customized via user preferences */
   --blue: #003e7e;
   --blue-light: #1c5fbf;
   --blue-hover: #002d5e;
@@ -11,6 +11,21 @@
   --gray-border: #ddd;
   --text-primary: #333;
   --text-secondary: #666;
+  
+  /* Theme Colors - Override these for custom themes */
+  --theme-primary: var(--blue);
+  --theme-primary-light: var(--blue-light);
+  --theme-primary-hover: var(--blue-hover);
+  --theme-background: var(--gray-light);
+  --theme-surface: var(--gray-medium);
+  --theme-border: var(--gray-border);
+  --theme-text: var(--text-primary);
+  --theme-text-secondary: var(--text-secondary);
+  
+  /* Background customization */
+  --background-image: none;
+  --background-color: var(--theme-background);
+  --background-overlay: rgba(255, 255, 255, 0.9);
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -40,12 +55,31 @@
 }
 
 body {
-  background: var(--gray-light);
+  background: var(--background-color);
+  background-image: var(--background-image);
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   font-family: Arial, sans-serif;
-  color: var(--blue);
+  color: var(--theme-primary);
   padding: var(--space-xl);
   text-align: center;
   margin: 0;
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--background-overlay);
+  z-index: -1;
+  pointer-events: none;
 }
 
 /* ============================= */
@@ -83,7 +117,7 @@ body {
   width: 80%;
   max-width: var(--logo-max);
   height: 3px;
-  background: var(--blue);
+  background: var(--theme-primary);
   margin: 0 auto var(--space-xl) auto;
   border-radius: var(--border-radius-sm);
 }
@@ -114,7 +148,7 @@ body {
 
 .input-box:focus {
   outline: none;
-  border-color: var(--blue-light);
+  border-color: var(--theme-primary-light);
   box-shadow: inset var(--shadow-light), 0 0 0 2px rgba(28, 95, 191, 0.1);
 }
 
@@ -166,6 +200,218 @@ body {
 #pdfModal {
   display: none;
   /* y otros estilos de posicionamiento */
+}
+
+/* ============================= */
+/* ⚙️ Settings Dropdown */
+/* ============================= */
+.settings-dropdown {
+  position: fixed;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  z-index: 1001;
+}
+
+.visual-preferences-btn {
+  background: var(--theme-primary);
+  color: var(--gray-light);
+  border: none;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: var(--shadow-light);
+}
+
+.visual-preferences-btn:hover {
+  background: var(--theme-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.settings-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--gray-light);
+  border: var(--border-width) solid var(--theme-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-medium);
+  min-width: 150px;
+  z-index: 1002;
+  transform: scale(0);
+  transform-origin: top right;
+  transition: transform var(--transition-fast);
+}
+
+.settings-menu.active {
+  transform: scale(1);
+}
+
+.settings-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-xs);
+}
+
+.settings-menu li {
+  margin: 0;
+}
+
+.settings-menu button {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: var(--space-sm);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: background-color var(--transition-fast);
+  color: var(--theme-text);
+}
+
+.settings-menu button:hover {
+  background: var(--theme-surface);
+}
+
+/* ============================= */
+/* 🎨 Preferences Modal */
+/* ============================= */
+.preferences-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.preferences-modal.active {
+  display: flex;
+}
+
+.preferences-content {
+  background: var(--gray-light);
+  border-radius: var(--border-radius);
+  padding: var(--space-xl);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.preferences-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  border-bottom: var(--border-width) solid var(--theme-border);
+  padding-bottom: var(--space-md);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--theme-text);
+  padding: var(--space-xs);
+  border-radius: var(--border-radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.close-btn:hover {
+  background: var(--theme-surface);
+}
+
+.preference-section {
+  margin-bottom: var(--space-lg);
+}
+
+.preference-section h3 {
+  margin-bottom: var(--space-md);
+  color: var(--theme-text);
+  font-size: 1.1rem;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.color-option {
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--theme-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+  border-color: var(--theme-text);
+}
+
+.color-option.selected {
+  border-color: var(--theme-primary);
+  border-width: 3px;
+}
+
+.color-option.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--gray-light);
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+.file-input-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  background: var(--theme-primary);
+  color: var(--gray-light);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius);
+  transition: background-color var(--transition-fast);
+}
+
+.file-input-wrapper:hover {
+  background: var(--theme-primary-hover);
+}
+
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.current-logo {
+  max-width: 100px;
+  max-height: 60px;
+  border: var(--border-width) solid var(--theme-border);
+  border-radius: var(--border-radius);
+  margin: var(--space-sm) 0;
 }
 
 /* ============================= */
@@ -252,7 +498,7 @@ body {
 }
 
 .side-menu a:hover {
-  color: var(--blue-light);
+  color: var(--theme-primary-light);
 }
 
 /* ============================= */
@@ -273,7 +519,7 @@ body {
 }
 
 #remitosTable thead {
-  background-color: var(--blue);
+  background-color: var(--theme-primary);
   color: var(--gray-light);
 }
 #remitosTable thead input {
@@ -300,7 +546,7 @@ body {
 }
 
 #remitosTable tbody tr:hover {
-  background-color: var(--blue-light);
+  background-color: var(--theme-primary-light);
   color: var(--gray-light);
   cursor: default;
   transition: background-color var(--transition-normal);
@@ -327,7 +573,7 @@ body {
 
 #remitosTable thead tr#filterRow th input.filter-input:focus {
   outline: none;
-  border-color: var(--blue-light);
+  border-color: var(--theme-primary-light);
 }
 
 /* ============================= */
@@ -379,8 +625,8 @@ tr.selected {
 .recover-doc-cell button {
   padding: var(--space-xs) var(--space-sm);
   font-size: 0.8rem;
-  border: var(--border-width) solid var(--blue);
-  background-color: var(--blue);
+  border: var(--border-width) solid var(--theme-primary);
+  background-color: var(--theme-primary);
   color: var(--gray-light);
   border-radius: var(--border-radius-sm);
   cursor: pointer;
@@ -388,7 +634,7 @@ tr.selected {
 }
 
 .recover-doc-cell button:hover {
-  background-color: var(--blue-hover);
+  background-color: var(--theme-primary-hover);
   transform: translateY(-1px);
 }
 
