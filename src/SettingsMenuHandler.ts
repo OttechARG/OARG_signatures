@@ -36,6 +36,11 @@ export class SettingsMenuHandler {
   public setVisibleCompanyField(show: boolean) {
     const cont = document.getElementById("buscarCompaniaContainer");
     if (cont) cont.style.display = show ? "block" : "none";
+    
+    // Update session storage through UserPreferences
+    if ((window as any).userPreferences) {
+      (window as any).userPreferences.setCompanyFieldVisibility(show);
+    }
   }
 
 

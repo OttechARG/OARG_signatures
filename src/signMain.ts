@@ -10,7 +10,6 @@ const pdfContainerEl = document.getElementById("pdfContainer") as HTMLDivElement
 setPdfContainer(pdfContainerEl);
 
 const puestos = Puestos.lista;
-window.puestoSeleccionado = null;
 const input = document.getElementById("searchInput") as HTMLInputElement;
 const suggestionsList = document.getElementById("suggestionsList") as HTMLUListElement;
 const formContainer = document.getElementById("formContainer") as HTMLDivElement;
@@ -80,18 +79,27 @@ suggestionsList.addEventListener("click", (event) => {
     input.value = target.textContent || "";
     suggestionsList.style.display = "none";
     suggestionsList.innerHTML = "";
-    window.puestoSeleccionado = input.value; 
-    if (window.puestoSeleccionado === Puestos.lista[0]) { //punto de venta entregas es actualmente.
+    
+    // Use new session storage method
+    window.userPreferences.setPuesto(input.value);
+    
+    if (input.value === Puestos.lista[0]) { //punto de venta entregas es actualmente.
       showFieldsAssociatedWithPuesto1();
-      
+      window.userPreferences.setCompanyFieldVisibility(true);
     } else {
-      menuHandler.setVisibleCompanyField(false);
+      window.userPreferences.setCompanyFieldVisibility(false);
     }
   }});
 
 
 let listaCompletaCompanias: { CPY_0: string; CPYNAM_0: string }[] = [];
 let listaCompletaFacilities: { FCY_0: string; FCYSHO_0: string }[] = [];
+
+// Make function and handlers globally accessible
+window.showFieldsAssociatedWithPuesto1 = showFieldsAssociatedWithPuesto1;
+window.Puestos = Puestos;
+window.remitosHandler = remitosHandler;
+window.tableHandler = tableHandler;
 
 function showFieldsAssociatedWithPuesto1() {
   if (!buscarCompaniaInput) {
@@ -178,23 +186,31 @@ function showFieldsAssociatedWithPuesto1() {
       id: "btnSaveSelection",
       text: "Save Selection",
       onClick: async () => {
-        const puesto = window.puestoSeleccionado || null;
-        const company = buscarCompaniaInput!.dataset.selectedCpy || null;
-        const facility = facilityInput!.dataset.facilityCode || null;
+        const workSession = window.userPreferences.getWorkSession();
         const fechaDesde: string | undefined = fechaDesdeInput?.value || undefined;
-         console.log("Datos a enviar:", { puesto, company, facility, fechaDesde }); // <--- aquí
-        if (!puesto || !company || !facility) {
+        
+        console.log("Datos a enviar:", { 
+          puesto: workSession.puestoSeleccionado, 
+          company: workSession.selectedCompany, 
+          facility: workSession.selectedFacility, 
+          fechaDesde 
+        });
+        
+        if (!workSession.puestoSeleccionado || !workSession.selectedCompany || !workSession.selectedFacility) {
           alert("You must select a position, company, and facility to save.");
           return;
         }
 
-        const dataToSave = { puesto, company, facility };
+        const dataToSave = { 
+          puesto: workSession.puestoSeleccionado, 
+          company: workSession.selectedCompany, 
+          facility: workSession.selectedFacility 
+        };
         
-        
-        const remitos = await remitosHandler.fetchRemitos(company, facility, fechaDesde);
+        const remitos = await remitosHandler.fetchRemitos(workSession.selectedCompany, workSession.selectedFacility, fechaDesde);
         sessionStorage.setItem("userSelection", JSON.stringify(dataToSave));
         alert("Selection saved in session.");
-        if (company && facility) {
+        if (workSession.selectedCompany && workSession.selectedFacility) {
           tableHandler.renderTable(remitos);
         }
       },
@@ -224,6 +240,9 @@ function showFieldsAssociatedWithPuesto1() {
           buscarCompaniaInput!.value = c.CPYNAM_0;
           buscarCompaniaInput!.dataset.selectedCpy = c.CPY_0;
 
+          // Save to session storage
+          window.userPreferences.setCompany(c.CPY_0, c.CPYNAM_0);
+
           listaCompanias.style.display = "none";
 
           cargarFacilities();
@@ -250,6 +269,10 @@ function showFieldsAssociatedWithPuesto1() {
         li.addEventListener("click", () => {
           facilityInput!.value = `${f.FCYSHO_0} (${f.FCY_0})`
           facilityInput!.dataset.facilityCode = f.FCY_0;
+          
+          // Save to session storage
+          window.userPreferences.setFacility(f.FCY_0, `${f.FCYSHO_0} (${f.FCY_0})`);
+          
           listaFacilities.style.display = "none";
         });
         listaFacilities.appendChild(li);

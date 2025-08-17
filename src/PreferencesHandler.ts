@@ -13,6 +13,15 @@ interface UserPreferencesData {
   customLogo: string | null;
 }
 
+interface WorkSessionData {
+  puestoSeleccionado: string | null;
+  selectedCompany: string | null;
+  selectedCompanyName: string | null;
+  selectedFacility: string | null;
+  selectedFacilityName: string | null;
+  showCompanyField: boolean;
+}
+
 interface ThemeCollection {
   [key: string]: ThemeColors;
 }
@@ -24,6 +33,8 @@ interface BackgroundCollection {
 class UserPreferences {
   private defaultPreferences: UserPreferencesData;
   private preferences: UserPreferencesData;
+  private defaultWorkSession: WorkSessionData;
+  private workSession: WorkSessionData;
   private themes: ThemeCollection;
   private backgrounds: BackgroundCollection;
 
@@ -33,6 +44,15 @@ class UserPreferences {
       background: 'white',
       backgroundImage: null,
       customLogo: null
+    };
+
+    this.defaultWorkSession = {
+      puestoSeleccionado: null,
+      selectedCompany: null,
+      selectedCompanyName: null,
+      selectedFacility: null,
+      selectedFacilityName: null,
+      showCompanyField: false
     };
     
     this.themes = {
@@ -78,13 +98,16 @@ class UserPreferences {
     };
 
     this.preferences = { ...this.defaultPreferences };
+    this.workSession = { ...this.defaultWorkSession };
     this.init();
   }
 
   private init(): void {
     this.loadPreferences();
+    this.loadWorkSession();
     this.attachEventListeners();
     this.applyTheme();
+    this.restoreWorkSessionUI();
   }
 
   private loadPreferences(): void {
@@ -102,6 +125,24 @@ class UserPreferences {
       localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
     } catch (error) {
       console.error('Error saving preferences:', error);
+    }
+  }
+
+  private loadWorkSession(): void {
+    try {
+      const saved = sessionStorage.getItem('workSession');
+      this.workSession = saved ? JSON.parse(saved) : { ...this.defaultWorkSession };
+    } catch (error) {
+      console.error('Error loading work session:', error);
+      this.workSession = { ...this.defaultWorkSession };
+    }
+  }
+
+  private saveWorkSession(): void {
+    try {
+      sessionStorage.setItem('workSession', JSON.stringify(this.workSession));
+    } catch (error) {
+      console.error('Error saving work session:', error);
     }
   }
 
@@ -180,6 +221,151 @@ class UserPreferences {
         const element = option as HTMLElement;
         element.classList.remove('selected');
       });
+    }
+  }
+
+  private restoreWorkSessionUI(): void {
+    // Restore puesto selection
+    if (this.workSession.puestoSeleccionado) {
+      const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+      if (searchInput) {
+        searchInput.value = this.workSession.puestoSeleccionado;
+        (window as any).puestoSeleccionado = this.workSession.puestoSeleccionado;
+        
+        // Trigger puesto-related UI logic after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          this.triggerPuestoLogic(this.workSession.puestoSeleccionado!);
+        }, 100);
+      }
+    }
+  }
+
+  private triggerPuestoLogic(puesto: string): void {
+    // Import Puestos dynamically or check if it exists
+    if ((window as any).Puestos && (window as any).showFieldsAssociatedWithPuesto1) {
+      const Puestos = (window as any).Puestos;
+      if (puesto === Puestos.lista[0]) {
+        // Trigger the same logic as in signMain.ts
+        (window as any).showFieldsAssociatedWithPuesto1();
+        this.setCompanyFieldVisibility(true);
+        
+        // After UI is created, restore company/facility data
+        setTimeout(() => {
+          this.restoreCompanyFacilityData();
+        }, 200);
+      } else {
+        this.setCompanyFieldVisibility(false);
+      }
+    }
+  }
+
+  private restoreCompanyFacilityData(): void {
+    // Restore company selection
+    if (this.workSession.selectedCompany && this.workSession.selectedCompanyName) {
+      const companyInput = document.getElementById("buscarCompania") as HTMLInputElement;
+      if (companyInput) {
+        companyInput.value = this.workSession.selectedCompanyName;
+        companyInput.dataset.selectedCpy = this.workSession.selectedCompany;
+      }
+    }
+
+    // Restore facility selection
+    if (this.workSession.selectedFacility && this.workSession.selectedFacilityName) {
+      const facilityInput = document.getElementById("facility") as HTMLInputElement;
+      if (facilityInput) {
+        facilityInput.value = this.workSession.selectedFacilityName;
+        facilityInput.dataset.facilityCode = this.workSession.selectedFacility;
+      }
+    }
+
+    // Auto-reload table if all data is available
+    if (this.workSession.puestoSeleccionado && 
+        this.workSession.selectedCompany && 
+        this.workSession.selectedFacility) {
+      this.autoReloadTable();
+    }
+  }
+
+  private async autoReloadTable(): Promise<void> {
+    try {
+      // Wait a bit more to ensure all DOM elements are ready
+      setTimeout(async () => {
+        if ((window as any).remitosHandler && (window as any).tableHandler) {
+          const fechaDesdeInput = document.getElementById("fechaDesde") as HTMLInputElement;
+          const fechaDesde = fechaDesdeInput?.value || undefined;
+          
+          console.log('Auto-reloading table with session data:', {
+            company: this.workSession.selectedCompany,
+            facility: this.workSession.selectedFacility,
+            fechaDesde
+          });
+          
+          const remitos = await (window as any).remitosHandler.fetchRemitos(
+            this.workSession.selectedCompany,
+            this.workSession.selectedFacility,
+            fechaDesde
+          );
+          (window as any).tableHandler.renderTable(remitos);
+          console.log('Table auto-reloaded successfully');
+        }
+      }, 500);
+    } catch (error) {
+      console.error('Error auto-reloading table:', error);
+    }
+  }
+
+  // Work Session Management Methods
+  public setPuesto(puesto: string | null): void {
+    this.workSession.puestoSeleccionado = puesto;
+    this.saveWorkSession();
+    (window as any).puestoSeleccionado = puesto;
+  }
+
+  public setCompany(company: string | null, companyName: string | null = null): void {
+    this.workSession.selectedCompany = company;
+    this.workSession.selectedCompanyName = companyName;
+    this.saveWorkSession();
+  }
+
+  public setFacility(facility: string | null, facilityName: string | null = null): void {
+    this.workSession.selectedFacility = facility;
+    this.workSession.selectedFacilityName = facilityName;
+    this.saveWorkSession();
+  }
+
+  public setCompanyFieldVisibility(show: boolean): void {
+    this.workSession.showCompanyField = show;
+    this.saveWorkSession();
+    
+    const companyContainer = document.getElementById("buscarCompaniaContainer");
+    if (companyContainer) {
+      companyContainer.style.display = show ? "block" : "none";
+    }
+  }
+
+  public getWorkSession(): WorkSessionData {
+    return { ...this.workSession };
+  }
+
+  public clearWorkSession(): void {
+    this.workSession = { ...this.defaultWorkSession };
+    this.saveWorkSession();
+    (window as any).puestoSeleccionado = null;
+    
+    // Clear UI elements
+    const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+    if (searchInput) searchInput.value = "";
+    
+    const companyInput = document.getElementById("buscarCompania") as HTMLInputElement;
+    if (companyInput) {
+      companyInput.value = "";
+      delete companyInput.dataset.selectedCpy;
+    }
+    
+    const facilityInput = document.getElementById("facility") as HTMLInputElement;
+    if (facilityInput) {
+      facilityInput.value = "";
+      delete facilityInput.dataset.facilityCode;
     }
   }
 
@@ -378,4 +564,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Export for module system
-export { UserPreferences };
+export { UserPreferences, WorkSessionData, UserPreferencesData };
