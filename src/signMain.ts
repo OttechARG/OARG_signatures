@@ -10,9 +10,66 @@ const pdfContainerEl = document.getElementById("pdfContainer") as HTMLDivElement
 setPdfContainer(pdfContainerEl);
 
 const puestos = Puestos.lista;
-const input = document.getElementById("searchInput") as HTMLInputElement;
-const suggestionsList = document.getElementById("suggestionsList") as HTMLUListElement;
 const formContainer = document.getElementById("formContainer") as HTMLDivElement;
+
+// Initialize puesto buttons
+function initializePuestoButtons() {
+  const btnPuesto0 = document.getElementById("btnPuesto0") as HTMLButtonElement;
+  const btnPuesto1 = document.getElementById("btnPuesto1") as HTMLButtonElement;
+  
+  if (btnPuesto0) {
+    btnPuesto0.textContent = Puestos.lista[0];
+    btnPuesto0.addEventListener("click", () => handlePuestoSelection(Puestos.lista[0]));
+  }
+  
+  if (btnPuesto1) {
+    btnPuesto1.textContent = Puestos.lista[1];
+    btnPuesto1.addEventListener("click", () => handlePuestoSelection(Puestos.lista[1]));
+  }
+}
+
+// Handle puesto selection (extracted from previous logic)
+function handlePuestoSelection(selectedPuesto: string) {
+  // Update button visual state
+  updatePuestoButtonSelection(selectedPuesto);
+  
+  // Use new session storage method
+  window.userPreferences.setPuesto(selectedPuesto);
+  
+  if (selectedPuesto === Puestos.lista[0]) { // "Punto de Venta Entregas"
+    showFieldsAssociatedWithPuesto1();
+    window.userPreferences.setCompanyFieldVisibility(true);
+  } else {
+    window.userPreferences.setCompanyFieldVisibility(false);
+    // Clear dynamic fields when switching to other puestos
+    const dynamicFields = document.getElementById("dynamicFields");
+    if (dynamicFields) {
+      dynamicFields.innerHTML = "";
+    }
+    // Reset input references
+    buscarCompaniaInput = null;
+    facilityInput = null;
+    // Create save button for non-"punto de venta entregas" puestos
+    createSaveButton();
+  }
+}
+
+// Update visual state of puesto buttons
+function updatePuestoButtonSelection(selectedPuesto: string) {
+  const btnPuesto0 = document.getElementById("btnPuesto0") as HTMLButtonElement;
+  const btnPuesto1 = document.getElementById("btnPuesto1") as HTMLButtonElement;
+  
+  // Remove selected class from all buttons
+  btnPuesto0?.classList.remove("selected");
+  btnPuesto1?.classList.remove("selected");
+  
+  // Add selected class to the clicked button
+  if (selectedPuesto === Puestos.lista[0]) {
+    btnPuesto0?.classList.add("selected");
+  } else if (selectedPuesto === Puestos.lista[1]) {
+    btnPuesto1?.classList.add("selected");
+  }
+}
 
 let buscarCompaniaInput: HTMLInputElement | null = null;
 let facilityInput: HTMLInputElement | null = null;
@@ -83,9 +140,8 @@ function createSaveButton() {
       // Dynamic validation based on requirements
       const missingFields = [];
       
-      // Check puesto input field value, not just session storage
-      const puestoInputValue = input?.value?.trim();
-      if (!puestoInputValue || !workSession.puestoSeleccionado) {
+      // Check puesto session storage (no input field anymore, just buttons)
+      if (!workSession.puestoSeleccionado) {
         missingFields.push("position");
       }
       
@@ -129,6 +185,11 @@ function createSaveButton() {
 }
 
 
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+  initializePuestoButtons();
+});
+
 window.addEventListener('message', async (event) => {
   if (event.data.type === 'PDF_SIGNED') {
     console.log('PDF firmado, actualizando tabla...', event.data);
@@ -151,61 +212,7 @@ window.addEventListener('message', async (event) => {
   }
 });
 
-input.addEventListener("input", () => {
-  const query = input.value.toLowerCase();
-
-  if (!query) {
-    suggestionsList.style.display = "none";
-    suggestionsList.innerHTML = "";
-    return;
-  }
-  const filtrados = menuHandler.filtrarPuestos(query);
-  menuHandler.mostrarSugerenciasPuestos(filtrados, suggestionsList);
-});
-
-
-input.addEventListener("focus", () => {
-  if (!input.value) {
-    suggestionsList.innerHTML = puestos
-      .map(puesto => `<li class="suggestion-item">${puesto}</li>`)
-      .join("");
-    suggestionsList.style.display = "block";
-  }
-});
-
-input.addEventListener("blur", () => {
-  setTimeout(() => {
-    suggestionsList.style.display = "none";
-  }, 150);
-});
-
-suggestionsList.addEventListener("click", (event) => {
-  const target = event.target as HTMLElement;
-  if (target && target.tagName === "LI") {
-    input.value = target.textContent || "";
-    suggestionsList.style.display = "none";
-    suggestionsList.innerHTML = "";
-    
-    // Use new session storage method
-    window.userPreferences.setPuesto(input.value);
-    
-    if (input.value === Puestos.lista[0]) { //punto de venta entregas es actualmente.
-      showFieldsAssociatedWithPuesto1();
-      window.userPreferences.setCompanyFieldVisibility(true);
-    } else {
-      window.userPreferences.setCompanyFieldVisibility(false);
-      // Clear dynamic fields when switching to other puestos
-      const dynamicFields = document.getElementById("dynamicFields");
-      if (dynamicFields) {
-        dynamicFields.innerHTML = "";
-      }
-      // Reset input references
-      buscarCompaniaInput = null;
-      facilityInput = null;
-      // Create save button for non-"punto de venta entregas" puestos
-      createSaveButton();
-    }
-  }});
+// Old input event handlers removed - now using puesto buttons
 
 
 let listaCompletaCompanias: { CPY_0: string; CPYNAM_0: string }[] = [];

@@ -62,7 +62,19 @@
 
     <!-- Menú lateral oculto que ahora incluye TODO el contenido que quieres mostrar -->
     <nav id="sideMenu" class="side-menu" aria-label="Menú lateral">
-      <div id="formContainer">
+      <div class="sidebar-layout">
+        <!-- Puesto selection buttons on the left side -->
+        <div id="puestoButtonsContainer" class="puesto-buttons-container">
+          <button id="btnPuesto0" class="puesto-button" type="button">
+            <!-- Will be populated by JavaScript -->
+          </button>
+          <button id="btnPuesto1" class="puesto-button" type="button">
+            <!-- Will be populated by JavaScript -->
+          </button>
+        </div>
+        
+        <!-- Form content on the right side -->
+        <div id="formContainer" class="form-content">
            <div id="fixedFields">
               <!-- Campo fijo "Remitos desde" -->
               <div id="divFechaDesde" style="position: relative;">
@@ -76,28 +88,13 @@
               </div>
             </div>
       <div class="form-container">
-        <div id="searchContainer"class="input-wrapper">
-          <input
-            type="text"
-            id="searchInput"
-            class="input-box"
-            placeholder="Seleccione un puesto..."
-            autocomplete="off"
-          />
-          <ul id="suggestionsList" class="suggestions-list" style="display: none;"></ul>
-        </div>
-
-        
-
             <div id="dynamicFields">
               <!-- Campos dinámicos según puesto -->
             </div>
           <!-- contenido dinámico -->
         </div>
-
-        
-      </div>
-      
+        </div> <!-- Close form-content -->
+      </div> <!-- Close sidebar-layout -->
     </nav>
 
   </div>
