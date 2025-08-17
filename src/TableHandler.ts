@@ -14,31 +14,64 @@ export class TableHandler {
     if (!table) return;
 
     const filterInputs = table.querySelectorAll<HTMLInputElement>('thead input.filter-input');
+    const filterSelects = table.querySelectorAll<HTMLSelectElement>('thead select.filter-select');
 
-    filterInputs.forEach(input => {
-      input.addEventListener('input', () => {
-        const filters = Array.from(filterInputs).map(i => ({
-          colIndex: Number(i.dataset.col),
-          value: i.value.toLowerCase().trim()
-        }));
+    const applyFilters = () => {
+      const textFilters = Array.from(filterInputs).map(i => ({
+        colIndex: Number(i.dataset.col),
+        value: i.value.toLowerCase().trim()
+      }));
 
-        const tbody = table.tBodies[0];
-        if (!tbody) return;
+      const selectFilters = Array.from(filterSelects).map(s => ({
+        colIndex: Number(s.dataset.col),
+        value: s.value
+      }));
 
-        Array.from(tbody.rows).forEach(row => {
-          let visible = true;
-          for (const filter of filters) {
+      const tbody = table.tBodies[0];
+      if (!tbody) return;
+
+      Array.from(tbody.rows).forEach(row => {
+        let visible = true;
+
+        // Apply text filters
+        for (const filter of textFilters) {
+          if (filter.value) {
+            const cellText = row.cells[filter.colIndex]?.textContent?.toLowerCase() || '';
+            if (!cellText.includes(filter.value)) {
+              visible = false;
+              break;
+            }
+          }
+        }
+
+        // Apply select filters (firmado column)
+        if (visible) {
+          for (const filter of selectFilters) {
             if (filter.value) {
-              const cellText = row.cells[filter.colIndex]?.textContent?.toLowerCase() || '';
-              if (!cellText.includes(filter.value)) {
+              const cell = row.cells[filter.colIndex];
+              const isSigned = cell?.classList.contains('signed-true');
+              
+              if (filter.value === 'no-firmados' && isSigned) {
+                visible = false;
+                break;
+              } else if (filter.value === 'si-firmados' && !isSigned) {
                 visible = false;
                 break;
               }
             }
           }
-          row.style.display = visible ? '' : 'none';
-        });
+        }
+
+        row.style.display = visible ? '' : 'none';
       });
+    };
+
+    filterInputs.forEach(input => {
+      input.addEventListener('input', applyFilters);
+    });
+
+    filterSelects.forEach(select => {
+      select.addEventListener('change', applyFilters);
     });
   }
 
@@ -71,18 +104,24 @@ export class TableHandler {
         <td>${r.DLVDAT_0 || ""}</td>
         <td>${r.BPCORD_0 || ""}</td>
         <td>${r.BPDNAM_0 || ""}</td>
-        <td class="${isSigned ? 'signed-true' : 'signed-false'}">
-            ${isSigned ? '✓' : '✗'}
+        <td class="firmado-column ${isSigned ? 'signed-true' : 'signed-false'}">
+            <span class="status-indicator">${isSigned ? '✓' : '✗'}</span>
+            <span class="button-container"></span>
         </td>
-        <td class="recover-doc-cell"></td>
       `;
       tbody.appendChild(tr);
 
-      const tdBoton = tr.querySelector(".recover-doc-cell") as HTMLElement;
+      const tdBoton = tr.querySelector(".button-container") as HTMLElement;
       if (!isSigned) {
         createButton(tdBoton, {
           id: `recuperarDocumentoBtn-${r.SDHNUM_0}`,
-          text: "Firmar",
+          html: '<img src="assets/Firmar.png" alt="Firmar" style="height: 35px; width: auto;">',
+          style: { 
+            background: 'none',
+            border: 'none',
+            padding: '0',
+            cursor: 'pointer'
+          },
           onClick: async () => {
             // Guardar datos del remito en sessionStorage para uso posterior
             const remitoData = {
@@ -111,15 +150,19 @@ export class TableHandler {
               });
 
               // Actualizar visualmente
-              tr.querySelector("td.signed-true, td.signed-false")!.textContent = "✓";
-              tr.querySelector("td.signed-true, td.signed-false")!.className = "signed-true";
+              const firmadoCell = tr.querySelector("td.firmado-column") as HTMLElement;
+              const statusIndicator = firmadoCell.querySelector(".status-indicator") as HTMLElement;
+              const buttonContainer = firmadoCell.querySelector(".button-container") as HTMLElement;
+              
+              statusIndicator.textContent = "✓";
+              firmadoCell.className = "firmado-column signed-true";
+              buttonContainer.innerHTML = "";
 
             } catch (error) {
               console.error(error);
               alert((error as Error).message);
             }
-          },
-          style: { padding: "4px 8px" }
+          }
         });
       }
     }

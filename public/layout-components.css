@@ -576,19 +576,54 @@ body::before {
   border-color: var(--theme-primary-light);
 }
 
+#remitosTable thead tr#filterRow th select.filter-select {
+  width: 100%;
+  background-color: var(--gray-light);
+  color: var(--text-primary);
+  border: var(--border-width) solid var(--gray-border);
+  padding: var(--space-xs);
+  border-radius: var(--border-radius-sm);
+  transition: border-color var(--transition-fast);
+  font-size: inherit;
+}
+
+#remitosTable thead tr#filterRow th select.filter-select:focus {
+  outline: none;
+  border-color: var(--theme-primary-light);
+}
+
 /* ============================= */
 /* ✅ Signature Status */
 /* ============================= */
 .signed-true {
   color: #28a745;
   font-weight: bold;
-  text-align: center;
 }
 
 .signed-false {
   color: #dc3545;
   font-weight: bold;
-  text-align: center;
+}
+
+/* Firmado Column Layout */
+.firmado-column {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm) !important;
+  min-height: 60px;
+  vertical-align: top;
+  position: relative;
+}
+
+.firmado-column .status-indicator {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.firmado-column .button-container {
+  flex-shrink: 0;
+  margin-left: var(--space-sm);
 }
 
 /* ============================= */
@@ -613,6 +648,11 @@ tr.selected {
   min-width: 0;
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+.table-container table td {
+  vertical-align: middle;
+  padding: var(--space-xs) var(--space-sm);
 }
 
 /* Button Column */

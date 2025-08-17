@@ -7,7 +7,8 @@
  * @param container - The HTML container where the button should be appended
  * @param options - Configuration options for the button
  *   - id: optional unique id for the button
- *   - text: text to display on the button
+ *   - text: text to display on the button (optional if html is provided)
+ *   - html: HTML content to display on the button (takes precedence over text)
  *   - onClick: callback function when clicked
  *   - style: optional CSS styles
  */
@@ -15,7 +16,8 @@ export function createButton(
   container: HTMLElement | null,
   options: {
     id?: string;
-    text: string;
+    text?: string;
+    html?: string;
     onClick: () => void;
     style?: Partial<CSSStyleDeclaration>;
   }
@@ -28,7 +30,13 @@ export function createButton(
   const button = document.createElement("button");
   if (options.id) button.id = options.id;
   button.type = "button";
-  button.textContent = options.text;
+  
+  // Set content - prefer html over text
+  if (options.html) {
+    button.innerHTML = options.html;
+  } else if (options.text) {
+    button.textContent = options.text;
+  }
 
   // Apply custom styles if provided
   if (options.style) {

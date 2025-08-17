@@ -39,15 +39,19 @@
         <th>Cod. Cliente</th>
         <th>Razón Social</th>
         <th>Firmado</th>
-        <th class="action-col"></th>
       </tr>
       <tr id="filterRow">
         <th><input type="search" placeholder="Buscar Remito" class="filter-input" data-col="0" /></th>
         <th><input type="search" placeholder="Buscar Fecha" class="filter-input" data-col="1" /></th>
         <th><input type="search" placeholder="Buscar Código" class="filter-input" data-col="2" /></th>
         <th><input type="search" placeholder="Buscar Razón" class="filter-input" data-col="3" /></th>
-        <th><input type="search" placeholder="Buscar Firmado" class="filter-input" data-col="4" /></th>
-        <th></th>
+        <th>
+          <select class="filter-select" data-col="4">
+            <option value="">Todos</option>
+            <option value="no-firmados">No firmados</option>
+            <option value="si-firmados">Si firmados</option>
+          </select>
+        </th>
       </tr>
     </thead>
     <tbody>
