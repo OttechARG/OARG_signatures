@@ -7,7 +7,7 @@ import { getMousePos, getTouchPos } from "./signUtils.js";
 // Import only the TypeScript type 'PDFDocumentProxy' from pdfjs-dist
 // to help with type checking when working with PDF.js documents (no code output).
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { crearInputParaCaja, obtenerCajasDeTexto } from "./TextBox.js";
+import { cajas, crearInputParaCaja, obtenerCajasDeTexto } from "./TextBox.js";
 
 // Get the global reference to the PDF.js library (pdfjsLib) which
 // is loaded as an external script in the browser. This library lets
@@ -183,6 +183,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     alert("No se pudo cargar el PDF");                              // Alert if the PDF couldn't be loaded
     return;
   }
+   setupFontSizeControl();
 
   const arrayBuffer = await response.arrayBuffer();                 // Read response as ArrayBuffer
   const typedarray = new Uint8Array(arrayBuffer);                    // Convert to typed array for PDF.js
@@ -201,7 +202,39 @@ window.addEventListener("DOMContentLoaded", async () => {
   crearInputParaCaja(dni);
   renderPage(currentPage);                                           // Render the first page of the PDF
 });
+function setupFontSizeControl(): void {
+  const fontSizeSlider = document.getElementById("fontSize") as HTMLInputElement;
+  const fontSizeValue = document.getElementById("fontSizeValue") as HTMLSpanElement;
+  
+  if (!fontSizeSlider || !fontSizeValue) return;
+  
+  fontSizeSlider.addEventListener("input", () => {
+    const newSize = parseInt(fontSizeSlider.value);
+    fontSizeValue.textContent = `${newSize}px`;
+    
+    // Update all text boxes on current page
+    updateTextBoxFontSize(currentPage, newSize);
+  });
+}
 
+// Update font size for all text boxes on a specific page
+function updateTextBoxFontSize(pageNum: number, fontSize: number): void {
+  // Update the fontSize property in the CajaTexto objects
+  cajas.forEach(caja => {
+    if (caja.page === pageNum) {
+      caja.fontSize = fontSize;
+    }
+  });
+  
+  // Update the DOM elements - look for both class names
+  const textBoxes = container.querySelectorAll<HTMLInputElement>('.pdf-textbox, .text-overlay');
+  textBoxes.forEach(input => {
+    const inputPage = parseInt(input.dataset.page || '0');
+    if (inputPage === pageNum) {
+      input.style.fontSize = `${fontSize}px`;
+    }
+  });
+}
 // Save the current signature drawn on the canvas for the active page
 function saveSignInPage(): void {
   const imgData = sigCanvas.toDataURL("image/png");                  // Get signature as base64 PNG image
@@ -241,7 +274,7 @@ export async function guardarFirma(): Promise<void> {
       page.drawText(caja.text || "", {
         x: caja.x,
         y: page.getHeight() - caja.y - caja.height, // Ajuste de coordenadas
-        size: 12,
+        size: caja.fontSize,
         color: rgb(0, 0, 0),
       });
     }
