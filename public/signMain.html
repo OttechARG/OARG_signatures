@@ -63,6 +63,18 @@
       <!-- Filas dinámicas -->
     </tbody>
   </table>
+
+  <!-- Pagination Controls -->
+  <div id="paginationContainer" class="pagination-container" style="display: none;">
+    <div class="pagination-info">
+      <span id="paginationInfo">Mostrando 0 de 0 registros</span>
+    </div>
+    <div class="pagination-controls">
+      <button id="prevPageBtn" class="pagination-btn" disabled>❮ Anterior</button>
+      <div id="pageNumbers" class="page-numbers"></div>
+      <button id="nextPageBtn" class="pagination-btn" disabled>Siguiente ❯</button>
+    </div>
+  </div>
 </div>
 
     <!-- Menú lateral oculto que ahora incluye TODO el contenido que quieres mostrar -->
@@ -93,6 +105,21 @@
                 />
               </div>
             </div>
+
+            <!-- Page Size Selection -->
+            <div id="pageSizeContainer" style="margin-top: 15px;">
+              <label for="pageSizeMenuSelect" class="field-label">Registros por página</label>
+              <select id="pageSizeMenuSelect" class="input-box">
+                <option value="10">10 registros</option>
+                <option value="15">15 registros</option>
+                <option value="25">25 registros</option>
+                <option value="50" selected>50 registros</option>
+                <option value="100">100 registros</option>
+                <option value="200">200 registros</option>
+                <option value="500">500 registros</option>
+              </select>
+            </div>
+
       <div class="form-container">
             <div id="dynamicFields">
               <!-- Campos dinámicos según puesto -->

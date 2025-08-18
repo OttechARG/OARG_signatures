@@ -126,7 +126,7 @@ async function renderPage(pageNum: number): Promise<void> {
     sigCtx.lineJoin = "round";
     sigCtx.lineCap = "round";
     sigCtx.strokeStyle = "rgba(0,0,0,0.8)";
-    sigCtx.lineWidth = 3 * dpr;
+    sigCtx.lineWidth = 0.5 * dpr;
     sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
 
     if (signs[pageNum]) {
@@ -297,7 +297,6 @@ function saveSignInPage(): void {
 }
 
 // Apply all saved signatures to the PDF and trigger download of signed PDF
-// Función para guardar PDF con firmas y textos
 export async function guardarFirma(): Promise<void> {
   console.log("guardarFirma llamada");
 
@@ -328,7 +327,7 @@ export async function guardarFirma(): Promise<void> {
     for (const caja of cajasPagina) {
       page.drawText(caja.text || "", {
         x: caja.x,
-        y: page.getHeight() - caja.y - caja.height, // Ajuste de coordenadas
+        y: page.getHeight() - caja.y - caja.height,
         size: caja.fontSize,
         color: rgb(0, 0, 0),
       });
@@ -336,12 +335,6 @@ export async function guardarFirma(): Promise<void> {
   }
 
   const pdfBytes = await pdfDocLib.save();
-  
-  // Crear JSON archive con el código del PDF firmado
-  const pdfBase64 = `data:application/pdf;base64,${btoa(String.fromCharCode(...pdfBytes))}`;
-  
-  // Extraer información del archivo desde la URL
-  const nombreArchivo = window.location.pathname.split("/").pop() || "";
   
   // Obtener parámetros del remito desde sessionStorage
   const storedRemitoData = sessionStorage.getItem('currentRemito');
@@ -351,9 +344,10 @@ export async function guardarFirma(): Promise<void> {
     remitoInfo = JSON.parse(storedRemitoData);
   }
   
-  // Send signed PDF via SOAP
+  // 1️⃣ Send signed PDF via SOAP
   try {
     if (remitoInfo.sdhnum) {
+      console.log("Sending PDF to SOAP endpoint...");
       const soapResponse = await fetch('/send-signed-pdf', {
         method: 'POST',
         headers: {
@@ -367,93 +361,22 @@ export async function guardarFirma(): Promise<void> {
       
       const soapResult = await soapResponse.json();
       if (soapResult.success) {
-        console.log('Signed PDF sent via SOAP successfully:', soapResult);
+        console.log('✅ PDF sent via SOAP successfully:', soapResult);
+        alert("✅ PDF enviado exitosamente via SOAP");
       } else {
-        console.error('Error sending PDF via SOAP:', soapResult);
-      }
-    }
-  } catch (error) {
-    console.error('Error calling SOAP endpoint:', error);
-  }
-
-  // Crear JSON archive con toda la información
-  const jsonArchive = {
-    metadata: {
-      ...remitoInfo,
-      nombreArchivo,
-      url: window.location.href,
-      firmadoEn: new Date().toISOString(),
-      userAgent: navigator.userAgent
-    },
-    pdfBase64Code: pdfBase64,
-    signatureData: {
-      firmas: signs,
-      cajasTexto: Object.fromEntries(
-        pages.map((_: any, i: number) => [i + 1, obtenerCajasDeTexto(i + 1)])
-      )
-    }
-  };
-
-  try {
-    // Enviar JSON archive al servidor para guardarlo
-    const response = await fetch('/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `
-      mutation GuardarJsonArchive($data: String!) {
-        guardarJsonArchive(data: $data)
-      }
-    `,
-        
-        variables: {
-          key: `${remitoInfo.cpy}-${remitoInfo.stofcy}-${remitoInfo.sdhnum}`,
-          jsonData: jsonArchive
-        }
-      })
-    });
-
-    const result = await response.json();
-    
-    if (result.data?.guardarJsonArchive?.success) {
-      console.log("JSON archive guardado exitosamente:", result.data.guardarJsonArchive);
-      alert(`PDF firmado y JSON archive creado exitosamente.\nArchivo JSON: ${result.data.guardarJsonArchive.jsonFile}`);
-      
-      // --- Marcar como firmado en GraphQL ---
-      const key = `${remitoInfo.cpy}-${remitoInfo.stofcy}-${remitoInfo.sdhnum}`;
-      try {
-        await fetch("/graphql", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `mutation($key: String!) { signPdf(key: $key) }`,
-            variables: { key }
-          }),
-        });
-        console.log("PDF marcado como firmado en GraphQL");
-      } catch (error) {
-        console.error("Error marking PDF as signed:", error);
-      }
-
-      // Notificar a la ventana padre para actualizar la UI
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({
-          type: 'PDF_SIGNED',
-          data: { ...remitoInfo, jsonFile: result.data.guardarJsonArchive.jsonFile }
-        }, '*');
+        console.error('❌ Error sending PDF via SOAP:', soapResult);
+        alert("❌ Error enviando PDF via SOAP");
       }
     } else {
-      console.error("Error guardando JSON archive:", result);
-      throw new Error("Error guardando JSON archive en el servidor");
+      console.warn("No remito number found, skipping SOAP call");
+      alert("⚠️ No se encontró número de remito, omitiendo envío SOAP");
     }
   } catch (error) {
-    console.error("Error enviando al servidor:", error);
-    alert("Advertencia: El PDF se descargará localmente, pero no se pudo crear el JSON archive en el servidor.");
+    console.error('❌ Error calling SOAP endpoint:', error);
+    alert("❌ Error llamando endpoint SOAP");
   }
 
-  // Descargar PDF localmente siempre
+  // 2️⃣ Download PDF locally
   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
 
@@ -463,6 +386,7 @@ export async function guardarFirma(): Promise<void> {
   a.click();
   
   URL.revokeObjectURL(url);
+  console.log("📥 PDF downloaded locally");
 }
 
 // Mousedown -> touchstart

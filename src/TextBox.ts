@@ -59,8 +59,8 @@ export function crearInputParaCaja(caja: CajaTexto) {
   input.style.width = caja.width + "px";
   input.style.height = caja.height + "px";
   input.style.fontSize = caja.fontSize + "px";
-  input.style.border = "1px solid #000";
-  input.style.background = "rgba(255,255,255,0.8)";
+  input.style.border = "none";
+  input.style.background = "#f0f0f0";
   input.style.zIndex = "1000";
   input.addEventListener("input", () => {
     caja.text = input.value;
@@ -91,8 +91,8 @@ export function renderCajasTexto(pageNum: number) {
     input.style.width = `${c.width}px`;
     input.style.height = `${c.height}px`;
     input.style.fontSize = `${c.fontSize}px`;
-    input.style.border = '1px solid #000';
-    input.style.background = 'rgba(255,255,255,0.8)';
+    input.style.border = 'none';
+    input.style.background = '#f0f0f0';
     input.style.zIndex = '1000';
     input.value = c.text;
 

@@ -18,14 +18,25 @@ export const queryFacilities = `
 `;
 
 export const queryRemitos = `
-  query Remitos($cpy: String!, $stofcy: String!, $desde: String) {
-    remitos(cpy: $cpy, stofcy: $stofcy, desde: $desde) {
-      CPY_0
-      DLVDAT_0
-      STOFCY_0
-      SDHNUM_0
-      BPCORD_0
-      BPDNAM_0
+  query Remitos($cpy: String!, $stofcy: String!, $desde: String, $page: Int, $pageSize: Int) {
+    remitos(cpy: $cpy, stofcy: $stofcy, desde: $desde, page: $page, pageSize: $pageSize) {
+      remitos {
+        CPY_0
+        DLVDAT_0
+        STOFCY_0
+        SDHNUM_0
+        BPCORD_0
+        BPDNAM_0
+        XX6FLSIGN_0
+      }
+      pagination {
+        currentPage
+        pageSize
+        totalCount
+        totalPages
+        hasNextPage
+        hasPreviousPage
+      }
     }
   }
 `;

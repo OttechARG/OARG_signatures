@@ -13,6 +13,7 @@ declare global {
     Puestos: any;
     remitosHandler: any;
     tableHandler: any;
+    refreshCurrentTable: (page?: number, pageSize?: number) => void;
   }
 }
 

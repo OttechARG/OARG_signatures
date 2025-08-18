@@ -17,6 +17,21 @@ type Remito {
   SDHNUM_0: String!
   BPCORD_0: String!
   BPDNAM_0: String!
+  XX6FLSIGN_0: Int!
+}
+
+type PaginationInfo {
+  currentPage: Int!
+  pageSize: Int!
+  totalCount: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+type RemitosResponse {
+  remitos: [Remito]!
+  pagination: PaginationInfo!
 }
 
 type UrlResponse {
@@ -25,17 +40,11 @@ type UrlResponse {
 
 type Mutation {
   subirPdfBase64(pdfBase64: String!): UrlResponse!
-  guardarJsonArchive(key: String!, data: String!): Boolean!
-  # Nueva mutation para marcar un remito como firmado
-  signPdf(key: String!): Boolean!
 }
 
 type Query {
   companies(search: String): [Company!]!
   facilities(legcpy: String): [Facility!]!
-  remitos(cpy: String!, stofcy: String!, desde: String): [Remito]!
+  remitos(cpy: String!, stofcy: String!, desde: String, page: Int = 1, pageSize: Int = 50): RemitosResponse!
   testDB: [Company!]!
-
-  # Nueva query para obtener todos los PDFs firmados
-  signedPdfs: [String!]!
 }

@@ -5,6 +5,8 @@ export class TableHandler {
   private tableId: string;
   public remitoSeleccionado: { company: string; facility: string; remito: string } | null = null;
   private isProcessing = false; // Flag to prevent multiple simultaneous requests
+  private currentPagination: any = null; // Store current pagination info
+  public currentParams: any = null; // Store current search params
 
   constructor(tableId: string) {
     this.tableId = tableId;
@@ -138,8 +140,12 @@ export class TableHandler {
       // Refresh table data
       const remitosHandler = (window as any).remitosHandler;
       if (remitosHandler && company && facility) {
-        const remitos = await remitosHandler.fetchRemitos(company, facility, fechaDesde);
-        await this.renderTable(remitos);
+        // Store current params for pagination
+        this.currentParams = { company, facility, fechaDesde };
+        
+        const pageSize = (window as any).userPreferences?.getPageSize() || 50;
+        const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize);
+        await this.renderTable(result.remitos, result.pagination);
         
         // Set filter to "no-firmados" after refresh
         const filterSelect = document.querySelector('.filter-select[data-col="4"]') as HTMLSelectElement;
@@ -157,19 +163,16 @@ export class TableHandler {
     }
   }
 
-  public async renderTable(remitos: any[]): Promise<void> {
+  public async renderTable(remitos: any[], pagination?: any): Promise<void> {
     const tabla = document.getElementById(this.tableId) as HTMLTableElement;
     const tbody = tabla.querySelector('tbody')!;
     tbody.innerHTML = "";
 
-    // --- Obtener PDFs firmados desde GraphQL ---
-    const signedKeys: string[] = await fetch("/graphql", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: `{ signedPdfs }` }),
-    })
-  .then(res => res.json())
-  .then(res => res.data?.signedPdfs || []); // si es null o undefined, devuelve array vacío
+    // Store pagination info
+    if (pagination) {
+      this.currentPagination = pagination;
+      this.renderPaginationControls();
+    }
 
     for (const r of remitos) {
       const tr = document.createElement('tr');
@@ -178,8 +181,8 @@ export class TableHandler {
       tr.dataset.remito = String(r.SDHNUM_0 || "");
       tr.style.cursor = "pointer";
 
-      const key = `${r.CPY_0 || r.CPY || ""}-${r.STOFCY_0 || r.STOFAC || ""}-${r.SDHNUM_0 || ""}`;
-      const isSigned = signedKeys.includes(key);
+      // Usar XX6FLSIGN_0 directamente: 1 = No firmado, 2 = Firmado
+      const isSigned = r.XX6FLSIGN_0 === 2;
 
       tr.innerHTML = `
         <td>${r.SDHNUM_0 || ""}</td>
@@ -295,5 +298,101 @@ export class TableHandler {
         }
       });
     });
+  }
+
+  private renderPaginationControls(): void {
+    if (!this.currentPagination) return;
+
+    const paginationContainer = document.getElementById('paginationContainer');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const pageNumbers = document.getElementById('pageNumbers');
+    const prevBtn = document.getElementById('prevPageBtn') as HTMLButtonElement;
+    const nextBtn = document.getElementById('nextPageBtn') as HTMLButtonElement;
+
+    if (!paginationContainer || !paginationInfo || !pageNumbers || !prevBtn || !nextBtn) return;
+
+    // Show pagination container
+    paginationContainer.style.display = 'block';
+
+    // Update info
+    const { currentPage, totalCount, pageSize, totalPages, hasNextPage, hasPreviousPage } = this.currentPagination;
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, totalCount);
+    paginationInfo.textContent = `Mostrando ${start}-${end} de ${totalCount} registros`;
+
+    // Update buttons
+    prevBtn.disabled = !hasPreviousPage;
+    nextBtn.disabled = !hasNextPage;
+
+    // Generate page numbers
+    pageNumbers.innerHTML = '';
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      const pageBtn = document.createElement('button');
+      pageBtn.textContent = i.toString();
+      pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+      pageBtn.addEventListener('click', () => this.goToPage(i));
+      pageNumbers.appendChild(pageBtn);
+    }
+
+    // Set up navigation button listeners (remove old ones first)
+    prevBtn.replaceWith(prevBtn.cloneNode(true));
+    nextBtn.replaceWith(nextBtn.cloneNode(true));
+    
+    const newPrevBtn = document.getElementById('prevPageBtn') as HTMLButtonElement;
+    const newNextBtn = document.getElementById('nextPageBtn') as HTMLButtonElement;
+    
+    newPrevBtn.addEventListener('click', () => this.goToPage(currentPage - 1));
+    newNextBtn.addEventListener('click', () => this.goToPage(currentPage + 1));
+  }
+
+  private async goToPage(page: number): Promise<void> {
+    if (!this.currentParams || !this.currentPagination) return;
+    
+    const pageSize = (window as any).userPreferences?.getPageSize() || 50;
+    
+    try {
+      const remitosHandler = (window as any).remitosHandler;
+      if (remitosHandler) {
+        const result = await remitosHandler.fetchRemitos(
+          this.currentParams.company,
+          this.currentParams.facility,
+          this.currentParams.fechaDesde,
+          page,
+          pageSize
+        );
+        await this.renderTable(result.remitos, result.pagination);
+      }
+    } catch (error) {
+      console.error('Error changing page:', error);
+    }
+  }
+
+  // Method to refresh current table with new page size
+  public async refreshWithPageSize(page: number = 1, pageSize: number): Promise<void> {
+    if (!this.currentParams) return;
+    
+    try {
+      const remitosHandler = (window as any).remitosHandler;
+      if (remitosHandler) {
+        const result = await remitosHandler.fetchRemitos(
+          this.currentParams.company,
+          this.currentParams.facility,
+          this.currentParams.fechaDesde,
+          page,
+          pageSize
+        );
+        await this.renderTable(result.remitos, result.pagination);
+      }
+    } catch (error) {
+      console.error('Error refreshing with page size:', error);
+    }
   }
 }

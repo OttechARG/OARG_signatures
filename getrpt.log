@@ -23,3 +23,13 @@
   level: 'info',
   timestamp: '2025-08-18T17:57:27.246Z'
 }
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-18T18:01:56.878Z'
+}
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-18T18:58:26.086Z'
+}

@@ -11,6 +11,7 @@ interface UserPreferencesData {
   background: string;
   backgroundImage: string | null;
   customLogo: string | null;
+  pageSize: number;
 }
 
 interface WorkSessionData {
@@ -43,7 +44,8 @@ class UserPreferences {
       theme: 'default',
       background: 'white',
       backgroundImage: null,
-      customLogo: null
+      customLogo: null,
+      pageSize: 50
     };
 
     this.defaultWorkSession = {
@@ -113,7 +115,13 @@ class UserPreferences {
   private loadPreferences(): void {
     try {
       const saved = localStorage.getItem('userPreferences');
-      this.preferences = saved ? JSON.parse(saved) : { ...this.defaultPreferences };
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge with defaults to handle missing properties like pageSize
+        this.preferences = { ...this.defaultPreferences, ...parsed };
+      } else {
+        this.preferences = { ...this.defaultPreferences };
+      }
     } catch (error) {
       console.error('Error loading preferences:', error);
       this.preferences = { ...this.defaultPreferences };
@@ -310,12 +318,20 @@ class UserPreferences {
             fechaDesde
           });
           
-          const remitos = await (window as any).remitosHandler.fetchRemitos(
+          const pageSize = this.getPageSize();
+          const result = await (window as any).remitosHandler.fetchRemitos(
             this.workSession.selectedCompany,
             this.workSession.selectedFacility,
-            fechaDesde
+            fechaDesde,
+            1,
+            pageSize
           );
-          (window as any).tableHandler.renderTable(remitos);
+          (window as any).tableHandler.currentParams = { 
+            company: this.workSession.selectedCompany, 
+            facility: this.workSession.selectedFacility, 
+            fechaDesde 
+          };
+          (window as any).tableHandler.renderTable(result.remitos, result.pagination);
           console.log('Table auto-reloaded successfully');
         }
       }, 500);
@@ -414,6 +430,15 @@ class UserPreferences {
     this.preferences = { ...this.defaultPreferences };
     this.applyTheme();
     this.savePreferences();
+  }
+
+  public setPageSize(pageSize: number): void {
+    this.preferences.pageSize = pageSize;
+    this.savePreferences();
+  }
+
+  public getPageSize(): number {
+    return this.preferences.pageSize || 50;
   }
 
   private attachEventListeners(): void {
@@ -530,6 +555,24 @@ class UserPreferences {
       resetSettings.addEventListener('click', () => {
         if (confirm('¿Estás seguro de que quieres restablecer todas las preferencias?')) {
           this.resetToDefaults();
+        }
+      });
+    }
+
+    // Page size selection (now in hamburger menu)
+    const pageSizeMenuSelect = document.getElementById('pageSizeMenuSelect') as HTMLSelectElement;
+    if (pageSizeMenuSelect) {
+      // Set current value with fallback for undefined pageSize
+      const currentPageSize = this.preferences.pageSize || 50;
+      pageSizeMenuSelect.value = currentPageSize.toString();
+      
+      pageSizeMenuSelect.addEventListener('change', () => {
+        const pageSize = parseInt(pageSizeMenuSelect.value);
+        this.setPageSize(pageSize);
+        
+        // Refresh table with new page size if data is available
+        if ((window as any).refreshCurrentTable) {
+          (window as any).refreshCurrentTable(1, pageSize); // Reset to page 1 with new size
         }
       });
     }

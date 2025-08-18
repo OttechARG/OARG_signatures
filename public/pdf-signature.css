@@ -228,7 +228,19 @@ span {
   position: absolute;
   z-index: 2;          /* always above canvas layers */
   font-size: 14px;
-  border: 1px solid #000;
+  border: none;
   padding: 2px;
-  background: rgba(255,255,255,0.8);
+  background: #f0f0f0;
+  caret-color: #000;
+  outline: none;
+}
+
+.text-overlay:focus {
+  caret-color: #000;
+}
+
+/* Make cursor thinner using custom CSS */
+.pdf-textbox {
+  caret-color: #000;
+  caret-width: 1px;
 }
