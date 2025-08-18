@@ -631,6 +631,18 @@ body::before {
 }
 
 /* ============================= */
+/* 🏷️ Field Labels */
+/* ============================= */
+.field-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--theme-text);
+  margin-bottom: var(--space-xs);
+  text-align: left;
+}
+
+/* ============================= */
 /* 🎯 Sidebar Layout - Horizontal */
 /* ============================= */
 .sidebar-layout {

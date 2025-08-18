@@ -188,7 +188,34 @@ function createSaveButton() {
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializePuestoButtons();
+  setDefaultDate();
 });
+
+// Set default date and restore from session
+function setDefaultDate() {
+  const fechaDesdeInput = document.getElementById("fechaDesde") as HTMLInputElement;
+  if (!fechaDesdeInput) return;
+  
+  // First, try to restore from session storage
+  const savedDate = sessionStorage.getItem("fechaDesde");
+  if (savedDate) {
+    fechaDesdeInput.value = savedDate;
+    console.log("Date restored from session:", savedDate);
+  } else if (!fechaDesdeInput.value) {
+    // Only set to current date if no saved date and no value
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+    fechaDesdeInput.value = formattedDate;
+    sessionStorage.setItem("fechaDesde", formattedDate);
+    console.log("Default date set to:", formattedDate);
+  }
+  
+  // Add listener to save date changes to session storage
+  fechaDesdeInput.addEventListener('change', () => {
+    sessionStorage.setItem("fechaDesde", fechaDesdeInput.value);
+    console.log("Date saved to session:", fechaDesdeInput.value);
+  });
+}
 
 window.addEventListener('message', async (event) => {
   if (event.data.type === 'PDF_SIGNED') {
