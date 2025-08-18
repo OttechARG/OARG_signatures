@@ -188,10 +188,21 @@ export class BoxText {
 }
 const cajasTexto: CajaTexto[] = []; // array global de cajas de texto
 
-export function agregarCajaDeTexto(x: number, y: number, width: number, height: number, pageNum: number, texto: string = ""): CajaTexto {
-  const caja = new CajaTexto(x, y, width, height, texto, pageNum);
+export function addTextBox(coordinates: string, pageNum: number, text: string = "", fontSize: number = 12): CajaTexto {
+  // Parse coordinates from format "x1.y1;x2.y2" (PDF points)
+  const [topLeft, bottomRight] = coordinates.split(';');
+  const [x1, y1] = topLeft.split('.').map(Number);
+  const [x2, y2] = bottomRight.split('.').map(Number);
+  
+  // Calculate position and dimensions in PDF points
+  const x = Math.min(x1, x2);
+  const y = Math.min(y1, y2);
+  const width = Math.abs(x2 - x1);
+  const height = Math.abs(y2 - y1);
+  
+  const caja = new CajaTexto(x, y, width, height, text, pageNum, fontSize);
   cajas.push(caja);
-  return caja; // ✅ ahora devuelve la caja
+  return caja;
 }
 
 export function renderCajasTexto(pageNum: number) {

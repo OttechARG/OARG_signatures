@@ -245,7 +245,8 @@ export class TableHandler {
               const pdfData = {
                 base64: jsonResult.pdfBase64,
                 filename: jsonResult.filename,
-                remito: r.SDHNUM_0
+                remito: r.SDHNUM_0,
+                coordinates: jsonResult.coordinates
               };
               sessionStorage.setItem('pdfToSign', JSON.stringify(pdfData));
 
