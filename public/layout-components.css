@@ -595,6 +595,41 @@ body::before {
   border-color: var(--theme-primary-light);
 }
 
+/* Filter cell with dropdown and refresh button */
+.filter-cell-content {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+  width: 100%;
+}
+
+.filter-cell-content .filter-select {
+  flex: 1;
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.refresh-btn:hover {
+  background-color: var(--gray-border);
+  transform: scale(1.1);
+}
+
+.refresh-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
 /* ============================= */
 /* 🎯 Sidebar Layout - Horizontal */
 /* ============================= */

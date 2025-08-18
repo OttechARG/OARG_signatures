@@ -225,26 +225,31 @@ class UserPreferences {
   }
 
   private restoreWorkSessionUI(): void {
-    // Restore puesto selection
+    // Restore puesto selection using new button system
     if (this.workSession.puestoSeleccionado) {
-      const searchInput = document.getElementById("searchInput") as HTMLInputElement;
-      if (searchInput) {
-        searchInput.value = this.workSession.puestoSeleccionado;
-        (window as any).puestoSeleccionado = this.workSession.puestoSeleccionado;
-        
-        // Trigger puesto-related UI logic after a short delay to ensure DOM is ready
-        setTimeout(() => {
-          this.triggerPuestoLogic(this.workSession.puestoSeleccionado!);
-        }, 100);
-      }
+      console.log("Restoring puesto from session:", this.workSession.puestoSeleccionado);
+      (window as any).puestoSeleccionado = this.workSession.puestoSeleccionado;
+      
+      // Trigger puesto-related UI logic after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        this.triggerPuestoLogic(this.workSession.puestoSeleccionado!);
+      }, 200);
     }
   }
 
   private triggerPuestoLogic(puesto: string): void {
+    console.log("Triggering puesto logic for:", puesto);
+    
+    // Update puesto button selection visually
+    if ((window as any).updatePuestoButtonSelection) {
+      (window as any).updatePuestoButtonSelection(puesto);
+    }
+    
     // Import Puestos dynamically or check if it exists
     if ((window as any).Puestos && (window as any).showFieldsAssociatedWithPuesto1) {
       const Puestos = (window as any).Puestos;
       if (puesto === Puestos.lista[0]) {
+        console.log("Showing fields for Punto de Venta Entregas");
         // Trigger the same logic as in signMain.ts
         (window as any).showFieldsAssociatedWithPuesto1();
         this.setCompanyFieldVisibility(true);
@@ -252,9 +257,14 @@ class UserPreferences {
         // After UI is created, restore company/facility data
         setTimeout(() => {
           this.restoreCompanyFacilityData();
-        }, 200);
+        }, 300);
       } else {
+        console.log("Handling other puesto:", puesto);
         this.setCompanyFieldVisibility(false);
+        // Create save button for non-punto de venta puestos
+        if ((window as any).createSaveButton) {
+          (window as any).createSaveButton();
+        }
       }
     }
   }

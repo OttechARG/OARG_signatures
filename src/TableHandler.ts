@@ -73,6 +73,49 @@ export class TableHandler {
     filterSelects.forEach(select => {
       select.addEventListener('change', applyFilters);
     });
+
+    // Setup refresh button
+    const refreshBtn = document.getElementById('refreshTableBtn') as HTMLButtonElement;
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        this.refreshTableWithNoFirmados();
+      });
+    }
+  }
+
+  private async refreshTableWithNoFirmados(): Promise<void> {
+    try {
+      // Get current selection from sessionStorage
+      const savedSelection = sessionStorage.getItem("userSelection");
+      if (!savedSelection) {
+        alert("No selection found. Please select a puesto first.");
+        return;
+      }
+
+      const { company, facility } = JSON.parse(savedSelection);
+      const fechaDesdeInput = document.getElementById("fechaDesde") as HTMLInputElement;
+      const fechaDesde = fechaDesdeInput?.value || undefined;
+
+      // Refresh table data
+      const remitosHandler = (window as any).remitosHandler;
+      if (remitosHandler && company && facility) {
+        const remitos = await remitosHandler.fetchRemitos(company, facility, fechaDesde);
+        await this.renderTable(remitos);
+        
+        // Set filter to "no-firmados" after refresh
+        const filterSelect = document.querySelector('.filter-select[data-col="4"]') as HTMLSelectElement;
+        if (filterSelect) {
+          filterSelect.value = "no-firmados";
+          // Trigger the filter
+          filterSelect.dispatchEvent(new Event('change'));
+        }
+        
+        console.log('Table refreshed and filtered to show no firmados');
+      }
+    } catch (error) {
+      console.error('Error refreshing table:', error);
+      alert('Error refreshing table. Please try again.');
+    }
   }
 
   public async renderTable(remitos: any[]): Promise<void> {

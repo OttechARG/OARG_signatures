@@ -46,11 +46,16 @@
         <th><input type="search" placeholder="Buscar Código" class="filter-input" data-col="2" /></th>
         <th><input type="search" placeholder="Buscar Razón" class="filter-input" data-col="3" /></th>
         <th>
-          <select class="filter-select" data-col="4">
-            <option value="">Todos</option>
-            <option value="no-firmados">No firmados</option>
-            <option value="si-firmados">Si firmados</option>
-          </select>
+          <div class="filter-cell-content">
+            <select class="filter-select" data-col="4">
+              <option value="">Todos</option>
+              <option value="no-firmados">No firmados</option>
+              <option value="si-firmados">Si firmados</option>
+            </select>
+            <button id="refreshTableBtn" class="refresh-btn" type="button">
+              <img src="assets/Refresh.png" alt="Refresh" class="refresh-icon">
+            </button>
+          </div>
         </th>
       </tr>
     </thead>
