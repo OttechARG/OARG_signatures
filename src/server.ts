@@ -3,6 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import * as ini from 'ini';
+import * as soap from 'soap';
+import winston from 'winston';
 import { getConnection } from './configDB.js';
 import { graphqlHTTP } from 'express-graphql';
 import { makeExecutableSchema } from "@graphql-tools/schema";
@@ -12,6 +15,9 @@ import { remitoResolvers, GraphQLDate} from "./graphql/resolvers/RemitoResolvers
 
 const app = express();
 const PORT = 3000;
+
+// In-memory storage for PDF data
+const pdfMemoryStore = new Map<string, Buffer>();
 
 export const resolvers = {
   Date: GraphQLDate,
@@ -29,6 +35,16 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const logfile = path.join(__dirname, "..", "getrpt.log");
+
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json(), winston.format.prettyPrint()),
+  transports: [
+    new winston.transports.File({ filename: logfile, tailable: true }),
+  ],
+});
 
 // Multer setup
 const storage = multer.diskStorage({
@@ -65,29 +81,101 @@ app.get('/firmar/:archivo', (_req: Request, res: Response) => {
 });
 
 app.get("/proxy-getrpt", async (req: Request, res: Response) => {
-  const { PCLE } = req.query;
-  if (!PCLE || typeof PCLE !== "string") {
-    return res.status(400).send("Falta parámetro PCLE");
+  const { PRPT, POBJ, POBJORI, PCLE, WSIGN, PIMPRIMANTE } = req.query;
+
+  if (!PRPT || !POBJ || !POBJORI || !PCLE || !WSIGN || !PIMPRIMANTE) {
+    return res.status(400).send('Faltan parametros');
   }
 
-  const url = `http://localhost:3111/getrpt/getrpt?PRPT=ZREMITOAI&POBJ=SDH&POBJORI=SDH&PCLE=${encodeURIComponent(PCLE)}`;
-
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      return res.status(response.status).send(response.statusText);
-    }
+    const config = ini.parse(fs.readFileSync(path.join(__dirname, "..", "getrpt.ini"), "utf-8"));
 
-    // Leer como buffer para datos binarios (PDF)
-    const buffer = await response.arrayBuffer();
+    const options = {
+      disableCache: true,
+      connection: 'keep-alive'
+    };
 
-    // Setear header correcto para PDF
-    res.set("Content-Type", "application/pdf");
+    let inputXML: string =
+      '<PARAM><GRP ID="GRP1">\
+					<FLD NAME="PRPT"    	TYPE="Char">ZREMITOAI</FLD>\
+          <FLD NAME="PIMPRIMANTE"  TYPE="Char">WSPRINT</FLD>\
+          <FLD NAME="POBJ"    	TYPE="Char">SDH</FLD>\
+					<FLD NAME="POBJORI" 	TYPE="Char">SDH</FLD>\
+					<FLD NAME="PCLE" 		TYPE="Char">' + PCLE + '</FLD>\
+					<FLD NAME="WSIGN" 		TYPE="Char">2</FLD>\
+        </GRP></PARAM>';
 
-    // Enviar el buffer como respuesta
-    res.send(Buffer.from(buffer));
+    let query = {
+      PRPT,
+      POBJ, 
+      POBJORI,
+      PCLE,
+      WSIGN,
+      PIMPRIMANTE,
+      callContext: {
+        codeLang: config.codeLang,
+        poolAlias: config.poolAlias
+      },
+      publicName: config.publicName,
+      inputXml: '<![CDATA[' + inputXML + ']]>'
+    };
+
+    soap.createClient(config.urlsoap, options, (err: any, client: any) => {
+      if (err) {
+        logger.error("Error creating SOAP client:", err);
+        return res.status(400).json(err);
+      }
+
+      client.setSecurity(new soap.BasicAuthSecurity(config.user, config.pass));
+
+      client['run'](query, (err: any, result: any) => {
+        if (err) {
+          logger.error("Error executing SOAP request:", err);
+          return res.status(500).send('error');
+        }
+
+        try {
+          console.log("=== SOAP RESPONSE STRUCTURE ===");
+          console.log(JSON.stringify(result, null, 2));
+          console.log("=== END SOAP RESPONSE ===");
+          logger.info("SOAP response logged to console");
+          
+          // Try to navigate the response structure more safely
+          let resvec;
+          if (result?.runReturn?.resultXml?.$value?.RESULT?.GRP?.FLD) {
+            resvec = result.runReturn.resultXml.$value.RESULT.GRP.FLD;
+          } else if (result?.runReturn?.resultXml?.RESULT?.GRP?.FLD) {
+            resvec = result.runReturn.resultXml.RESULT.GRP.FLD;
+          } else {
+            throw new Error("Unexpected SOAP response structure");
+          }
+
+          let item = resvec.find((i: any) => i.attributes?.NAME === 'PRPT64' || i.$?.NAME === 'PRPT64');
+          if (!item) {
+            throw new Error("PRPT64 field not found in response");
+          }
+
+          let pdfBase64 = item.$value || item._;
+          if (!pdfBase64) {
+            throw new Error("PDF data not found in PRPT64 field");
+          }
+
+          // Return JSON with base64 PDF data
+          res.status(200).json({
+            success: true,
+            pdfBase64: pdfBase64,
+            filename: PCLE + '.pdf'
+          });
+
+        } catch (error) {
+          logger.error("Error processing SOAP response:", error);
+          res.status(500).json({ message: error });
+        }
+      });
+    });
+
   } catch (error) {
-    console.error("Error proxy /proxy-getrpt:", error);
+    logger.error("Error in /proxy-getrpt:", error);
     res.status(500).send("Error en proxy");
   }
 });

@@ -2,15 +2,16 @@ import sql from 'mssql';
 
 const config: sql.config = {
     user: 'SGETO',
-  password: 'tiger',
-  server: '172.20.1.69',
-  database: 'x3db',
-  options: {
+    password: 'tiger',
+    server: '172.20.1.69',
+    database: 'x3db',
+    options: {
     instanceName: 'sage',
     encrypt: false,
     trustServerCertificate: true,
   },
 };
+
 export async function getConnection(): Promise<sql.ConnectionPool> {
   try {
     const pool = await sql.connect(config);

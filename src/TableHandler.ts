@@ -4,9 +4,48 @@ import { recuperarDocumentoBase64ConReintentos } from "./PDFHandler.js";
 export class TableHandler {
   private tableId: string;
   public remitoSeleccionado: { company: string; facility: string; remito: string } | null = null;
+  private isProcessing = false; // Flag to prevent multiple simultaneous requests
 
   constructor(tableId: string) {
     this.tableId = tableId;
+    // Reset processing flag when page loads (handles navigation back)
+    this.isProcessing = false;
+    
+    // Add CSS animation for spinner
+    if (!document.getElementById('spinner-style')) {
+      const style = document.createElement('style');
+      style.id = 'spinner-style';
+      style.textContent = `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Reset flag when window gets focus (handles navigation back)
+    window.addEventListener('focus', () => {
+      this.isProcessing = false;
+      this.resetAllButtons();
+    });
+    
+    // Reset flag when page becomes visible (handles tab switching)
+    window.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        this.isProcessing = false;
+        this.resetAllButtons();
+      }
+    });
+  }
+
+  private resetAllButtons(): void {
+    // Reset all firmar buttons to their original state
+    const buttons = document.querySelectorAll('button[id^="recuperarDocumentoBtn-"]') as NodeListOf<HTMLButtonElement>;
+    buttons.forEach(button => {
+      button.innerHTML = '<img src="assets/Firmar.png" alt="Firmar" style="height: 35px; width: auto;">';
+      button.disabled = false;
+    });
   }
 
   public setupColumnFilters(): void {
@@ -166,6 +205,17 @@ export class TableHandler {
             cursor: 'pointer'
           },
           onClick: async () => {
+            // Prevent multiple simultaneous requests
+            if (this.isProcessing) return;
+            this.isProcessing = true;
+
+            // Show loading indicator on the button
+            const button = document.getElementById(`recuperarDocumentoBtn-${r.SDHNUM_0}`) as HTMLButtonElement;
+            if (button) {
+              button.innerHTML = '<div style="width:20px;height:20px;border:2px solid #ccc;border-top:2px solid #000;border-radius:50%;animation:spin 1s linear infinite;margin:auto;"></div>';
+              button.disabled = true;
+            }
+
             // Guardar datos del remito en sessionStorage para uso posterior
             const remitoData = {
               cpy: r.CPY_0 || "",
@@ -178,30 +228,38 @@ export class TableHandler {
             sessionStorage.setItem('currentRemito', JSON.stringify(remitoData));
             console.log("Datos del remito guardados:", remitoData);
 
-            const url = `/proxy-getrpt?PCLE=${encodeURIComponent(r.SDHNUM_0)}`;
+            const url = `/proxy-getrpt?PRPT=ZREMITOAI&POBJ=SDH&POBJORI=SDH&PCLE=${encodeURIComponent(r.SDHNUM_0)}&WSIGN=2&PIMPRIMANTE=WSPRINT`;
             try {
-              await recuperarDocumentoBase64ConReintentos(url);
-
-              // --- Marcar como firmado en GraphQL ---
-              await fetch("/graphql", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  query: `mutation($key: String!) { signPdf(key: $key) }`,
-                  variables: { key }
-                }),
-              });
-
-              // Actualizar visualmente
-              const firmadoCell = tr.querySelector("td.firmado-column") as HTMLElement;
-              const statusIndicator = firmadoCell.querySelector(".status-indicator") as HTMLElement;
-              const buttonContainer = firmadoCell.querySelector(".button-container") as HTMLElement;
+              // Fetch JSON response with base64 PDF
+              const response = await fetch(url);
+              if (!response.ok) {
+                throw new Error(`Error: ${response.status} ${response.statusText}`);
+              }
               
-              statusIndicator.textContent = "✓";
-              firmadoCell.className = "firmado-column signed-true";
-              buttonContainer.innerHTML = "";
+              const jsonResult = await response.json();
+              if (!jsonResult.success || !jsonResult.pdfBase64) {
+                throw new Error('PDF data not received from server');
+              }
+
+              // Store PDF data in sessionStorage for signing page
+              const pdfData = {
+                base64: jsonResult.pdfBase64,
+                filename: jsonResult.filename,
+                remito: r.SDHNUM_0
+              };
+              sessionStorage.setItem('pdfToSign', JSON.stringify(pdfData));
+
+              // Navigate to signing page (flag will reset when page reloads)
+              window.location.href = `/firmar/${r.SDHNUM_0}`;
 
             } catch (error) {
+              // Reset flag and button on error
+              this.isProcessing = false;
+              const button = document.getElementById(`recuperarDocumentoBtn-${r.SDHNUM_0}`) as HTMLButtonElement;
+              if (button) {
+                button.innerHTML = '<img src="assets/Firmar.png" alt="Firmar" style="height: 35px; width: auto;">';
+                button.disabled = false;
+              }
               console.error(error);
               alert((error as Error).message);
             }

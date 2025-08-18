@@ -174,33 +174,46 @@ sigCanvas.addEventListener("mouseleave", () => (drawing = false));
 
 // Load the PDF file when the page finishes loading
 window.addEventListener("DOMContentLoaded", async () => {
-  const nombreArchivo = window.location.pathname.split("/").pop();  // Extract file name from URL path
-  if (!nombreArchivo) return;                                        // Exit if no file name is found
-
-  const url = `/uploads/${nombreArchivo}`;                           // Construct the URL to fetch the PDF
-  const response = await fetch(url);                                 // Fetch the PDF file from the server
-  if (!response.ok) {
-    alert("No se pudo cargar el PDF");                              // Alert if the PDF couldn't be loaded
+  // Get PDF data from sessionStorage instead of fetching from uploads
+  const pdfDataString = sessionStorage.getItem('pdfToSign');
+  if (!pdfDataString) {
+    alert("No PDF data found. Please go back and try again.");
     return;
   }
-   setupFontSizeControl();
 
-  const arrayBuffer = await response.arrayBuffer();                 // Read response as ArrayBuffer
-  const typedarray = new Uint8Array(arrayBuffer);                    // Convert to typed array for PDF.js
-  fileBuffer = typedarray.slice();                                   // Store a copy of the file buffer
+  const pdfData = JSON.parse(pdfDataString);
+  if (!pdfData.base64) {
+    alert("Invalid PDF data. Please go back and try again.");
+    return;
+  }
+
+  setupFontSizeControl();
+
+  // Convert base64 to Uint8Array for PDF.js
+  const binaryString = atob(pdfData.base64);                        // Decode base64 to binary string
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  
+  fileBuffer = bytes.slice();                                       // Store a copy of the file buffer
 
   // Configure PDF.js worker script to handle PDF parsing in a separate thread
   (pdfjsLib as any).GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.worker.min.js";
 
   // Load the PDF document into pdfDoc object and set the first page as current
-  pdfDoc = await (pdfjsLib as any).getDocument(typedarray).promise;
+  pdfDoc = await (pdfjsLib as any).getDocument(bytes).promise;
   currentPage = 1;
   const nombre = agregarCajaDeTexto(130, 600, 140, 15, 1);
   crearInputParaCaja(nombre);
   const dni = agregarCajaDeTexto(300, 600, 100, 15, 1);
   crearInputParaCaja(dni);
   renderPage(currentPage);                                           // Render the first page of the PDF
+
+  // Clean up sessionStorage after successful load
+  sessionStorage.removeItem('pdfToSign');
 });
 function setupFontSizeControl(): void {
   const fontSizeSlider = document.getElementById("fontSize") as HTMLInputElement;
@@ -341,6 +354,21 @@ export async function guardarFirma(): Promise<void> {
       console.log("JSON archive guardado exitosamente:", result.data.guardarJsonArchive);
       alert(`PDF firmado y JSON archive creado exitosamente.\nArchivo JSON: ${result.data.guardarJsonArchive.jsonFile}`);
       
+      // --- Marcar como firmado en GraphQL ---
+      const key = `${remitoInfo.cpy}-${remitoInfo.stofcy}-${remitoInfo.sdhnum}`;
+      try {
+        await fetch("/graphql", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: `mutation($key: String!) { signPdf(key: $key) }`,
+            variables: { key }
+          }),
+        });
+        console.log("PDF marcado como firmado en GraphQL");
+      } catch (error) {
+        console.error("Error marking PDF as signed:", error);
+      }
 
       // Notificar a la ventana padre para actualizar la UI
       if (window.parent && window.parent !== window) {
