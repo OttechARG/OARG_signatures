@@ -14,7 +14,7 @@ import { facilityResolvers } from "./graphql/resolvers/FacilityResolvers.js";
 import { remitoResolvers, GraphQLDate} from "./graphql/resolvers/RemitoResolvers.js"
 
 const app = express();
-const PORT = 3000;
+let config = ini.parse(fs.readFileSync("signatures.ini", "utf-8"));
 
 // In-memory storage for PDF data
 const pdfMemoryStore = new Map<string, Buffer>();
@@ -88,7 +88,7 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
   }
 
   try {
-    const config = ini.parse(fs.readFileSync(path.join(__dirname, "..", "getrpt.ini"), "utf-8"));
+    const config = ini.parse(fs.readFileSync(path.join(__dirname, "..", "signatures.ini"), "utf-8"));
 
     const options = {
       disableCache: true,
@@ -336,7 +336,7 @@ app.use("/graphql", graphqlHTTP({
   graphiql: true, // habilita interfaz para pruebas
 }));
 
-app.listen(PORT, () => {
-  console.log(`Servidor en http://localhost:${PORT}`);
-  console.log(`GraphQL listo en http://localhost:${PORT}/graphql`);
+app.listen(config.http_port, () => {
+  console.log(`Servidor en http://localhost:${config.http_port}`);
+  console.log(`GraphQL listo en http://localhost:${config.http_port}/graphql`);
 });

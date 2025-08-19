@@ -1,0 +1,18 @@
+2025-08-19 10:47:36 - Starting C:\nvm4w\nodejs\node.exe  --harmony C:\Users\lucas\Ottech\Dev\Projects\OARG_signatures\node_modules\node-windows\lib\wrapper.js --file C:\Users\lucas\Ottech\Dev\Projects\OARG_signatures\lib\server.js --scriptoptions= --log "OARG_signatures wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
+2025-08-19 10:47:36 - Started 34132
+2025-08-19 10:56:31 - Stopping oarg_signatures.exe
+2025-08-19 10:56:31 - ProcessKill 34132
+2025-08-19 10:56:31 - Found child process: 32700 Name: conhost.exe
+2025-08-19 10:56:31 - Found child process: 17560 Name: node.exe
+2025-08-19 10:56:31 - Stopping process 32700
+2025-08-19 10:56:31 - Send SIGINT 32700
+2025-08-19 10:56:31 - SIGINT to 32700 failed - Killing as fallback
+2025-08-19 10:56:32 - Stopping process 17560
+2025-08-19 10:56:32 - Send SIGINT 17560
+2025-08-19 10:56:32 - SIGINT to 17560 failed - Killing as fallback
+2025-08-19 10:56:32 - Stopping process 34132
+2025-08-19 10:56:32 - Send SIGINT 34132
+2025-08-19 10:56:32 - SIGINT to 34132 failed - Killing as fallback
+2025-08-19 10:56:32 - Finished oarg_signatures.exe
+2025-08-19 10:56:32 - Starting C:\nvm4w\nodejs\node.exe  --harmony C:\Users\lucas\Ottech\Dev\Projects\OARG_signatures\node_modules\node-windows\lib\wrapper.js --file C:\Users\lucas\Ottech\Dev\Projects\OARG_signatures\lib\server.js --scriptoptions= --log "OARG_signatures wrapper" --grow 0.25 --wait 1 --maxrestarts 3 --abortonerror n --stopparentfirst undefined
+2025-08-19 10:56:32 - Started 39532

@@ -33,3 +33,113 @@
   level: 'info',
   timestamp: '2025-08-18T18:58:26.086Z'
 }
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /proxy-getrpt: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:76:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:113:7)',
+  timestamp: '2025-08-19T13:48:34.979Z'
+}
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /proxy-getrpt: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:76:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:113:7)',
+  timestamp: '2025-08-19T13:51:54.749Z'
+}
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /proxy-getrpt: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:76:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:113:7)',
+  timestamp: '2025-08-19T13:51:56.652Z'
+}
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /proxy-getrpt: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:76:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:113:7)',
+  timestamp: '2025-08-19T13:51:57.964Z'
+}
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /proxy-getrpt: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:76:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:113:7)',
+  timestamp: '2025-08-19T13:54:15.526Z'
+}
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-19T13:56:53.107Z'
+}
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-19T13:57:04.695Z'
+}

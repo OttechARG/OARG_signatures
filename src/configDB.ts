@@ -1,6 +1,9 @@
 import sql from 'mssql';
+import * as ini from "ini";
+import * as fs from "fs";
 
-const config: sql.config = {
+
+/*const config: sql.config = {
     user: 'SGETO',
     password: 'tiger',
     server: '172.20.1.69',
@@ -10,8 +13,10 @@ const config: sql.config = {
     encrypt: false,
     trustServerCertificate: true,
   },
-};
+};*/
 
+let config_ini = ini.parse(fs.readFileSync("signatures.ini", "utf-8"));
+const config: sql.config = config_ini.db;
 export async function getConnection(): Promise<sql.ConnectionPool> {
   try {
     const pool = await sql.connect(config);
