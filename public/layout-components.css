@@ -911,3 +911,66 @@ tr.selected {
     gap: 3px;
   }
 }
+
+/* ============================= */
+/* 🔘 Firmado Filter Options Styles */
+/* ============================= */
+.firmado-filter-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.filter-option {
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.filter-option:hover {
+  background: var(--theme-primary-light, #1c5fbf);
+  color: white;
+  border-color: var(--theme-primary-light, #1c5fbf);
+}
+
+.filter-option.selected {
+  background: var(--theme-primary, #003e7e);
+  color: white;
+  border-color: var(--theme-primary, #003e7e);
+  font-weight: bold;
+}
+
+.filter-option.selected:hover {
+  background: var(--theme-primary-hover, #002d5e);
+  border-color: var(--theme-primary-hover, #002d5e);
+}
+
+/* Responsive filter options */
+@media (max-width: 768px) {
+  .firmado-filter-options {
+    gap: 4px;
+  }
+  
+  .filter-option {
+    padding: 3px 6px;
+    font-size: 12px;
+  }
+}
+
+/* ============================= */
+/* 📄 Page Size Selector Styles */
+/* ============================= */
+#pageSizeMenuSelect {
+  background: transparent !important;
+  height: 45px !important;
+  padding: 8px 12px !important;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}

@@ -38,6 +38,7 @@ class UserPreferences {
   private workSession: WorkSessionData;
   private themes: ThemeCollection;
   private backgrounds: BackgroundCollection;
+  private hasAutoReloaded: boolean = false; // Prevent multiple auto-reloads
 
   constructor() {
     this.defaultPreferences = {
@@ -296,11 +297,18 @@ class UserPreferences {
       }
     }
 
-    // Auto-reload table if all data is available
+    // Auto-reload table if all data is available, but only once per page load
     if (this.workSession.puestoSeleccionado && 
         this.workSession.selectedCompany && 
-        this.workSession.selectedFacility) {
-      this.autoReloadTable();
+        this.workSession.selectedFacility &&
+        !this.hasAutoReloaded) {
+      // Use a longer delay and ensure we only do this once per page load
+      setTimeout(() => {
+        if (!this.hasAutoReloaded) { // Double-check to prevent race conditions
+          this.hasAutoReloaded = true;
+          this.autoReloadTable();
+        }
+      }, 1000); // 1 second delay to ensure everything is initialized
     }
   }
 
@@ -324,7 +332,8 @@ class UserPreferences {
             this.workSession.selectedFacility,
             fechaDesde,
             1,
-            pageSize
+            pageSize,
+            'no-firmados'
           );
           (window as any).tableHandler.currentParams = { 
             company: this.workSession.selectedCompany, 
@@ -332,6 +341,21 @@ class UserPreferences {
             fechaDesde 
           };
           (window as any).tableHandler.renderTable(result.remitos, result.pagination);
+          
+          // Ensure "No" filter is selected after auto-reload
+          setTimeout(() => {
+            const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+            if (filterContainer) {
+              // Remove selected class from all options
+              filterContainer.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('selected'));
+              // Add selected class to "No" option
+              const noOption = filterContainer.querySelector('.filter-option[data-value="no-firmados"]') as HTMLElement;
+              if (noOption) {
+                noOption.classList.add('selected');
+              }
+            }
+          }, 100);
+          
           console.log('Table auto-reloaded successfully');
         }
       }, 500);
@@ -570,8 +594,11 @@ class UserPreferences {
         const pageSize = parseInt(pageSizeMenuSelect.value);
         this.setPageSize(pageSize);
         
-        // Refresh table with new page size if data is available
-        if ((window as any).refreshCurrentTable) {
+        // Only refresh table if we have complete session data AND table has been rendered at least once
+        if ((window as any).refreshCurrentTable && 
+            this.workSession.selectedCompany && 
+            this.workSession.selectedFacility &&
+            (window as any).tableHandler?.currentParams) {
           (window as any).refreshCurrentTable(1, pageSize); // Reset to page 1 with new size
         }
       });

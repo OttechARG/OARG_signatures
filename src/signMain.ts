@@ -180,7 +180,7 @@ function createSaveButton() {
       // Only fetch remitos if company and facility are available
       if (workSession.selectedCompany && workSession.selectedFacility) {
         const pageSize = window.userPreferences?.getPageSize() || 50;
-        const result = await remitosHandler.fetchRemitos(workSession.selectedCompany, workSession.selectedFacility, fechaDesde, 1, pageSize);
+        const result = await remitosHandler.fetchRemitos(workSession.selectedCompany, workSession.selectedFacility, fechaDesde, 1, pageSize, 'no-firmados');
         tableHandler.currentParams = { company: workSession.selectedCompany, facility: workSession.selectedFacility, fechaDesde };
         tableHandler.renderTable(result.remitos, result.pagination);
       }
@@ -238,7 +238,7 @@ window.addEventListener('message', async (event) => {
       // Refrescar la tabla con datos actualizados
       try {
         const pageSize = window.userPreferences?.getPageSize() || 50;
-        const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize);
+        const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, 'no-firmados');
         tableHandler.currentParams = { company, facility, fechaDesde };
         tableHandler.renderTable(result.remitos, result.pagination);
         console.log('Tabla actualizada exitosamente');

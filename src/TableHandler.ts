@@ -7,6 +7,8 @@ export class TableHandler {
   private isProcessing = false; // Flag to prevent multiple simultaneous requests
   private currentPagination: any = null; // Store current pagination info
   public currentParams: any = null; // Store current search params
+  private lastFilterClickTime: number = 0; // Track last filter click time
+  private filterClickDelay: number = 2000; // 2 second delay between filter clicks
 
   constructor(tableId: string) {
     this.tableId = tableId;
@@ -55,17 +57,12 @@ export class TableHandler {
     if (!table) return;
 
     const filterInputs = table.querySelectorAll<HTMLInputElement>('thead input.filter-input');
-    const filterSelects = table.querySelectorAll<HTMLSelectElement>('thead select.filter-select');
+    const filterOptions = table.querySelectorAll<HTMLElement>('thead .firmado-filter-options');
 
     const applyFilters = () => {
       const textFilters = Array.from(filterInputs).map(i => ({
         colIndex: Number(i.dataset.col),
         value: i.value.toLowerCase().trim()
-      }));
-
-      const selectFilters = Array.from(filterSelects).map(s => ({
-        colIndex: Number(s.dataset.col),
-        value: s.value
       }));
 
       const tbody = table.tBodies[0];
@@ -74,31 +71,13 @@ export class TableHandler {
       Array.from(tbody.rows).forEach(row => {
         let visible = true;
 
-        // Apply text filters
+        // Apply text filters only (firmado filter is now handled at backend)
         for (const filter of textFilters) {
           if (filter.value) {
             const cellText = row.cells[filter.colIndex]?.textContent?.toLowerCase() || '';
             if (!cellText.includes(filter.value)) {
               visible = false;
               break;
-            }
-          }
-        }
-
-        // Apply select filters (firmado column)
-        if (visible) {
-          for (const filter of selectFilters) {
-            if (filter.value) {
-              const cell = row.cells[filter.colIndex];
-              const isSigned = cell?.classList.contains('signed-true');
-              
-              if (filter.value === 'no-firmados' && isSigned) {
-                visible = false;
-                break;
-              } else if (filter.value === 'si-firmados' && !isSigned) {
-                visible = false;
-                break;
-              }
             }
           }
         }
@@ -111,8 +90,29 @@ export class TableHandler {
       input.addEventListener('input', applyFilters);
     });
 
-    filterSelects.forEach(select => {
-      select.addEventListener('change', applyFilters);
+    // Setup filter option click handlers
+    filterOptions.forEach(container => {
+      const options = container.querySelectorAll('.filter-option');
+      options.forEach(option => {
+        option.addEventListener('click', () => {
+          // Debounce rapid filter clicks
+          const now = Date.now();
+          if (now - this.lastFilterClickTime < this.filterClickDelay) {
+            console.log('Filter click debounced - too soon after last click');
+            return;
+          }
+          this.lastFilterClickTime = now;
+          
+          // Remove selected class from all options in this container
+          container.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('selected'));
+          // Add selected class to clicked option
+          option.classList.add('selected');
+          
+          // Get the filter value and refresh data from backend
+          const filterValue = (option as HTMLElement).dataset.value;
+          this.refreshWithFilter(filterValue || '');
+        });
+      });
     });
 
     // Setup refresh button
@@ -144,16 +144,27 @@ export class TableHandler {
         this.currentParams = { company, facility, fechaDesde };
         
         const pageSize = (window as any).userPreferences?.getPageSize() || 50;
-        const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize);
+        // Get current filter value
+        const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+        const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
+        const currentFilter = selectedOption?.dataset.value || 'no-firmados'; // Default to no-firmados
+        
+        const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, currentFilter);
         await this.renderTable(result.remitos, result.pagination);
         
-        // Set filter to "no-firmados" after refresh
-        const filterSelect = document.querySelector('.filter-select[data-col="4"]') as HTMLSelectElement;
-        if (filterSelect) {
-          filterSelect.value = "no-firmados";
-          // Trigger the filter
-          filterSelect.dispatchEvent(new Event('change'));
-        }
+        // Ensure "No" filter is selected after refresh
+        setTimeout(() => {
+          const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+          if (filterContainer) {
+            // Remove selected class from all options
+            filterContainer.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to "No" option
+            const noOption = filterContainer.querySelector('.filter-option[data-value="no-firmados"]') as HTMLElement;
+            if (noOption) {
+              noOption.classList.add('selected');
+            }
+          }
+        }, 100);
         
         console.log('Table refreshed and filtered to show no firmados');
       }
@@ -274,6 +285,9 @@ export class TableHandler {
 
     this.setupColumnFilters();
     this.setupRowSelection();
+    
+    // Apply default filter (No firmados) on initial render
+    this.applyInitialFilter();
   }
 
   private setupRowSelection(): void {
@@ -358,6 +372,11 @@ export class TableHandler {
     
     const pageSize = (window as any).userPreferences?.getPageSize() || 50;
     
+    // Get current filter value
+    const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+    const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
+    const currentFilter = selectedOption?.dataset.value || 'no-firmados';
+    
     try {
       const remitosHandler = (window as any).remitosHandler;
       if (remitosHandler) {
@@ -366,7 +385,8 @@ export class TableHandler {
           this.currentParams.facility,
           this.currentParams.fechaDesde,
           page,
-          pageSize
+          pageSize,
+          currentFilter
         );
         await this.renderTable(result.remitos, result.pagination);
       }
@@ -379,6 +399,11 @@ export class TableHandler {
   public async refreshWithPageSize(page: number = 1, pageSize: number): Promise<void> {
     if (!this.currentParams) return;
     
+    // Get current filter value
+    const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+    const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
+    const currentFilter = selectedOption?.dataset.value || 'no-firmados';
+    
     try {
       const remitosHandler = (window as any).remitosHandler;
       if (remitosHandler) {
@@ -387,12 +412,42 @@ export class TableHandler {
           this.currentParams.facility,
           this.currentParams.fechaDesde,
           page,
-          pageSize
+          pageSize,
+          currentFilter
         );
         await this.renderTable(result.remitos, result.pagination);
       }
     } catch (error) {
       console.error('Error refreshing with page size:', error);
+    }
+  }
+
+  private applyInitialFilter(): void {
+    // No longer needed - filter is applied at backend level
+    // This method is kept for compatibility but does nothing
+  }
+
+  // New method to refresh with filter
+  public async refreshWithFilter(filterValue: string): Promise<void> {
+    if (!this.currentParams) return;
+    
+    try {
+      const remitosHandler = (window as any).remitosHandler;
+      const pageSize = (window as any).userPreferences?.getPageSize() || 50;
+      
+      if (remitosHandler) {
+        const result = await remitosHandler.fetchRemitos(
+          this.currentParams.company,
+          this.currentParams.facility,
+          this.currentParams.fechaDesde,
+          1, // Reset to page 1 when filter changes
+          pageSize,
+          filterValue
+        );
+        await this.renderTable(result.remitos, result.pagination);
+      }
+    } catch (error) {
+      console.error('Error refreshing with filter:', error);
     }
   }
 }

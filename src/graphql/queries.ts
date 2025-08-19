@@ -18,8 +18,8 @@ export const queryFacilities = `
 `;
 
 export const queryRemitos = `
-  query Remitos($cpy: String!, $stofcy: String!, $desde: String, $page: Int, $pageSize: Int) {
-    remitos(cpy: $cpy, stofcy: $stofcy, desde: $desde, page: $page, pageSize: $pageSize) {
+  query Remitos($cpy: String!, $stofcy: String!, $desde: String, $page: Int, $pageSize: Int, $firmadoFilter: String) {
+    remitos(cpy: $cpy, stofcy: $stofcy, desde: $desde, page: $page, pageSize: $pageSize, firmadoFilter: $firmadoFilter) {
       remitos {
         CPY_0
         DLVDAT_0

@@ -11,16 +11,27 @@ export const remitoResolvers = {
   Date: GraphQLDate,
 
   Query: {
-    async remitos(_: any, { cpy, stofcy, desde, page = 1, pageSize = 50 }: { 
+    async remitos(_: any, { cpy, stofcy, desde, page = 1, pageSize = 50, firmadoFilter }: { 
       cpy: string; 
       stofcy: string; 
       desde?: string; 
       page?: number; 
-      pageSize?: number 
+      pageSize?: number;
+      firmadoFilter?: string;
     }) {
-      console.log("Parametros recibidos en resolver remitos:", { cpy, stofcy, desde, page, pageSize });
+      console.log("Parametros recibidos en resolver remitos:", { cpy, stofcy, desde, page, pageSize, firmadoFilter });
       const pool = await getConnection();
       
+      // Build WHERE clause with optional firmado filter
+      let whereClause = "WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy";
+      
+      if (firmadoFilter === "no-firmados") {
+        whereClause += " AND XX6FLSIGN_0 != 2";
+      } else if (firmadoFilter === "si-firmados") {
+        whereClause += " AND XX6FLSIGN_0 = 2";
+      }
+      // If firmadoFilter is empty or "todos", no additional filter is added
+
       // First, get total count
       const countResult = await pool.request()
         .input("cpy", cpy)
@@ -29,7 +40,7 @@ export const remitoResolvers = {
         .query(`
           SELECT COUNT(*) as total
           FROM SDELIVERY
-          WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy
+          ${whereClause}
         `);
       
       const totalCount = countResult.recordset[0]?.total || 0;
@@ -46,7 +57,7 @@ export const remitoResolvers = {
         .query(`
           SELECT CPY_0, DLVDAT_0, STOFCY_0, SDHNUM_0, BPCORD_0, BPDNAM_0, XX6FLSIGN_0
           FROM SDELIVERY
-          WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy
+          ${whereClause}
           ORDER BY DLVDAT_0 DESC
           OFFSET @offset ROWS
           FETCH NEXT @pageSize ROWS ONLY
