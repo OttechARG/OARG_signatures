@@ -143,3 +143,88 @@
   level: 'info',
   timestamp: '2025-08-19T13:57:04.695Z'
 }
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-19T14:24:11.619Z'
+}
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /send-signed-pdf: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:189:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:104:7)',
+  timestamp: '2025-08-19T14:24:15.013Z'
+}
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-19T14:27:59.569Z'
+}
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /send-signed-pdf: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:189:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:104:7)',
+  timestamp: '2025-08-19T14:28:09.117Z'
+}
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-19T14:54:36.153Z'
+}
+{
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini',
+  level: 'error',
+  message: "Error in /send-signed-pdf: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'",
+  stack: "Error: ENOENT: no such file or directory, open 'C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\getrpt.ini'\n" +
+    '    at Object.readFileSync (node:fs:453:20)\n' +
+    '    at file:///C:/Users/lucas/Ottech/Dev/Projects/OARG_signatures/lib/server.js:189:37\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:149:13)\n' +
+    '    at Route.dispatch (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\route.js:119:3)\n' +
+    '    at Layer.handle [as handle_request] (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\layer.js:95:5)\n' +
+    '    at C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:284:15\n' +
+    '    at Function.process_params (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:346:12)\n' +
+    '    at next (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\express\\lib\\router\\index.js:280:10)\n' +
+    '    at jsonParser (C:\\Users\\lucas\\Ottech\\Dev\\Projects\\OARG_signatures\\node_modules\\body-parser\\lib\\types\\json.js:104:7)',
+  timestamp: '2025-08-19T14:54:41.468Z'
+}
+{
+  message: 'SOAP response logged to console',
+  level: 'info',
+  timestamp: '2025-08-19T14:58:23.714Z'
+}
+{
+  message: 'Send signed PDF SOAP response logged',
+  level: 'info',
+  timestamp: '2025-08-19T14:58:30.344Z'
+}

@@ -1,3 +1,5 @@
 node_modules/
 uploads/
 signatures.ini
+lib/daemon/
+getrpt.log

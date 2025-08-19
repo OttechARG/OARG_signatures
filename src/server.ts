@@ -209,13 +209,12 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
 
 app.post("/send-signed-pdf", async (req: Request, res: Response) => {
   const { NREMITO, PRPT64 } = req.body;
-
   if (!NREMITO || !PRPT64) {
     return res.status(400).json({ error: 'NREMITO and PRPT64 are required' });
   }
 
   try {
-    const config = ini.parse(fs.readFileSync(path.join(__dirname, "..", "getrpt.ini"), "utf-8"));
+    const config = ini.parse(fs.readFileSync(path.join(__dirname, "..", "signatures.ini"), "utf-8"));
 
     const options = {
       disableCache: true,
@@ -256,7 +255,6 @@ app.post("/send-signed-pdf", async (req: Request, res: Response) => {
           <FLD NAME="PRPT64"    TYPE="Char">${PRPT64}</FLD>
         </GRP>
       </PARAM>`;
-
     let query = {
       callContext: {
         codeLang: config.codeLang,
