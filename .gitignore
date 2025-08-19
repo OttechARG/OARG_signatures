@@ -3,3 +3,5 @@ uploads/
 signatures.ini
 lib/daemon/
 getrpt.log
+signatures.log
+getrpt.log

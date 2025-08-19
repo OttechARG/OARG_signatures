@@ -36,7 +36,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const logfile = path.join(__dirname, "..", "getrpt.log");
+const logfile = path.join(__dirname, "..", "signatures.log");
 
 const logger = winston.createLogger({
   level: "info",
