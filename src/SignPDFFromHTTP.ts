@@ -376,17 +376,6 @@ export async function guardarFirma(): Promise<void> {
     alert("❌ Error llamando endpoint SOAP");
   }
 
-  // 2️⃣ Download PDF locally
-  const blob = new Blob([pdfBytes], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "pdf_firmado.pdf";
-  a.click();
-  
-  URL.revokeObjectURL(url);
-  console.log("📥 PDF downloaded locally");
 }
 
 // Mousedown -> touchstart
