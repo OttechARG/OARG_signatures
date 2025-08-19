@@ -105,21 +105,21 @@ class UserPreferences {
     this.init();
   }
 
-  private init(): void {
-    this.loadPreferences();
+  private async init(): Promise<void> {
+    await this.loadPreferences();
     this.loadWorkSession();
     this.attachEventListeners();
     this.applyTheme();
     this.restoreWorkSessionUI();
   }
 
-  private loadPreferences(): void {
+  private async loadPreferences(): Promise<void> {
     try {
-      const saved = localStorage.getItem('userPreferences');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Merge with defaults to handle missing properties like pageSize
-        this.preferences = { ...this.defaultPreferences, ...parsed };
+      const response = await fetch('/api/visual-preferences');
+      if (response.ok) {
+        const saved = await response.json();
+        // Merge with defaults to handle missing properties
+        this.preferences = { ...this.defaultPreferences, ...saved };
       } else {
         this.preferences = { ...this.defaultPreferences };
       }
@@ -129,9 +129,19 @@ class UserPreferences {
     }
   }
 
-  private savePreferences(): void {
+  private async savePreferences(): Promise<void> {
     try {
-      localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+      const response = await fetch('/api/visual-preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.preferences)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save preferences');
+      }
     } catch (error) {
       console.error('Error saving preferences:', error);
     }
@@ -450,15 +460,15 @@ class UserPreferences {
     this.applyTheme();
   }
 
-  public resetToDefaults(): void {
+  public async resetToDefaults(): Promise<void> {
     this.preferences = { ...this.defaultPreferences };
     this.applyTheme();
-    this.savePreferences();
+    await this.savePreferences();
   }
 
-  public setPageSize(pageSize: number): void {
+  public async setPageSize(pageSize: number): Promise<void> {
     this.preferences.pageSize = pageSize;
-    this.savePreferences();
+    await this.savePreferences();
   }
 
   public getPageSize(): number {
@@ -576,9 +586,9 @@ class UserPreferences {
     // Reset settings
     const resetSettings = document.getElementById('resetSettings') as HTMLButtonElement;
     if (resetSettings) {
-      resetSettings.addEventListener('click', () => {
+      resetSettings.addEventListener('click', async () => {
         if (confirm('¿Estás seguro de que quieres restablecer todas las preferencias?')) {
-          this.resetToDefaults();
+          await this.resetToDefaults();
         }
       });
     }
@@ -590,9 +600,9 @@ class UserPreferences {
       const currentPageSize = this.preferences.pageSize || 50;
       pageSizeMenuSelect.value = currentPageSize.toString();
       
-      pageSizeMenuSelect.addEventListener('change', () => {
+      pageSizeMenuSelect.addEventListener('change', async () => {
         const pageSize = parseInt(pageSizeMenuSelect.value);
-        this.setPageSize(pageSize);
+        await this.setPageSize(pageSize);
         
         // Only refresh table if we have complete session data AND table has been rendered at least once
         if ((window as any).refreshCurrentTable && 
@@ -607,8 +617,8 @@ class UserPreferences {
     // Save preferences
     const savePreferences = document.getElementById('savePreferences') as HTMLButtonElement;
     if (savePreferences && preferencesModal) {
-      savePreferences.addEventListener('click', () => {
-        this.savePreferences();
+      savePreferences.addEventListener('click', async () => {
+        await this.savePreferences();
         preferencesModal.classList.remove('active');
         
         // Show success message
@@ -639,7 +649,7 @@ class UserPreferences {
 }
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   window.userPreferences = new UserPreferences();
 });
 

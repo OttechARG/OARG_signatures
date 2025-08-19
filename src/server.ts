@@ -334,6 +334,55 @@ app.use("/graphql", graphqlHTTP({
   graphiql: true, // habilita interfaz para pruebas
 }));
 
+// Visual preferences endpoints
+app.get('/api/visual-preferences', (req: Request, res: Response) => {
+  try {
+    const configPath = path.join(__dirname, '..', 'visual-preferences-config.json');
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      res.json(config.visualPreferences);
+    } else {
+      // Return default preferences if file doesn't exist
+      const defaultPreferences = {
+        theme: 'default',
+        background: 'white',
+        backgroundImage: null,
+        customLogo: null,
+        pageSize: 50
+      };
+      res.json(defaultPreferences);
+    }
+  } catch (error) {
+    logger.error('Error loading visual preferences:', error);
+    res.status(500).json({ error: 'Failed to load visual preferences' });
+  }
+});
+
+app.post('/api/visual-preferences', (req: Request, res: Response) => {
+  try {
+    const configPath = path.join(__dirname, '..', 'visual-preferences-config.json');
+    const preferences = req.body;
+    
+    const config = {
+      version: '1.0.0',
+      visualPreferences: preferences,
+      metadata: {
+        lastModified: new Date().toISOString(),
+        createdAt: fs.existsSync(configPath) ? 
+          (JSON.parse(fs.readFileSync(configPath, 'utf-8')).metadata?.createdAt || new Date().toISOString()) : 
+          new Date().toISOString()
+      }
+    };
+    
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    logger.info('Visual preferences saved successfully');
+    res.json({ success: true, message: 'Visual preferences saved' });
+  } catch (error) {
+    logger.error('Error saving visual preferences:', error);
+    res.status(500).json({ error: 'Failed to save visual preferences' });
+  }
+});
+
 app.listen(config.http_port, () => {
   console.log(`Servidor en http://localhost:${config.http_port}`);
   console.log(`GraphQL listo en http://localhost:${config.http_port}/graphql`);
