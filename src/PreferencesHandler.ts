@@ -11,6 +11,8 @@ interface UserPreferencesData {
   background: string;
   backgroundImage: string | null;
   customLogo: string | null;
+  customThemeColor: string | null;
+  customBackgroundColor: string | null;
   pageSize: number;
 }
 
@@ -46,6 +48,8 @@ class UserPreferences {
       background: 'white',
       backgroundImage: null,
       customLogo: null,
+      customThemeColor: null,
+      customBackgroundColor: null,
       pageSize: 50
     };
 
@@ -167,12 +171,22 @@ class UserPreferences {
 
   private applyTheme(): void {
     const root = document.documentElement;
-    const theme = this.themes[this.preferences.theme];
     
-    if (theme) {
-      root.style.setProperty('--theme-primary', theme.primary);
-      root.style.setProperty('--theme-primary-light', theme.primaryLight);
-      root.style.setProperty('--theme-primary-hover', theme.primaryHover);
+    // Apply custom theme color if available, otherwise use predefined theme
+    if (this.preferences.customThemeColor) {
+      const customColor = this.validateAndFormatHexColor(this.preferences.customThemeColor);
+      if (customColor) {
+        root.style.setProperty('--theme-primary', customColor);
+        root.style.setProperty('--theme-primary-light', this.lightenColor(customColor, 20));
+        root.style.setProperty('--theme-primary-hover', this.darkenColor(customColor, 20));
+      }
+    } else {
+      const theme = this.themes[this.preferences.theme];
+      if (theme) {
+        root.style.setProperty('--theme-primary', theme.primary);
+        root.style.setProperty('--theme-primary-light', theme.primaryLight);
+        root.style.setProperty('--theme-primary-hover', theme.primaryHover);
+      }
     }
 
     this.applyBackground();
@@ -186,6 +200,9 @@ class UserPreferences {
     if (this.preferences.backgroundImage) {
       root.style.setProperty('--background-image', `url(${this.preferences.backgroundImage})`);
       root.style.setProperty('--background-color', 'transparent');
+    } else if (this.preferences.customBackgroundColor) {
+      root.style.setProperty('--background-image', 'none');
+      root.style.setProperty('--background-color', this.preferences.customBackgroundColor);
     } else {
       root.style.setProperty('--background-image', 'none');
       const bgValue = this.backgrounds[this.preferences.background] || this.backgrounds.white;
@@ -216,31 +233,96 @@ class UserPreferences {
   }
 
   private updateUISelections(): void {
-    // Update theme selection
+    // Update theme selection - clear if custom theme color is set
     document.querySelectorAll('#colorThemes .color-option').forEach((option: Element) => {
       const element = option as HTMLElement;
       element.classList.remove('selected');
-      if (element.dataset.theme === this.preferences.theme) {
+      if (!this.preferences.customThemeColor && element.dataset.theme === this.preferences.theme) {
         element.classList.add('selected');
       }
     });
 
-    // Update background selection
+    // Update custom theme color inputs
+    const customThemeInput = document.getElementById('customThemeCode') as HTMLInputElement;
+    const customThemePicker = document.getElementById('customThemePicker') as HTMLInputElement;
+    const themePreview = document.getElementById('themePreview') as HTMLElement;
+    
+    if (customThemeInput) {
+      customThemeInput.value = this.preferences.customThemeColor || '';
+    }
+    if (customThemePicker) {
+      customThemePicker.value = this.preferences.customThemeColor || '#3B82F6';
+    }
+    if (themePreview) {
+      themePreview.style.background = this.preferences.customThemeColor || '#3B82F6';
+      if (this.preferences.customThemeColor) {
+        themePreview.classList.add('selected');
+      } else {
+        themePreview.classList.remove('selected');
+      }
+    }
+
+    // Update custom background color inputs
+    const customBackgroundInput = document.getElementById('customBackgroundCode') as HTMLInputElement;
+    const customBackgroundPicker = document.getElementById('customBackgroundPicker') as HTMLInputElement;
+    const backgroundPreview = document.getElementById('backgroundPreview') as HTMLElement;
+    
+    if (customBackgroundInput) {
+      customBackgroundInput.value = this.preferences.customBackgroundColor || '';
+    }
+    if (customBackgroundPicker) {
+      customBackgroundPicker.value = this.preferences.customBackgroundColor || '#F3F4F6';
+    }
+    if (backgroundPreview) {
+      backgroundPreview.style.background = this.preferences.customBackgroundColor || '#F3F4F6';
+      if (this.preferences.customBackgroundColor) {
+        backgroundPreview.classList.add('selected');
+      } else {
+        backgroundPreview.classList.remove('selected');
+      }
+    }
+
+    // Update background selection - clear if custom background color or image is set
     document.querySelectorAll('#backgroundOptions .color-option').forEach((option: Element) => {
       const element = option as HTMLElement;
       element.classList.remove('selected');
-      if (element.dataset.bg === this.preferences.background && !this.preferences.backgroundImage) {
+      if (!this.preferences.customBackgroundColor && !this.preferences.backgroundImage && element.dataset.bg === this.preferences.background) {
         element.classList.add('selected');
       }
     });
+  }
 
-    // Clear background selection if custom image is set
-    if (this.preferences.backgroundImage) {
-      document.querySelectorAll('#backgroundOptions .color-option').forEach((option: Element) => {
-        const element = option as HTMLElement;
-        element.classList.remove('selected');
-      });
+  private validateAndFormatHexColor(color: string): string | null {
+    // Remove # if present and validate format
+    const cleanColor = color.replace('#', '');
+    const hexRegex = /^[0-9A-Fa-f]{6}$/;
+    
+    if (hexRegex.test(cleanColor)) {
+      return '#' + cleanColor.toUpperCase();
     }
+    return null;
+  }
+
+  private lightenColor(hex: string, percent: number): string {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+      (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+  }
+
+  private darkenColor(hex: string, percent: number): string {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) - amt;
+    const G = (num >> 8 & 0x00FF) - amt;
+    const B = (num & 0x0000FF) - amt;
+    return '#' + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+      (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+      (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
   }
 
   private restoreWorkSessionUI(): void {
@@ -432,7 +514,55 @@ class UserPreferences {
   public selectTheme(theme: string): void {
     if (this.themes[theme]) {
       this.preferences.theme = theme;
+      this.preferences.customThemeColor = null; // Clear custom theme color when selecting predefined theme
       this.applyTheme();
+    }
+  }
+
+  public setCustomThemeColor(colorCode: string): void {
+    const validColor = this.validateAndFormatHexColor(colorCode);
+    if (validColor) {
+      this.preferences.customThemeColor = validColor;
+      this.preferences.theme = 'custom';
+      this.updateThemeColorUI(validColor);
+      this.applyTheme();
+    }
+  }
+
+  public setCustomBackgroundColor(colorCode: string): void {
+    const validColor = this.validateAndFormatHexColor(colorCode);
+    if (validColor) {
+      this.preferences.customBackgroundColor = validColor;
+      this.preferences.background = 'custom';
+      this.preferences.backgroundImage = null;
+      this.updateBackgroundColorUI(validColor);
+      this.applyTheme(); // This calls applyBackground internally
+    }
+  }
+
+  private updateThemeColorUI(color: string): void {
+    const themeInput = document.getElementById('customThemeCode') as HTMLInputElement;
+    const themePicker = document.getElementById('customThemePicker') as HTMLInputElement;
+    const themePreview = document.getElementById('themePreview') as HTMLElement;
+    
+    if (themeInput) themeInput.value = color;
+    if (themePicker) themePicker.value = color;
+    if (themePreview) {
+      themePreview.style.background = color;
+      themePreview.classList.add('selected');
+    }
+  }
+
+  private updateBackgroundColorUI(color: string): void {
+    const backgroundInput = document.getElementById('customBackgroundCode') as HTMLInputElement;
+    const backgroundPicker = document.getElementById('customBackgroundPicker') as HTMLInputElement;
+    const backgroundPreview = document.getElementById('backgroundPreview') as HTMLElement;
+    
+    if (backgroundInput) backgroundInput.value = color;
+    if (backgroundPicker) backgroundPicker.value = color;
+    if (backgroundPreview) {
+      backgroundPreview.style.background = color;
+      backgroundPreview.classList.add('selected');
     }
   }
 
@@ -531,6 +661,76 @@ class UserPreferences {
         if (theme) this.selectTheme(theme);
       });
     });
+
+    // Custom theme color picker
+    const customThemePicker = document.getElementById('customThemePicker') as HTMLInputElement;
+    if (customThemePicker) {
+      customThemePicker.addEventListener('input', (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        this.setCustomThemeColor(target.value);
+      });
+    }
+
+    // Custom theme color input
+    const customThemeInput = document.getElementById('customThemeCode') as HTMLInputElement;
+    if (customThemeInput) {
+      customThemeInput.addEventListener('input', (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        let value = target.value.trim();
+        
+        if (value === '') {
+          this.preferences.customThemeColor = null;
+          this.preferences.theme = 'default';
+          this.applyTheme();
+          return;
+        }
+        
+        // Auto-add # if not present
+        if (value.length === 6 && !value.startsWith('#')) {
+          value = '#' + value;
+          target.value = value;
+        }
+        
+        if (value.length === 7 && value.startsWith('#')) {
+          this.setCustomThemeColor(value);
+        }
+      });
+    }
+
+    // Custom background color picker
+    const customBackgroundPicker = document.getElementById('customBackgroundPicker') as HTMLInputElement;
+    if (customBackgroundPicker) {
+      customBackgroundPicker.addEventListener('input', (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        this.setCustomBackgroundColor(target.value);
+      });
+    }
+
+    // Custom background color input
+    const customBackgroundInput = document.getElementById('customBackgroundCode') as HTMLInputElement;
+    if (customBackgroundInput) {
+      customBackgroundInput.addEventListener('input', (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        let value = target.value.trim();
+        
+        if (value === '') {
+          this.preferences.customBackgroundColor = null;
+          this.preferences.background = 'white';
+          this.applyTheme();
+          return;
+        }
+        
+        // Auto-add # if not present
+        if (value.length === 6 && !value.startsWith('#')) {
+          value = '#' + value;
+          target.value = value;
+        }
+        
+        if (value.length === 7 && value.startsWith('#')) {
+          this.setCustomBackgroundColor(value);
+        }
+      });
+    }
 
     // Background selection
     document.querySelectorAll('#backgroundOptions .color-option').forEach((option: Element) => {

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Seleccione un puesto</title>
   <link rel="stylesheet" href="../layout-components.css" />
+  <link rel="stylesheet" href="visual-preferences-modal.css" />
 </head>
 <body>
   <div id="main">
@@ -17,7 +18,7 @@
     <!-- Visual Preferences Button -->
     <div class="settings-dropdown">
       <button id="settingsToggle" class="visual-preferences-btn" aria-label="Visual Preferences">
-        🎨 Visual Preferences
+        Preferencias Visuales
       </button>
       <div id="settingsMenu" class="settings-menu">
         <ul>
@@ -136,65 +137,75 @@
   <div id="preferencesModal" class="preferences-modal">
     <div class="preferences-content">
       <div class="preferences-header">
-        <h2>🎨 Visual Preferences</h2>
+        <h2>Preferencias Visuales</h2>
         <button id="closePreferences" class="close-btn">×</button>
       </div>
 
-      <!-- Theme Colors Section -->
+      <!-- Logo Section -->
       <div class="preference-section">
-        <h3>🎨 Colores del Tema</h3>
-        <div class="color-grid" id="colorThemes">
-          <div class="color-option selected" data-theme="default" style="background: linear-gradient(45deg, #003e7e, #1c5fbf)" title="Azul Ottech (Por defecto)"></div>
-          <div class="color-option" data-theme="emerald" style="background: linear-gradient(45deg, #065f46, #10b981)" title="Verde Esmeralda"></div>
-          <div class="color-option" data-theme="purple" style="background: linear-gradient(45deg, #581c87, #8b5cf6)" title="Púrpura Elegante"></div>
-          <div class="color-option" data-theme="orange" style="background: linear-gradient(45deg, #c2410c, #f97316)" title="Naranja Vibrante"></div>
-          <div class="color-option" data-theme="rose" style="background: linear-gradient(45deg, #be185d, #f43f5e)" title="Rosa Moderno"></div>
-          <div class="color-option" data-theme="slate" style="background: linear-gradient(45deg, #374151, #6b7280)" title="Gris Profesional"></div>
+        <div class="section-header">
+          <h3>Logo</h3>
+          <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+            <img id="currentLogo" src="assets/logo-fondo-blanco.jpg" alt="Logo actual" class="current-logo" style="height: 40px; width: auto;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <label class="upload-btn">
+              Cambiar logo
+              <input type="file" id="logoUpload" accept="image/*" style="display: none;">
+            </label>
+            <button id="resetLogo" class="upload-btn" style="background: #6b7280;">
+              Usar por defecto
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Section -->
+      <div class="preference-section">
+        <div class="section-header">
+          <h3>Tema</h3>
+          <div class="inline-color-grid" id="colorThemes">
+            <div class="color-option selected" data-theme="default" style="background: linear-gradient(45deg, #003e7e, #1c5fbf)" title="Azul Ottech (Por defecto)"></div>
+            <div class="color-option" data-theme="emerald" style="background: linear-gradient(45deg, #065f46, #10b981)" title="Verde Esmeralda"></div>
+            <div class="color-option" data-theme="purple" style="background: linear-gradient(45deg, #581c87, #8b5cf6)" title="Púrpura Elegante"></div>
+            <div class="color-option" data-theme="orange" style="background: linear-gradient(45deg, #c2410c, #f97316)" title="Naranja Vibrante"></div>
+            <div class="color-option" data-theme="rose" style="background: linear-gradient(45deg, #be185d, #f43f5e)" title="Rosa Moderno"></div>
+            <div class="color-option" data-theme="slate" style="background: linear-gradient(45deg, #374151, #6b7280)" title="Gris Profesional"></div>
+            <input type="color" id="customThemePicker" style="width: 30px; height: 30px; border: none; border-radius: 4px; cursor: pointer;">
+            <input type="text" id="customThemeCode" placeholder="#3B82F6" class="input-box" maxlength="7" pattern="^#?[0-9A-Fa-f]{6}$" style="width: 80px; font-size: 0.85em; padding: 4px 6px;">
+            <div class="color-option custom-preview" id="themePreview" style="width: 30px; height: 30px; background: #3B82F6;" title="Color de Tema"></div>
+          </div>
         </div>
       </div>
 
       <!-- Background Section -->
       <div class="preference-section">
-        <h3>🖼️ Fondo</h3>
-        <div class="color-grid" id="backgroundOptions">
-          <div class="color-option" data-bg="white" style="background: #ffffff; border: 2px solid #ddd;" title="Blanco"></div>
-          <div class="color-option" data-bg="light-gray" style="background: #f8fafc;" title="Gris Claro"></div>
-          <div class="color-option" data-bg="blue-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" title="Degradado Azul"></div>
-          <div class="color-option" data-bg="sunset" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);" title="Atardecer"></div>
-          <div class="color-option" data-bg="forest" style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);" title="Bosque"></div>
-          <div class="color-option" data-bg="ocean" style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);" title="Océano"></div>
+        <div class="section-header">
+          <h3>Fondo</h3>
+          <div class="inline-color-grid" id="backgroundOptions">
+            <div class="color-option" data-bg="white" style="background: #ffffff; border: 2px solid #ddd;" title="Blanco"></div>
+            <div class="color-option" data-bg="light-gray" style="background: #f8fafc;" title="Gris Claro"></div>
+            <div class="color-option" data-bg="blue-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" title="Degradado Azul"></div>
+            <div class="color-option" data-bg="sunset" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);" title="Atardecer"></div>
+            <div class="color-option" data-bg="forest" style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);" title="Bosque"></div>
+            <div class="color-option" data-bg="ocean" style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);" title="Océano"></div>
+            <input type="color" id="customBackgroundPicker" style="width: 30px; height: 30px; border: none; border-radius: 4px; cursor: pointer;">
+            <input type="text" id="customBackgroundCode" placeholder="#F3F4F6" class="input-box" maxlength="7" pattern="^#?[0-9A-Fa-f]{6}$" style="width: 80px; font-size: 0.85em; padding: 4px 6px;">
+            <div class="color-option custom-preview" id="backgroundPreview" style="width: 30px; height: 30px; background: #F3F4F6;" title="Color de Fondo"></div>
+          </div>
         </div>
-        <div style="margin-top: var(--space-md);">
-          <label class="file-input-wrapper">
-            📁 Subir imagen personalizada
-            <input type="file" id="backgroundUpload" accept="image/*">
+        <div style="margin-top: 10px; text-align: center;">
+          <label class="upload-btn">
+            Subir imagen
+            <input type="file" id="backgroundUpload" accept="image/*" style="display: none;">
           </label>
-        </div>
-      </div>
-
-      <!-- Logo Section -->
-      <div class="preference-section">
-        <h3>🏢 Logo de la Empresa</h3>
-        <div>
-          <img id="currentLogo" src="assets/logo-fondo-blanco.jpg" alt="Logo actual" class="current-logo">
-        </div>
-        <div style="margin-top: var(--space-md);">
-          <label class="file-input-wrapper">
-            📁 Cambiar logo
-            <input type="file" id="logoUpload" accept="image/*">
-          </label>
-        </div>
-        <div style="margin-top: var(--space-sm);">
-          <button id="resetLogo" style="background: #dc3545; color: white; border: none; padding: var(--space-sm); border-radius: var(--border-radius-sm); cursor: pointer;">
-            🔄 Usar logo por defecto
-          </button>
         </div>
       </div>
 
       <!-- Save Section -->
       <div class="preference-section">
         <button id="savePreferences" style="width: 100%; background: var(--theme-primary); color: white; border: none; padding: var(--space-md); border-radius: var(--border-radius); cursor: pointer; font-size: 1rem;">
-          💾 Guardar Preferencias
+          Guardar Preferencias
         </button>
       </div>
     </div>

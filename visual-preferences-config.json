@@ -1,14 +1,15 @@
 {
   "version": "1.0.0",
   "visualPreferences": {
-    "theme": "orange",
+    "theme": "custom",
     "background": "white",
     "backgroundImage": null,
     "customLogo": null,
+    "customColorCode": "#AAAAAA",
     "pageSize": 50
   },
   "metadata": {
-    "lastModified": "2025-08-19T18:57:31.136Z",
+    "lastModified": "2025-08-19T20:14:10.919Z",
     "createdAt": "2025-08-19T18:57:31.136Z"
   }
 }
