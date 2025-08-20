@@ -42,12 +42,12 @@ export function addTextBox(coordinates: string, pageNum: number, text: string = 
 }
 
 // Obtener cajas por página
-export function obtenerCajasDeTexto(pageNum: number) {
+export function getTextBoxes(pageNum: number) {
   return cajas.filter(c => c.page === pageNum);
 }
 
 // Crea un input DOM para la caja y sincroniza su texto
-export function crearInputParaCaja(caja: CajaTexto) {
+export function createInputForBox(caja: CajaTexto) {
   const input = document.createElement("input");
   input.className = "text-overlay pdf-textbox";
   input.type = "text";
@@ -75,7 +75,7 @@ export function setPdfContainer(container: HTMLDivElement) {
 
 
 // Renderiza solo las cajas de una página (por si quieres refrescar)
-export function renderCajasTexto(pageNum: number) {
+export function renderTextBoxes(pageNum: number) {
   pdfContainer.querySelectorAll<HTMLInputElement>('.pdf-textbox').forEach(el => el.remove());
 
   const cajasPagina = cajas.filter(c => c.page === pageNum); // <-- usar el array global

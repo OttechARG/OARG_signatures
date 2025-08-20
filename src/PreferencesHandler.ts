@@ -17,7 +17,7 @@ interface UserPreferencesData {
 }
 
 interface WorkSessionData {
-  puestoSeleccionado: string | null;
+  selectedPosition: string | null;
   selectedCompany: string | null;
   selectedCompanyName: string | null;
   selectedFacility: string | null;
@@ -54,7 +54,7 @@ class UserPreferences {
     };
 
     this.defaultWorkSession = {
-      puestoSeleccionado: null,
+      selectedPosition: null,
       selectedCompany: null,
       selectedCompanyName: null,
       selectedFacility: null,
@@ -128,7 +128,7 @@ class UserPreferences {
         this.preferences = { ...this.defaultPreferences };
       }
     } catch (error) {
-      console.error('Error loading preferences:', error);
+      console.error('Error al cargar las preferencias:', error);
       this.preferences = { ...this.defaultPreferences };
     }
   }
@@ -144,10 +144,10 @@ class UserPreferences {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to save preferences');
+        throw new Error('Error al guardar las preferencias');
       }
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      console.error('Error al guardar las preferencias:', error);
     }
   }
 
@@ -156,7 +156,7 @@ class UserPreferences {
       const saved = sessionStorage.getItem('workSession');
       this.workSession = saved ? JSON.parse(saved) : { ...this.defaultWorkSession };
     } catch (error) {
-      console.error('Error loading work session:', error);
+      console.error('Error al cargar la sesión de trabajo:', error);
       this.workSession = { ...this.defaultWorkSession };
     }
   }
@@ -165,7 +165,7 @@ class UserPreferences {
     try {
       sessionStorage.setItem('workSession', JSON.stringify(this.workSession));
     } catch (error) {
-      console.error('Error saving work session:', error);
+      console.error('Error al guardar la sesión de trabajo:', error);
     }
   }
 
@@ -327,13 +327,13 @@ class UserPreferences {
 
   private restoreWorkSessionUI(): void {
     // Restore puesto selection using new button system
-    if (this.workSession.puestoSeleccionado) {
-      console.log("Restoring puesto from session:", this.workSession.puestoSeleccionado);
-      (window as any).puestoSeleccionado = this.workSession.puestoSeleccionado;
+    if (this.workSession.selectedPosition) {
+      console.log("Restoring puesto from session:", this.workSession.selectedPosition);
+      (window as any).selectedPosition = this.workSession.selectedPosition;
       
       // Trigger puesto-related UI logic after a short delay to ensure DOM is ready
       setTimeout(() => {
-        this.triggerPuestoLogic(this.workSession.puestoSeleccionado!);
+        this.triggerPuestoLogic(this.workSession.selectedPosition!);
       }, 200);
     }
   }
@@ -390,7 +390,7 @@ class UserPreferences {
     }
 
     // Auto-reload table if all data is available, but only once per page load
-    if (this.workSession.puestoSeleccionado && 
+    if (this.workSession.selectedPosition && 
         this.workSession.selectedCompany && 
         this.workSession.selectedFacility &&
         !this.hasAutoReloaded) {
@@ -452,15 +452,15 @@ class UserPreferences {
         }
       }, 500);
     } catch (error) {
-      console.error('Error auto-reloading table:', error);
+      console.error('Error al recargar automáticamente la tabla:', error);
     }
   }
 
   // Work Session Management Methods
   public setPuesto(puesto: string | null): void {
-    this.workSession.puestoSeleccionado = puesto;
+    this.workSession.selectedPosition = puesto;
     this.saveWorkSession();
-    (window as any).puestoSeleccionado = puesto;
+    (window as any).selectedPosition = puesto;
   }
 
   public setCompany(company: string | null, companyName: string | null = null): void {
@@ -492,7 +492,7 @@ class UserPreferences {
   public clearWorkSession(): void {
     this.workSession = { ...this.defaultWorkSession };
     this.saveWorkSession();
-    (window as any).puestoSeleccionado = null;
+    (window as any).selectedPosition = null;
     
     // Clear UI elements
     const searchInput = document.getElementById("searchInput") as HTMLInputElement;

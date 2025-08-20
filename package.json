@@ -1,5 +1,5 @@
 {
-  "name": "sign-pdf",
+  "name": "firmar-pdf",
   "version": "1.0.0",
   "main": "lib/server.js",
   "type": "module",

@@ -2,21 +2,21 @@
 //IMPORTS
 //---------------------------------------------------------------------------------------------
 
-import { addTextBox, renderCajasTexto, setPdfContainer } from "./PDFHandler.js";
+import { addTextBox, renderTextBoxes, setPdfContainer } from "./PDFHandler.js";
 import { getMousePos, getTouchPos } from "./signUtils.js";
-// Import only the TypeScript type 'PDFDocumentProxy' from pdfjs-dist
-// to help with type checking when working with PDF.js documents (no code output).
+// Importar solo el tipo TypeScript 'PDFDocumentProxy' de pdfjs-dist
+// para ayudar con la verificación de tipos al trabajar con documentos PDF.js (sin salida de código).
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { cajas, crearInputParaCaja, obtenerCajasDeTexto } from "./TextBox.js";
+import { cajas, createInputForBox, getTextBoxes } from "./TextBox.js";
 
-// Get the global reference to the PDF.js library (pdfjsLib) which
-// is loaded as an external script in the browser. This library lets
-// us load, view, and manipulate PDFs on the client side. 
+// Obtener la referencia global a la librería PDF.js (pdfjsLib) que
+// se carga como un script externo en el navegador. Esta librería nos permite
+// cargar, visualizar y manipular PDFs en el lado del cliente. 
 const pdfjsLib = window.pdfjsLib;
 const rgb = (window as any).PDFLib.rgb; 
-// Get the global reference to the PDFDocument class from the pdf-lib
-// library (PDFLib), also loaded as an external script. This class
-// allows us to create and modify PDF files programmatically.
+// Obtener la referencia global a la clase PDFDocument de la librería pdf-lib
+// (PDFLib), también cargada como un script externo. Esta clase
+// nos permite crear y modificar archivos PDF programáticamente.
 const PDFDocument = window.PDFLib.PDFDocument;
 const container = document.getElementById("pdf-viewer-container") as HTMLDivElement;
 if (!container) throw new Error("No se encontró el contenedor PDF");
@@ -26,19 +26,19 @@ setPdfContainer(container);
 // DOM ELEMENTS AND CANVAS SETUP
 //---------------------------------------------------------------------------------------------
 
-// Get the canvas element with id "pdfCanvas" and tell TypeScript it's an HTMLCanvasElement
+// Obtener el elemento canvas con id "pdfCanvas" e indicar a TypeScript que es un HTMLCanvasElement
 const pdfCanvas = document.getElementById("pdf-display-canvas") as HTMLCanvasElement;
 
-// Get the canvas element with id "sigCanvas" and assert its type as HTMLCanvasElement
+// Obtener el elemento canvas con id "sigCanvas" y asegurar su tipo como HTMLCanvasElement
 const sigCanvas = document.getElementById("signature-canvas") as HTMLCanvasElement;
 
-// Get the div element with id "pdfContainer" and assert its type as HTMLDivElement
+// Obtener el elemento div con id "pdfContainer" y asegurar su tipo como HTMLDivElement
 
 
-// Get the 2D drawing context from the PDF canvas for rendering the PDF pages
+// Obtener el contexto de dibujo 2D del canvas PDF para renderizar las páginas del PDF
 const pdfCtx = pdfCanvas.getContext("2d")!;
 
-// Get the 2D drawing context from the signature canvas for capturing the signature
+// Obtener el contexto de dibujo 2D del canvas de firma para capturar la firma
 let sigCtx = sigCanvas.getContext("2d")!;
 
 
@@ -142,7 +142,7 @@ async function renderPage(pageNum: number): Promise<void> {
     (document.getElementById("pageCount") as HTMLElement).textContent = String(pdfDoc.numPages);
 
     // <-- Aquí agregamos la línea para que las cajas de texto se actualicen
-    renderCajasTexto(currentPage);
+    renderTextBoxes(currentPage);
 }
 
 // Event triggered when the mouse button is pressed down on the signature canvas
@@ -177,13 +177,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Get PDF data from sessionStorage instead of fetching from uploads
   const pdfDataString = sessionStorage.getItem('pdfToSign');
   if (!pdfDataString) {
-    alert("No PDF data found. Please go back and try again.");
+    alert("No se encontraron datos del PDF. Por favor regresa e inténtalo de nuevo.");
     return;
   }
 
   const pdfData = JSON.parse(pdfDataString);
   if (!pdfData.base64) {
-    alert("Invalid PDF data. Please go back and try again.");
+    alert("Datos PDF inválidos. Por favor regresa e inténtalo de nuevo.");
     return;
   }
 
@@ -209,7 +209,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Get total number of pages
   if (!pdfDoc) {
-    console.error("Failed to load PDF document");
+    console.error("Error al cargar el documento PDF");
     return;
   }
   const totalPages = pdfDoc.numPages;
@@ -233,7 +233,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           console.log("Created textBox:", textBox);
           // Only create DOM input for current page (page 1)
           if (pageNum === 1) {
-            crearInputParaCaja(textBox);
+            createInputForBox(textBox);
           }
         }
       });
@@ -246,8 +246,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       const dni = addTextBox("300.600;400.615", pageNum);
       // Only create DOM inputs for current page (page 1)
       if (pageNum === 1) {
-        crearInputParaCaja(nombre);
-        crearInputParaCaja(dni);
+        createInputForBox(nombre);
+        createInputForBox(dni);
       }
     }
   }
@@ -297,7 +297,7 @@ function saveSignInPage(): void {
 }
 
 // Apply all saved signatures to the PDF and trigger download of signed PDF
-export async function guardarFirma(): Promise<void> {
+export async function saveSignature(): Promise<void> {
   console.log("guardarFirma llamada");
 
   if (!fileBuffer) {
@@ -322,7 +322,7 @@ export async function guardarFirma(): Promise<void> {
     }
 
     // 2️⃣ Cajas de texto
-    const cajasPagina = obtenerCajasDeTexto(i + 1);
+    const cajasPagina = getTextBoxes(i + 1);
     console.log("Cajas página", i+1, cajasPagina);
     for (const caja of cajasPagina) {
       page.drawText(caja.text || "", {
@@ -409,4 +409,4 @@ sigCanvas.addEventListener("touchcancel", e => {
 });
 // Expose the guardarFirma function globally for the HTML button to call
 // @ts-ignore — Ignore TypeScript error because of dynamic property assignment
-(window as any).guardarFirma = guardarFirma;
+(window as any).guardarFirma = saveSignature;

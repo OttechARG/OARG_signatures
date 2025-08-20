@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "client": "standard",
+  "lastModified": "2025-08-20T00:00:00.000Z",
+  "table": {
+    "dbColumns": [
+      {
+        "field": "SDHNUM_0",
+        "label": "Remito",
+        "type": "text",
+        "width": "120px",
+        "visible": true,
+        "position": 0,
+        "filterable": true,
+        "filterType": "text",
+        "sortable": true
+      },
+      {
+        "field": "DLVDAT_0",
+        "label": "Fecha",
+        "type": "date",
+        "width": "120px",
+        "visible": true,
+        "position": 1,
+        "filterable": true,
+        "filterType": "text",
+        "sortable": true
+      },
+      {
+        "field": "BPCORD_0",
+        "label": "Cod. Cliente",
+        "type": "text",
+        "width": "120px",
+        "visible": true,
+        "position": 2,
+        "filterable": true,
+        "filterType": "text",
+        "sortable": true
+      },
+      {
+        "field": "BPDNAM_0",
+        "label": "Razón Social",
+        "type": "text",
+        "width": "200px",
+        "visible": true,
+        "position": 3,
+        "filterable": true,
+        "filterType": "text",
+        "sortable": true
+      },
+      {
+        "field": "XX6FLSIGN_0",
+        "label": "Firmado",
+        "type": "select",
+        "width": "100px",
+        "visible": true,
+        "position": 4,
+        "filterable": true,
+        "filterType": "select",
+        "filterOptions": [
+          {"value": "no-firmados", "label": "No"},
+          {"value": "si-firmados", "label": "Sí"},
+          {"value": "", "label": "Todos"}
+        ],
+        "sortable": false
+      }
+    ],
+    "settings": {
+      "defaultPageSize": 50,
+      "allowPagination": true,
+      "defaultSort": {
+        "field": "DLVDAT_0",
+        "direction": "desc"
+      }
+    }
+  }
+}

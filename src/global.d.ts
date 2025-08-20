@@ -8,7 +8,7 @@ declare global {
       // si usás más cosas, agregalas acá
     };
     userPreferences: UserPreferences;
-    puestoSeleccionado: string | null;
+    selectedPosition: string | null;
     showFieldsAssociatedWithPuesto1: () => void;
     Puestos: any;
     remitosHandler: any;

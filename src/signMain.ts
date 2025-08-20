@@ -95,7 +95,7 @@ function createSaveButton() {
   }
 
   const workSession = window.userPreferences.getWorkSession();
-  const currentPuesto = workSession.puestoSeleccionado;
+  const currentPuesto = workSession.selectedPosition;
   
   // Define requirements based on puesto
   const getRequirementsForPuesto = (puesto: string) => {
@@ -104,21 +104,21 @@ function createSaveButton() {
         requiresCompany: true,
         requiresFacility: true,
         isAvailable: true,
-        message: "You must select a position, company, and facility to save."
+        message: "Debes seleccionar un puesto, empresa y planta para guardar."
       };
     } else if (puesto === Puestos.lista[1]) { // "Hoja de ruta" is not available
       return {
         requiresCompany: false,
         requiresFacility: false,
         isAvailable: false,
-        message: `${Puestos.lista[1]} is not available.`
+        message: `${Puestos.lista[1]} no está disponible.`
       };
     } else {
       return {
         requiresCompany: false,
         requiresFacility: false,
         isAvailable: true,
-        message: "You must select a position to save."
+        message: "Debes seleccionar un puesto para guardar."
       };
     }
   };
@@ -127,13 +127,13 @@ function createSaveButton() {
 
   createButton(formContainer, {
     id: "btnSaveSelection",
-    text: "Save Selection",
+    text: "Guardar Selección",
     onClick: async () => {
       const workSession = window.userPreferences.getWorkSession();
       const fechaDesde: string | undefined = fechaDesdeInput?.value || undefined;
       
       console.log("Datos a enviar:", { 
-        puesto: workSession.puestoSeleccionado, 
+        puesto: workSession.selectedPosition, 
         company: workSession.selectedCompany, 
         facility: workSession.selectedFacility, 
         fechaDesde 
@@ -149,7 +149,7 @@ function createSaveButton() {
       const missingFields = [];
       
       // Check puesto session storage (no input field anymore, just buttons)
-      if (!workSession.puestoSeleccionado) {
+      if (!workSession.selectedPosition) {
         missingFields.push("position");
       }
       
@@ -174,7 +174,7 @@ function createSaveButton() {
       }
 
       const dataToSave = { 
-        puesto: workSession.puestoSeleccionado, 
+        puesto: workSession.selectedPosition, 
         company: workSession.selectedCompany, 
         facility: workSession.selectedFacility 
       };
@@ -188,7 +188,7 @@ function createSaveButton() {
       }
       
       sessionStorage.setItem("userSelection", JSON.stringify(dataToSave));
-      alert("Selection saved in session.");
+      alert("Selección guardada en la sesión.");
     },
     style: { marginTop: "10px", padding: "8px 16px", alignSelf: "center" }
   });

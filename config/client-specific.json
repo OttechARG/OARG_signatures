@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "client": "specific",
+  "lastModified": "2025-08-20T00:00:00.000Z",
+  "table": {
+    "customColumns": [],
+    "columnOverrides": {},
+    "customFilters": [],
+    "settings": {}
+  }
+}

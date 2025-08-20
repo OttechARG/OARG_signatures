@@ -5,6 +5,7 @@
   <title>Seleccione un puesto</title>
   <link rel="stylesheet" href="../layout-components.css" />
   <link rel="stylesheet" href="visual-preferences-modal.css" />
+  <link rel="stylesheet" href="table-config-modal.css" />
 </head>
 <body>
   <div id="main">
@@ -23,6 +24,7 @@
       <div id="settingsMenu" class="settings-menu">
         <ul>
           <li><button id="openPreferences">Preferencias Visuales</button></li>
+          <li><button id="openTableConfig">Configurar Tabla</button></li>
           <li><button id="resetSettings">Restablecer</button></li>
         </ul>
       </div>
@@ -213,5 +215,6 @@
 
   <script type="module" src="/lib/signMain.js"></script>
   <script type="module" src="/lib/PreferencesHandler.js"></script>
+  <script type="module" src="/lib/ClientTableConfigManager.js"></script>
 </body>
 </html>

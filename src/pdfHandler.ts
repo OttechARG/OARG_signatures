@@ -1,4 +1,4 @@
-import { cajas, CajaTexto, crearInputParaCaja, obtenerCajasDeTexto } from "./TextBox.js";
+import { cajas, CajaTexto, createInputForBox, getTextBoxes } from "./TextBox.js";
 
 export let currentPage = 1;
 
@@ -10,7 +10,7 @@ export let pdfContainer: HTMLDivElement;
 export function setPdfContainer(container: HTMLDivElement) {
   pdfContainer = container;
 }
-export async function llamarMutationSubirPdfBase64(base64: string) {
+export async function callMutationUploadPdfBase64(base64: string) {
       console.log("Inicio de llamada a subirPdfBase64");
   console.log("Tamaño del base64 recibido:", base64.length);
   const query = `
@@ -44,7 +44,7 @@ console.log("URL recibida:", data.subirPdfBase64.url);
 }
 
 // Función para mostrar el PDF con botones Aceptar y Cancelar
-export function mostrarPdfConOpciones(blob: Blob) {
+export function showPdfWithOptions(blob: Blob) {
   const pdfUrl = URL.createObjectURL(blob);
 
   let modal = document.getElementById('pdfModal');
@@ -106,7 +106,7 @@ export function mostrarPdfConOpciones(blob: Blob) {
             });
             }
 //FUNCION PARA RECUPERAR EL DOCUMENTO
-export async function recuperarDocumentoBase64ConReintentos(
+export async function getDocumentBase64WithRetries(
             url: string, 
             maxIntentos = 3
             ) {
@@ -131,7 +131,7 @@ export async function recuperarDocumentoBase64ConReintentos(
                 }
 
                
-                const urlHTMLFirmarPDF = await llamarMutationSubirPdfBase64(base64);
+                const urlHTMLFirmarPDF = await callMutationUploadPdfBase64(base64);
                 console.log("PDF recibido (URL):", urlHTMLFirmarPDF);
                 window.location.href = urlHTMLFirmarPDF;
                 // Hacemos fetch para obtener el contenido HTML desde la URL recibida
@@ -205,11 +205,11 @@ export function addTextBox(coordinates: string, pageNum: number, text: string = 
   return caja;
 }
 
-export function renderCajasTexto(pageNum: number) {
+export function renderTextBoxes(pageNum: number) {
   // eliminar inputs existentes
   const inputs = document.querySelectorAll<HTMLInputElement>("#pdf-viewer-container input[data-page]");
   inputs.forEach(i => i.remove());
 
-  const cajasPagina = obtenerCajasDeTexto(pageNum);
-  cajasPagina.forEach(caja => crearInputParaCaja(caja));
+  const cajasPagina = getTextBoxes(pageNum);
+  cajasPagina.forEach(caja => createInputForBox(caja));
 }

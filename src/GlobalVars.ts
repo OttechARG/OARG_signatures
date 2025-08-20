@@ -1,4 +1,4 @@
 declare global {
-  var puestoSeleccionado: string | null;
+  var selectedPosition: string | null;
 }export{}
 

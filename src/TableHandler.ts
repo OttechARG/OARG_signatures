@@ -1,5 +1,5 @@
 import { createButton } from "./ButtonsHandler.js";
-import { recuperarDocumentoBase64ConReintentos } from "./PDFHandler.js";
+import { getDocumentBase64WithRetries } from "./PDFHandler.js";
 
 export class TableHandler {
   private tableId: string;
@@ -129,7 +129,7 @@ export class TableHandler {
       // Get current selection from sessionStorage
       const savedSelection = sessionStorage.getItem("userSelection");
       if (!savedSelection) {
-        alert("No selection found. Please select a puesto first.");
+        alert("No se encontró selección. Por favor selecciona un puesto primero.");
         return;
       }
 
@@ -169,8 +169,8 @@ export class TableHandler {
         console.log('Table refreshed and filtered to show no firmados');
       }
     } catch (error) {
-      console.error('Error refreshing table:', error);
-      alert('Error refreshing table. Please try again.');
+      console.error('Error al actualizar la tabla:', error);
+      alert('Error al actualizar la tabla. Por favor inténtalo de nuevo.');
     }
   }
 
@@ -391,7 +391,7 @@ export class TableHandler {
         await this.renderTable(result.remitos, result.pagination);
       }
     } catch (error) {
-      console.error('Error changing page:', error);
+      console.error('Error al cambiar de página:', error);
     }
   }
 
@@ -418,7 +418,7 @@ export class TableHandler {
         await this.renderTable(result.remitos, result.pagination);
       }
     } catch (error) {
-      console.error('Error refreshing with page size:', error);
+      console.error('Error al actualizar con el tamaño de página:', error);
     }
   }
 
@@ -447,7 +447,7 @@ export class TableHandler {
         await this.renderTable(result.remitos, result.pagination);
       }
     } catch (error) {
-      console.error('Error refreshing with filter:', error);
+      console.error('Error al actualizar con el filtro:', error);
     }
   }
 }

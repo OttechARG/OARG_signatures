@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 var config = ini.parse(fs.readFileSync("signatures.ini", "utf-8"));
 
-// Create a new service object
+// Crear un nuevo objeto de servicio
 var svc = new node_windows.Service({
   name: config.winservice || "OARG_signatures",
   description: "OARG servicio de firmas Ottech ARG.",

@@ -122,7 +122,7 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
 
     soap.createClient(config.urlsoap, options, (err: any, client: any) => {
       if (err) {
-        logger.error("Error creating SOAP client:", err);
+        logger.error("Error al crear el cliente SOAP:", err);
         return res.status(400).json(err);
       }
 
@@ -130,7 +130,7 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
 
       client['run'](query, (err: any, result: any) => {
         if (err) {
-          logger.error("Error executing SOAP request:", err);
+          logger.error("Error al ejecutar la petición SOAP:", err);
           return res.status(500).send('error');
         }
 
@@ -195,7 +195,7 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
           });
 
         } catch (error) {
-          logger.error("Error processing SOAP response:", error);
+          logger.error("Error al procesar la respuesta SOAP:", error);
           res.status(500).json({ message: error });
         }
       });
@@ -268,16 +268,16 @@ app.post("/send-signed-pdf", async (req: Request, res: Response) => {
 
     soap.createClient(config.urlsoap, options, (err: any, client: any) => {
       if (err) {
-        logger.error("Error creating SOAP client for send-signed-pdf:", err);
-        return res.status(400).json({ error: "SOAP client creation failed", details: err });
+        logger.error("Error al crear el cliente SOAP para send-signed-pdf:", err);
+        return res.status(400).json({ error: "Error al crear el cliente SOAP", details: err });
       }
 
       client.setSecurity(new soap.BasicAuthSecurity(config.user, config.pass));
 
       client['run'](query, (err: any, result: any) => {
         if (err) {
-          logger.error("Error executing SOAP request for send-signed-pdf:", err);
-          return res.status(500).json({ error: "SOAP request failed", details: err });
+          logger.error("Error al ejecutar la petición SOAP para send-signed-pdf:", err);
+          return res.status(500).json({ error: "Error en la petición SOAP", details: err });
         }
 
         try {
@@ -294,15 +294,15 @@ app.post("/send-signed-pdf", async (req: Request, res: Response) => {
           });
 
         } catch (error) {
-          logger.error("Error processing send signed PDF response:", error);
-          res.status(500).json({ error: "Error processing response", details: error });
+          logger.error("Error al procesar la respuesta del PDF firmado:", error);
+          res.status(500).json({ error: "Error al procesar la respuesta", details: error });
         }
       });
     });
 
   } catch (error) {
-    logger.error("Error in /send-signed-pdf:", error);
-    res.status(500).json({ error: "Internal server error", details: error });
+    logger.error("Error en /send-signed-pdf:", error);
+    res.status(500).json({ error: "Error interno del servidor", details: error });
   }
 });
 
@@ -353,8 +353,8 @@ app.get('/api/visual-preferences', (req: Request, res: Response) => {
       res.json(defaultPreferences);
     }
   } catch (error) {
-    logger.error('Error loading visual preferences:', error);
-    res.status(500).json({ error: 'Failed to load visual preferences' });
+    logger.error('Error al cargar las preferencias visuales:', error);
+    res.status(500).json({ error: 'Error al cargar las preferencias visuales' });
   }
 });
 
@@ -378,8 +378,78 @@ app.post('/api/visual-preferences', (req: Request, res: Response) => {
     logger.info('Visual preferences saved successfully');
     res.json({ success: true, message: 'Visual preferences saved' });
   } catch (error) {
-    logger.error('Error saving visual preferences:', error);
-    res.status(500).json({ error: 'Failed to save visual preferences' });
+    logger.error('Error al guardar las preferencias visuales:', error);
+    res.status(500).json({ error: 'Error al guardar las preferencias visuales' });
+  }
+});
+
+// Client Table Configuration API endpoints
+app.get('/api/config/client-standard', (req: Request, res: Response) => {
+  try {
+    const configPath = path.join(__dirname, '..', 'config', 'client-standard.json');
+    console.log('Looking for client-standard.json at:', configPath);
+    console.log('File exists:', fs.existsSync(configPath));
+    
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      res.json(config);
+    } else {
+      logger.warn('client-standard.json not found at:', configPath);
+      res.status(404).json({ error: 'Standard configuration not found', path: configPath });
+    }
+  } catch (error) {
+    logger.error('Error al cargar la configuración estándar del cliente:', error);
+    res.status(500).json({ error: 'Error al cargar la configuración estándar' });
+  }
+});
+
+app.get('/api/config/client-specific', (req: Request, res: Response) => {
+  try {
+    const configPath = path.join(__dirname, '..', 'config', 'client-specific.json');
+    
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      res.json(config);
+    } else {
+      // Return default empty specific config
+      const defaultConfig = {
+        version: "1.0",
+        client: "specific",
+        lastModified: new Date().toISOString(),
+        table: {
+          customColumns: [],
+          columnOverrides: {},
+          customFilters: [],
+          settings: {}
+        }
+      };
+      res.json(defaultConfig);
+    }
+  } catch (error) {
+    logger.error('Error al cargar la configuración específica del cliente:', error);
+    res.status(500).json({ error: 'Error al cargar la configuración específica' });
+  }
+});
+
+app.post('/api/config/client-specific', (req: Request, res: Response) => {
+  try {
+    const configPath = path.join(__dirname, '..', 'config', 'client-specific.json');
+    const configDir = path.dirname(configPath);
+    
+    // Ensure directory exists
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    
+    const config = req.body;
+    config.lastModified = new Date().toISOString();
+    
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    logger.info('Client specific configuration saved successfully');
+    res.json({ success: true, message: 'Configuration saved successfully' });
+  } catch (error) {
+    logger.error('Error al guardar la configuración específica del cliente:', error);
+    res.status(500).json({ error: 'Error al guardar la configuración' });
   }
 });
 
