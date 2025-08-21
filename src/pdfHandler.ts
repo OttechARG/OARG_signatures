@@ -136,6 +136,7 @@ export async function getDocumentBase64WithRetries(
                 window.location.href = urlHTMLFirmarPDF;
                 // Hacemos fetch para obtener el contenido HTML desde la URL recibida
                 
+                
                 return base64;
 
                 } catch (error) {
@@ -212,4 +213,13 @@ export function renderTextBoxes(pageNum: number) {
 
   const cajasPagina = getTextBoxes(pageNum);
   cajasPagina.forEach(caja => createInputForBox(caja));
+}
+// -----------------------------------------------------------------------------
+// BOTÓN CANCELAR (volver a signMain.html)
+// -----------------------------------------------------------------------------
+const cancelarBtn = document.getElementById("cancelarBtn") as HTMLButtonElement | null;
+if (cancelarBtn) {
+  cancelarBtn.addEventListener("click", () => {
+    window.location.href = "../signMain.html";
+  });
 }

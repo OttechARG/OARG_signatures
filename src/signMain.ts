@@ -189,7 +189,10 @@ function createSaveButton() {
       
       sessionStorage.setItem("userSelection", JSON.stringify(dataToSave));
       alert("Selección guardada en la sesión.");
+      // Close the side menu and show table view
+      menuHandler.toggleMenu();
     },
+    
     style: { marginTop: "10px", padding: "8px 16px", alignSelf: "center" }
   });
 }
@@ -197,6 +200,10 @@ function createSaveButton() {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem("pdfToSign")) {
+    sessionStorage.removeItem("pdfToSign");
+    console.log("pdfToSign eliminado de la sesión");
+  }
   initializePuestoButtons();
   setDefaultDate();
 });

@@ -170,14 +170,27 @@ sigCanvas.addEventListener("mouseup", () => (drawing = false));
 // Event triggered when the mouse leaves the canvas area
 // Stops drawing to avoid unwanted strokes outside the canvas
 sigCanvas.addEventListener("mouseleave", () => (drawing = false));
+let isRedirecting = false;
+window.addEventListener("pageshow", (e: PageTransitionEvent) => {
+  if (isRedirecting) return; // previene doble ejecución
 
+  const pdfDataString = sessionStorage.getItem('pdfToSign');
 
+  if (e.persisted || !pdfDataString) {
+    isRedirecting = true; // marcar que estamos redirigiendo
+    sessionStorage.removeItem('pdfToSign');
+    sessionStorage.removeItem('currentRemito');
+    // Usar replace evita que quede en el historial
+    window.location.replace("../signMain.html");
+  }
+});
 // Load the PDF file when the page finishes loading
 window.addEventListener("DOMContentLoaded", async () => {
+  
   // Get PDF data from sessionStorage instead of fetching from uploads
   const pdfDataString = sessionStorage.getItem('pdfToSign');
   if (!pdfDataString) {
-    alert("No se encontraron datos del PDF. Por favor regresa e inténtalo de nuevo.");
+    window.location.href = "../signMain.html";
     return;
   }
 
@@ -323,7 +336,6 @@ export async function saveSignature(): Promise<void> {
 
     // 2️⃣ Cajas de texto
     const cajasPagina = getTextBoxes(i + 1);
-    console.log("Cajas página", i+1, cajasPagina);
     for (const caja of cajasPagina) {
       page.drawText(caja.text || "", {
         x: caja.x,
@@ -335,48 +347,43 @@ export async function saveSignature(): Promise<void> {
   }
 
   const pdfBytes = await pdfDocLib.save();
-  
-  // Obtener parámetros del remito desde sessionStorage
+
   const storedRemitoData = sessionStorage.getItem('currentRemito');
   let remitoInfo: any = {};
-  
-  if (storedRemitoData) {
-    remitoInfo = JSON.parse(storedRemitoData);
-  }
-  
-  // 1️⃣ Send signed PDF via SOAP
+  if (storedRemitoData) remitoInfo = JSON.parse(storedRemitoData);
+
   try {
     if (remitoInfo.sdhnum) {
       console.log("Sending PDF to SOAP endpoint...");
       const soapResponse = await fetch('/send-signed-pdf', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           NREMITO: remitoInfo.sdhnum,
           PRPT64: btoa(String.fromCharCode(...pdfBytes))
         })
       });
-      
+
       const soapResult = await soapResponse.json();
       if (soapResult.success) {
-        console.log('✅ PDF sent via SOAP successfully:', soapResult);
         alert("✅ PDF enviado exitosamente via SOAP");
       } else {
-        console.error('❌ Error sending PDF via SOAP:', soapResult);
         alert("❌ Error enviando PDF via SOAP");
       }
     } else {
-      console.warn("No remito number found, skipping SOAP call");
       alert("⚠️ No se encontró número de remito, omitiendo envío SOAP");
     }
   } catch (error) {
     console.error('❌ Error calling SOAP endpoint:', error);
     alert("❌ Error llamando endpoint SOAP");
+  } finally {
+    sessionStorage.removeItem('pdfToSign');
+    sessionStorage.removeItem('currentRemito');
+    // Redirigir siempre después de mostrar el alert
+    window.location.href = "../signMain.html";
   }
-
 }
+
 
 // Mousedown -> touchstart
 sigCanvas.addEventListener("touchstart", e => {
