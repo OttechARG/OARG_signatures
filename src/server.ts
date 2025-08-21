@@ -51,6 +51,7 @@ const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const uploadsDir = path.join(__dirname, '../uploads');
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+
     cb(null, uploadsDir);
   },
   filename: (_req, file, cb) => {
@@ -66,7 +67,7 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Static folders
 app.use(express.static(path.join(__dirname, '../public')));
-app.use('/lib', express.static(path.join(__dirname, '../lib')));
+app.use('/lib', express.static(path.join(__dirname, '.')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Rutas

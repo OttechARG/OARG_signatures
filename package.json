@@ -1,10 +1,10 @@
 {
   "name": "firmar-pdf",
   "version": "1.0.0",
-  "main": "lib/core/server.js",
+  "main": "lib/server.js",
   "type": "module",
   "scripts": {
-    "start": "tsc && node lib/core/server.js",
+    "start": "tsc && node lib/server.js",
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
