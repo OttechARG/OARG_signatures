@@ -220,6 +220,9 @@ export function renderTextBoxes(pageNum: number) {
 const cancelarBtn = document.getElementById("cancelarBtn") as HTMLButtonElement | null;
 if (cancelarBtn) {
   cancelarBtn.addEventListener("click", () => {
-    window.location.href = "../signMain.html";
+    // Clean up sessionStorage before navigating back
+    sessionStorage.removeItem('pdfToSign');
+    sessionStorage.removeItem('currentRemito');
+    window.location.href = "/";
   });
 }

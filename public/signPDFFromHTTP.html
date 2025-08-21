@@ -20,19 +20,22 @@
     </div>
 
     <div id="pdf-controls">
-      <button id="prevPage">Anterior</button>
-      <button id="nextPage">Siguiente</button>
+      <button id="prevPage">←</button>
+      <button id="nextPage">→</button>
+      <button id="btn-sign" onclick="guardarFirma()">Enviar</button>
+      <button id="borrarBtn">Borrar</button>
+      <button id="cancelarBtn">Cancelar</button>
+    </div>
+    
+    <div class="control-row">
       <span>
         Página: <span id="pageNum">1</span> / <span id="pageCount">--</span>
       </span>
-      
-      <button id="btn-sign" onclick="guardarFirma()">Enviar</button>
-      <button id="cancelarBtn">Cancelar</button>
-    </div>
-        <div class="text-size-control">
-      <label for="fontSize">Tamaño texto:</label>
-      <input type="range" id="fontSize" min="8" max="24" value="12" step="1">
-      <span id="fontSizeValue">12px</span>
+      <div class="text-size-control">
+        <label for="fontSize" style="color: black;">Tamaño texto:</label>
+        <input type="range" id="fontSize" min="8" max="24" value="12" step="1">
+        <span id="fontSizeValue">12px</span>
+      </div>
     </div>
   </div>
 

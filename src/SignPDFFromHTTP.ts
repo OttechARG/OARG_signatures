@@ -171,17 +171,33 @@ sigCanvas.addEventListener("mouseup", () => (drawing = false));
 // Stops drawing to avoid unwanted strokes outside the canvas
 sigCanvas.addEventListener("mouseleave", () => (drawing = false));
 let isRedirecting = false;
+
+// Prevent navigation back - PDF should only be viewable once
 window.addEventListener("pageshow", (e: PageTransitionEvent) => {
-  if (isRedirecting) return; // previene doble ejecución
+  if (isRedirecting) return; // Prevent double execution
 
   const pdfDataString = sessionStorage.getItem('pdfToSign');
 
+  // If page is loaded from cache (back/forward navigation) or no PDF data exists
   if (e.persisted || !pdfDataString) {
-    isRedirecting = true; // marcar que estamos redirigiendo
+    isRedirecting = true;
+    console.log("Navigation prevention triggered: PDF can only be viewed once");
+    
+    // Clean up any remaining data
     sessionStorage.removeItem('pdfToSign');
     sessionStorage.removeItem('currentRemito');
-    // Usar replace evita que quede en el historial
-    window.location.replace("../signMain.html");
+    
+    // Use replace to avoid adding to browser history
+    window.location.replace("/");
+  }
+});
+
+// Additional protection: prevent browser back button
+window.addEventListener("beforeunload", () => {
+  // Clean up data when leaving the page naturally
+  if (!isRedirecting) {
+    sessionStorage.removeItem('pdfToSign');
+    sessionStorage.removeItem('currentRemito');
   }
 });
 // Load the PDF file when the page finishes loading
@@ -190,7 +206,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Get PDF data from sessionStorage instead of fetching from uploads
   const pdfDataString = sessionStorage.getItem('pdfToSign');
   if (!pdfDataString) {
-    window.location.href = "../signMain.html";
+    window.location.href = "/";
     return;
   }
 
@@ -309,6 +325,17 @@ function saveSignInPage(): void {
   signs[currentPage] = imgData;                                      // Store it keyed by current page number
 }
 
+// Clear the signature from the current page only
+function clearCurrentPageSignature(): void {
+  // Clear the signature canvas
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  
+  // Remove the signature from the signs object for current page
+  delete signs[currentPage];
+  
+  console.log(`Signature cleared for page ${currentPage}`);
+}
+
 // Apply all saved signatures to the PDF and trigger download of signed PDF
 export async function saveSignature(): Promise<void> {
   console.log("guardarFirma llamada");
@@ -380,7 +407,7 @@ export async function saveSignature(): Promise<void> {
     sessionStorage.removeItem('pdfToSign');
     sessionStorage.removeItem('currentRemito');
     // Redirigir siempre después de mostrar el alert
-    window.location.href = "../signMain.html";
+    window.location.href = "/";
   }
 }
 
@@ -414,6 +441,14 @@ sigCanvas.addEventListener("touchcancel", e => {
   e.preventDefault();
   drawing = false;
 });
+// Add event listener for the "Borrar" button
+const borrarBtn = document.getElementById("borrarBtn") as HTMLButtonElement;
+if (borrarBtn) {
+  borrarBtn.addEventListener("click", () => {
+    clearCurrentPageSignature();
+  });
+}
+
 // Expose the guardarFirma function globally for the HTML button to call
 // @ts-ignore — Ignore TypeScript error because of dynamic property assignment
 (window as any).guardarFirma = saveSignature;
