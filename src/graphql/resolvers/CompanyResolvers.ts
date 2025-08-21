@@ -1,4 +1,4 @@
-import { getConnection } from "../../configDB.js";
+import { getConnection } from "../../core/configDB.js";
 
 export const companyResolvers = {
   Query: {

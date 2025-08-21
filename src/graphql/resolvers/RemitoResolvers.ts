@@ -1,4 +1,4 @@
-import { getConnection } from "../../configDB.js";
+import { getConnection } from "../../core/configDB.js";
 import { GraphQLDate } from 'graphql-scalars';
 import path from 'path';
 import fs from 'fs';

@@ -9,9 +9,9 @@ import winston from 'winston';
 import { getConnection } from './configDB.js';
 import { graphqlHTTP } from 'express-graphql';
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { companyResolvers } from "./graphql/resolvers/CompanyResolvers.js";
-import { facilityResolvers } from "./graphql/resolvers/FacilityResolvers.js";
-import { remitoResolvers, GraphQLDate} from "./graphql/resolvers/RemitoResolvers.js"
+import { companyResolvers } from "../graphql/resolvers/CompanyResolvers.js";
+import { facilityResolvers } from "../graphql/resolvers/FacilityResolvers.js";
+import { remitoResolvers, GraphQLDate} from "../graphql/resolvers/RemitoResolvers.js"
 
 const app = express();
 let config = ini.parse(fs.readFileSync("signatures.ini", "utf-8"));

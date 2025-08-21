@@ -1,4 +1,4 @@
-import { queryRemitos } from "./graphql/queries.js";
+import { queryRemitos } from "../graphql/queries.js";
 
 
 export class RemitosHandler {

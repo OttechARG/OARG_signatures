@@ -7,7 +7,7 @@ import { getMousePos, getTouchPos } from "./signUtils.js";
 // Importar solo el tipo TypeScript 'PDFDocumentProxy' de pdfjs-dist
 // para ayudar con la verificación de tipos al trabajar con documentos PDF.js (sin salida de código).
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { cajas, createInputForBox, getTextBoxes } from "./TextBox.js";
+import { cajas, createInputForBox, getTextBoxes } from "../ui/TextBox.js";
 
 // Obtener la referencia global a la librería PDF.js (pdfjsLib) que
 // se carga como un script externo en el navegador. Esta librería nos permite

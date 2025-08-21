@@ -1,9 +1,9 @@
-import { createButton } from './ButtonsHandler.js';
-import { GET_COMPANIES, queryFacilities, queryRemitos } from "./graphql/queries.js";
-import { Puestos } from "./HiddenValues.js";
-import { SettingsMenuHandler } from './SettingsMenuHandler.js';
-import { RemitosHandler } from './RemitosHandler.js';
-import { TableHandler } from "./TableHandler.js";
+import { createButton } from '../ui/ButtonsHandler.js';
+import { GET_COMPANIES, queryFacilities, queryRemitos } from "../graphql/queries.js";
+import { Puestos } from "../business/HiddenValues.js";
+import { SettingsMenuHandler } from '../ui/SettingsMenuHandler.js';
+import { RemitosHandler } from '../business/RemitosHandler.js';
+import { TableHandler } from "../ui/TableHandler.js";
 import { setPdfContainer, setCurrentPage } from './PDFHandler.js';
 
 const pdfContainerEl = document.getElementById("pdfContainer") as HTMLDivElement;

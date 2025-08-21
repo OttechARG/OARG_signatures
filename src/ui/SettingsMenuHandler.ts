@@ -1,4 +1,4 @@
-import { Puestos } from "./HiddenValues.js";
+import { Puestos } from "../business/HiddenValues.js";
 
 export class SettingsMenuHandler {
   private menuToggle: HTMLElement | null;

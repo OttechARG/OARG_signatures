@@ -1,4 +1,4 @@
-import { UserPreferences } from './PreferencesHandler.js';
+import { UserPreferences } from '../ui/PreferencesHandler.js';
 
 declare global {
   interface Window {

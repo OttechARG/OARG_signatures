@@ -1,5 +1,5 @@
 import { createButton } from "./ButtonsHandler.js";
-import { getDocumentBase64WithRetries } from "./PDFHandler.js";
+import { getDocumentBase64WithRetries } from "../pdf/PDFHandler.js";
 
 export class TableHandler {
   private tableId: string;

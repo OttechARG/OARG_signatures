@@ -1,4 +1,4 @@
-import { cajas, CajaTexto, createInputForBox, getTextBoxes } from "./TextBox.js";
+import { cajas, CajaTexto, createInputForBox, getTextBoxes } from "../ui/TextBox.js";
 
 export let currentPage = 1;
 
