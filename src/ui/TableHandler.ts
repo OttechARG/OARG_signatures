@@ -59,35 +59,46 @@ export class TableHandler {
     const filterInputs = table.querySelectorAll<HTMLInputElement>('thead input.filter-input');
     const filterOptions = table.querySelectorAll<HTMLElement>('thead .firmado-filter-options');
 
-    const applyFilters = () => {
-      const textFilters = Array.from(filterInputs).map(i => ({
-        colIndex: Number(i.dataset.col),
-        value: i.value.toLowerCase().trim()
-      }));
+    // Store current timeout for debouncing
+    let filterTimeout: NodeJS.Timeout | null = null;
 
-      const tbody = table.tBodies[0];
-      if (!tbody) return;
-
-      Array.from(tbody.rows).forEach(row => {
-        let visible = true;
-
-        // Apply text filters only (firmado filter is now handled at backend)
-        for (const filter of textFilters) {
-          if (filter.value) {
-            const cellText = row.cells[filter.colIndex]?.textContent?.toLowerCase() || '';
-            if (!cellText.includes(filter.value)) {
-              visible = false;
-              break;
-            }
+    const applyServerSideFilters = () => {
+      if (!this.currentParams) return;
+      
+      // Collect text filter values
+      const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
+      
+      filterInputs.forEach(input => {
+        const colIndex = Number(input.dataset.col);
+        const value = input.value.trim();
+        if (value) {
+          switch (colIndex) {
+            case 0: textFilters.remito = value; break;
+            case 1: textFilters.fecha = value; break;
+            case 2: textFilters.codigo = value; break;
+            case 3: textFilters.razon = value; break;
           }
         }
-
-        row.style.display = visible ? '' : 'none';
       });
+
+      // Get current firmado filter
+      const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+      const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
+      const firmadoFilter = selectedOption?.dataset.value || 'no-firmados';
+
+      // Refresh data from server with filters
+      this.refreshWithFilters(firmadoFilter, textFilters);
     };
 
+    // Add debounced input listeners for text filters
     filterInputs.forEach(input => {
-      input.addEventListener('input', applyFilters);
+      input.addEventListener('input', () => {
+        if (filterTimeout) {
+          clearTimeout(filterTimeout);
+        }
+        // Debounce text filter requests by 500ms
+        filterTimeout = setTimeout(applyServerSideFilters, 500);
+      });
     });
 
     // Setup filter option click handlers
@@ -149,7 +160,7 @@ export class TableHandler {
         const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
         const currentFilter = selectedOption?.dataset.value || 'no-firmados'; // Default to no-firmados
         
-        const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, currentFilter);
+        const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, currentFilter, {});
         await this.renderTable(result.remitos, result.pagination);
         
         // Ensure "No" filter is selected after refresh
@@ -372,10 +383,27 @@ export class TableHandler {
     
     const pageSize = (window as any).userPreferences?.getPageSize() || 50;
     
-    // Get current filter value
+    // Get current firmado filter
     const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
     const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
     const currentFilter = selectedOption?.dataset.value || 'no-firmados';
+    
+    // Get current text filters
+    const filterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
+    const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
+    
+    filterInputs.forEach(input => {
+      const colIndex = Number(input.dataset.col);
+      const value = input.value.trim();
+      if (value) {
+        switch (colIndex) {
+          case 0: textFilters.remito = value; break;
+          case 1: textFilters.fecha = value; break;
+          case 2: textFilters.codigo = value; break;
+          case 3: textFilters.razon = value; break;
+        }
+      }
+    });
     
     try {
       const remitosHandler = (window as any).remitosHandler;
@@ -386,7 +414,8 @@ export class TableHandler {
           this.currentParams.fechaDesde,
           page,
           pageSize,
-          currentFilter
+          currentFilter,
+          textFilters
         );
         await this.renderTable(result.remitos, result.pagination);
       }
@@ -399,10 +428,27 @@ export class TableHandler {
   public async refreshWithPageSize(page: number = 1, pageSize: number): Promise<void> {
     if (!this.currentParams) return;
     
-    // Get current filter value
+    // Get current firmado filter
     const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
     const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
     const currentFilter = selectedOption?.dataset.value || 'no-firmados';
+    
+    // Get current text filters
+    const filterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
+    const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
+    
+    filterInputs.forEach(input => {
+      const colIndex = Number(input.dataset.col);
+      const value = input.value.trim();
+      if (value) {
+        switch (colIndex) {
+          case 0: textFilters.remito = value; break;
+          case 1: textFilters.fecha = value; break;
+          case 2: textFilters.codigo = value; break;
+          case 3: textFilters.razon = value; break;
+        }
+      }
+    });
     
     try {
       const remitosHandler = (window as any).remitosHandler;
@@ -413,7 +459,8 @@ export class TableHandler {
           this.currentParams.fechaDesde,
           page,
           pageSize,
-          currentFilter
+          currentFilter,
+          textFilters
         );
         await this.renderTable(result.remitos, result.pagination);
       }
@@ -427,8 +474,8 @@ export class TableHandler {
     // This method is kept for compatibility but does nothing
   }
 
-  // New method to refresh with filter
-  public async refreshWithFilter(filterValue: string): Promise<void> {
+  // New method to refresh with filters (both firmado and text filters)
+  public async refreshWithFilters(firmadoFilter: string, textFilters?: { remito?: string, fecha?: string, codigo?: string, razon?: string }): Promise<void> {
     if (!this.currentParams) return;
     
     try {
@@ -442,12 +489,18 @@ export class TableHandler {
           this.currentParams.fechaDesde,
           1, // Reset to page 1 when filter changes
           pageSize,
-          filterValue
+          firmadoFilter,
+          textFilters
         );
         await this.renderTable(result.remitos, result.pagination);
       }
     } catch (error) {
-      console.error('Error al actualizar con el filtro:', error);
+      console.error('Error al actualizar con los filtros:', error);
     }
+  }
+
+  // Legacy method for compatibility - now uses the new method
+  public async refreshWithFilter(filterValue: string): Promise<void> {
+    await this.refreshWithFilters(filterValue);
   }
 }

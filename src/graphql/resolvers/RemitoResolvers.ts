@@ -11,57 +11,105 @@ export const remitoResolvers = {
   Date: GraphQLDate,
 
   Query: {
-    async remitos(_: any, { cpy, stofcy, desde, page = 1, pageSize = 50, firmadoFilter }: { 
+    async remitos(_: any, { cpy, stofcy, desde, page = 1, pageSize = 50, firmadoFilter, remitoFilter, fechaFilter, codigoFilter, razonFilter }: { 
       cpy: string; 
       stofcy: string; 
       desde?: string; 
       page?: number; 
       pageSize?: number;
       firmadoFilter?: string;
+      remitoFilter?: string;
+      fechaFilter?: string;
+      codigoFilter?: string;
+      razonFilter?: string;
     }) {
-      console.log("Parametros recibidos en resolver remitos:", { cpy, stofcy, desde, page, pageSize, firmadoFilter });
+      console.log("Parametros recibidos en resolver remitos:", { cpy, stofcy, desde, page, pageSize, firmadoFilter, remitoFilter, fechaFilter, codigoFilter, razonFilter });
       const pool = await getConnection();
       
-      // Build WHERE clause with optional firmado filter
+      // Build WHERE clause with optional filters
       let whereClause = "WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy";
       
+      // Firmado filter
       if (firmadoFilter === "no-firmados") {
         whereClause += " AND XX6FLSIGN_0 != 2";
       } else if (firmadoFilter === "si-firmados") {
         whereClause += " AND XX6FLSIGN_0 = 2";
       }
-      // If firmadoFilter is empty or "todos", no additional filter is added
+      
+      // Text filters (case insensitive)
+      if (remitoFilter) {
+        whereClause += " AND UPPER(CAST(SDHNUM_0 AS NVARCHAR)) LIKE UPPER(@remitoFilter)";
+      }
+      if (fechaFilter) {
+        whereClause += " AND CAST(DLVDAT_0 AS NVARCHAR) LIKE @fechaFilter";
+      }
+      if (codigoFilter) {
+        whereClause += " AND BPCORD_0 LIKE @codigoFilter";
+      }
+      if (razonFilter) {
+        whereClause += " AND UPPER(BPDNAM_0) LIKE UPPER(@razonFilter)";
+      }
 
       // First, get total count
-      const countResult = await pool.request()
+      const countRequest = pool.request()
         .input("cpy", cpy)
         .input("stofcy", stofcy)
-        .input("dlvdat", desde ?? '2022-01-01')
-        .query(`
-          SELECT COUNT(*) as total
-          FROM SDELIVERY
-          ${whereClause}
-        `);
+        .input("dlvdat", desde ?? '2022-01-01');
+      
+      // Add text filter parameters if provided
+      if (remitoFilter) {
+        countRequest.input("remitoFilter", `%${remitoFilter}%`);
+      }
+      if (fechaFilter) {
+        countRequest.input("fechaFilter", `%${fechaFilter}%`);
+      }
+      if (codigoFilter) {
+        countRequest.input("codigoFilter", `%${codigoFilter}%`);
+      }
+      if (razonFilter) {
+        countRequest.input("razonFilter", `%${razonFilter}%`);
+      }
+      
+      const countResult = await countRequest.query(`
+        SELECT COUNT(*) as total
+        FROM SDELIVERY
+        ${whereClause}
+      `);
       
       const totalCount = countResult.recordset[0]?.total || 0;
       const totalPages = Math.ceil(totalCount / pageSize);
       const offset = (page - 1) * pageSize;
       
       // Then get paginated results
-      const result = await pool.request()
+      const mainRequest = pool.request()
         .input("cpy", cpy)
         .input("stofcy", stofcy)
         .input("dlvdat", desde ?? '2022-01-01')
         .input("offset", offset)
-        .input("pageSize", pageSize)
-        .query(`
-          SELECT CPY_0, DLVDAT_0, STOFCY_0, SDHNUM_0, BPCORD_0, BPDNAM_0, XX6FLSIGN_0
-          FROM SDELIVERY
-          ${whereClause}
-          ORDER BY DLVDAT_0 DESC
-          OFFSET @offset ROWS
-          FETCH NEXT @pageSize ROWS ONLY
-        `);
+        .input("pageSize", pageSize);
+      
+      // Add text filter parameters if provided
+      if (remitoFilter) {
+        mainRequest.input("remitoFilter", `%${remitoFilter}%`);
+      }
+      if (fechaFilter) {
+        mainRequest.input("fechaFilter", `%${fechaFilter}%`);
+      }
+      if (codigoFilter) {
+        mainRequest.input("codigoFilter", `%${codigoFilter}%`);
+      }
+      if (razonFilter) {
+        mainRequest.input("razonFilter", `%${razonFilter}%`);
+      }
+      
+      const result = await mainRequest.query(`
+        SELECT CPY_0, DLVDAT_0, STOFCY_0, SDHNUM_0, BPCORD_0, BPDNAM_0, XX6FLSIGN_0
+        FROM SDELIVERY
+        ${whereClause}
+        ORDER BY DLVDAT_0 DESC
+        OFFSET @offset ROWS
+        FETCH NEXT @pageSize ROWS ONLY
+      `);
       
       console.log("Resultado SQL:", result.recordset);
       

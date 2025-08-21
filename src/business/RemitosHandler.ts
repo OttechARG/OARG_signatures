@@ -2,13 +2,24 @@ import { queryRemitos } from "../graphql/queries.js";
 
 
 export class RemitosHandler {
-  async fetchRemitos(company: string, facility: string, desde?: string, page: number = 1, pageSize: number = 50, firmadoFilter?: string) {
+  async fetchRemitos(company: string, facility: string, desde?: string, page: number = 1, pageSize: number = 50, firmadoFilter?: string, textFilters?: { remito?: string, fecha?: string, codigo?: string, razon?: string }) {
     const response = await fetch('/graphql', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: queryRemitos,
-        variables: { cpy: company, stofcy: facility, desde: desde, page: page, pageSize: pageSize, firmadoFilter: firmadoFilter }
+        variables: { 
+          cpy: company, 
+          stofcy: facility, 
+          desde: desde, 
+          page: page, 
+          pageSize: pageSize, 
+          firmadoFilter: firmadoFilter,
+          remitoFilter: textFilters?.remito || null,
+          fechaFilter: textFilters?.fecha || null,
+          codigoFilter: textFilters?.codigo || null,
+          razonFilter: textFilters?.razon || null
+        }
       })
     });
 
