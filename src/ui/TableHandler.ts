@@ -13,11 +13,22 @@ export class TableHandler {
   private filterTimeout: NodeJS.Timeout | null = null; // Debounce timeout for text filters
   private listenersSetup = false; // Track if listeners are already set up
   private currentFirmadoFilter: string = 'no-firmados'; // Track current firmado filter state
+  private columns: any[] = []; // Dynamic columns from config
+  private currentTextFilters: Record<string, string> = {}; // Store all current text filters
+  private focusState: { col: string; position: number } | null = null; // Store focus state
+  private forceHeaderRegeneration = false; // Flag to force header regeneration
 
   constructor(tableId: string) {
     this.tableId = tableId;
     // Reset processing flag when page loads (handles navigation back)
     this.isProcessing = false;
+    
+    // On page load/refresh, always default to "No firmados"
+    this.currentFirmadoFilter = 'no-firmados';
+    this.currentTextFilters = {};
+    
+    // Load table configuration
+    this.loadTableConfig();
     
     // Add CSS animation for spinner
     if (!document.getElementById('spinner-style')) {
@@ -47,6 +58,37 @@ export class TableHandler {
     });
   }
 
+  private async loadTableConfig(): Promise<void> {
+    try {
+      // Get merged config from ClientTableConfigManager
+      if ((window as any).clientTableConfigManager) {
+        const config = (window as any).clientTableConfigManager.getMergedConfig();
+        if (config) {
+          this.columns = (window as any).clientTableConfigManager.getAllVisibleColumns();
+        }
+      }
+      
+      // Fallback to default columns if no config available
+      if (this.columns.length === 0) {
+        this.columns = [
+          { field: 'SDHNUM_0', label: 'Remito', filterable: true, filterType: 'text' },
+          { field: 'DLVDAT_0', label: 'Fecha', filterable: true, filterType: 'text' },
+          { field: 'BPCORD_0', label: 'Código', filterable: true, filterType: 'text' },
+          { field: 'BPDNAM_0', label: 'Razón', filterable: true, filterType: 'text' },
+          { field: 'XX6FLSIGN_0', label: 'Firmado', filterable: true, filterType: 'select', 
+            filterOptions: [
+              { value: 'no-firmados', label: 'No' },
+              { value: 'si-firmados', label: 'Sí' },
+              { value: '', label: 'Todos' }
+            ]
+          }
+        ];
+      }
+    } catch (error) {
+      console.error('Error loading table config:', error);
+    }
+  }
+
   private resetAllButtons(): void {
     // Reset all firmar buttons to their original state
     const buttons = document.querySelectorAll('button[id^="recuperarDocumentoBtn-"]') as NodeListOf<HTMLButtonElement>;
@@ -69,30 +111,27 @@ export class TableHandler {
     const applyServerSideFilters = () => {
       if (!this.currentParams) return;
       
-      // Collect text filter values from current DOM state
+      // Update persistent text filters storage from current DOM state
       const currentFilterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
-      const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
       
       currentFilterInputs.forEach(input => {
         const colIndex = Number(input.dataset.col);
         const value = input.value.trim();
-        if (value) {
-          switch (colIndex) {
-            case 0: textFilters.remito = value; break;
-            case 1: textFilters.fecha = value; break;
-            case 2: textFilters.codigo = value; break;
-            case 3: textFilters.razon = value; break;
+        if (this.columns[colIndex]) {
+          const fieldName = this.columns[colIndex].field;
+          if (value) {
+            this.currentTextFilters[fieldName] = value;
+          } else {
+            // Remove empty filters
+            delete this.currentTextFilters[fieldName];
           }
         }
       });
 
-      // Use stored firmado filter instead of reading from DOM
-      const firmadoFilter = this.currentFirmadoFilter;
-
-      console.log('🔍 Text filter applied - combining with firmado filter:', firmadoFilter, 'textFilters:', textFilters);
+      console.log('🔍 Text filter applied - combining with firmado filter:', this.currentFirmadoFilter, 'textFilters:', this.currentTextFilters);
       
-      // Refresh data from server with filters
-      this.refreshWithFilters(firmadoFilter, textFilters);
+      // Refresh data from server with combined filters
+      this.refreshWithFilters(this.currentFirmadoFilter, this.currentTextFilters);
     };
 
     // Add debounced input listeners for text filters
@@ -101,8 +140,21 @@ export class TableHandler {
         if (this.filterTimeout) {
           clearTimeout(this.filterTimeout);
         }
+        // Store focus state persistently
+        const focusedElement = document.activeElement as HTMLInputElement;
+        const focusedCol = focusedElement?.dataset?.col;
+        const cursorPosition = focusedElement?.selectionStart || 0;
+        
+        if (focusedCol) {
+          this.focusState = { col: focusedCol, position: cursorPosition };
+          console.log('🎯 Stored focus state:', this.focusState);
+        }
+        
         // Debounce text filter requests by 500ms
-        this.filterTimeout = setTimeout(applyServerSideFilters, 500);
+        this.filterTimeout = setTimeout(() => {
+          console.log('🔄 Applying filters...');
+          applyServerSideFilters();
+        }, 500);
       });
     });
 
@@ -128,22 +180,8 @@ export class TableHandler {
           const filterValue = (option as HTMLElement).dataset.value || '';
           this.currentFirmadoFilter = filterValue; // Store current filter
           
-          // Collect current text filters from input fields
-          const currentFilterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
-          const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
-          
-          currentFilterInputs.forEach(input => {
-            const colIndex = Number(input.dataset.col);
-            const value = input.value.trim();
-            if (value) {
-              switch (colIndex) {
-                case 0: textFilters.remito = value; break;
-                case 1: textFilters.fecha = value; break;
-                case 2: textFilters.codigo = value; break;
-                case 3: textFilters.razon = value; break;
-              }
-            }
-          });
+          // Use persistent text filters (they're always up to date)
+          const textFilters = { ...this.currentTextFilters };
           
           console.log('🎯 Filter clicked, stored:', filterValue, 'preserving text filters:', textFilters);
           this.refreshWithFilters(filterValue, textFilters);
@@ -183,17 +221,18 @@ export class TableHandler {
         this.currentParams = { company, facility, fechaDesde };
         
         const pageSize = (window as any).userPreferences?.getPageSize() || 50;
-        // Use default filter for initial load/refresh
+        // FORCE default filter for refresh button - always reset to "No firmados"
         const currentFilter = 'no-firmados';
-        this.currentFirmadoFilter = currentFilter; // Store default filter
-        console.log('🏠 Initial load - Using default filter:', currentFilter);
+        this.currentFirmadoFilter = currentFilter; // Force reset to default
+        this.currentTextFilters = {}; // Also clear text filters on refresh
+        console.log('🏠 Refresh button - Force reset to default filter:', currentFilter);
         
         const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, currentFilter, {});
+        // Force header regeneration on refresh to reset filter UI
+        this.forceHeaderRegeneration = true;
         await this.renderTable(result.remitos, result.pagination);
         
-        // Keep current filter selection after refresh (don't force "no-firmados")
-        
-        console.log('Table refreshed and filtered to show no firmados');
+        console.log('Table refreshed and reset to no firmados');
       }
     } catch (error) {
       console.error('Error al actualizar la tabla:', error);
@@ -201,8 +240,125 @@ export class TableHandler {
     }
   }
 
-  public async renderTable(remitos: any[], pagination?: any): Promise<void> {
+  private generateTableHeaders(): void {
     const tabla = document.getElementById(this.tableId) as HTMLTableElement;
+    const thead = tabla.querySelector('thead');
+    if (!thead) return;
+
+    // Filter values are stored in this.currentTextFilters, no need to save from DOM
+
+    // Clear existing headers and reset listener flag since we're creating new DOM elements
+    thead.innerHTML = '';
+    this.listenersSetup = false;
+
+    // Create main header row (with column names)
+    const headerRow = document.createElement('tr');
+    
+    this.columns.forEach((column) => {
+      const th = document.createElement('th');
+      th.textContent = column.label;
+      headerRow.appendChild(th);
+    });
+    
+    thead.appendChild(headerRow);
+
+    // Create filter row (matching original CSS structure)
+    const filterRow = document.createElement('tr');
+    filterRow.id = 'filterRow'; // Important: matches original CSS selector
+
+    this.columns.forEach((column, index) => {
+      const th = document.createElement('th');
+      
+      if (column.filterable) {
+        if (column.filterType === 'select' && column.filterOptions) {
+          // Select-type filter (like Firmado column) - preserve original structure
+          const filterCellContent = document.createElement('div');
+          filterCellContent.className = 'filter-cell-content';
+          
+          const filterOptionsContainer = document.createElement('div');
+          filterOptionsContainer.className = 'firmado-filter-options';
+          filterOptionsContainer.dataset.col = index.toString();
+          
+          column.filterOptions.forEach((option: any) => {
+            const optionEl = document.createElement('span');
+            optionEl.className = 'filter-option';
+            optionEl.dataset.value = option.value;
+            optionEl.textContent = option.label;
+            // Set selected state based on current filter, not default
+            if (option.value === this.currentFirmadoFilter) {
+              optionEl.classList.add('selected');
+            }
+            filterOptionsContainer.appendChild(optionEl);
+          });
+          
+          filterCellContent.appendChild(filterOptionsContainer);
+          th.appendChild(filterCellContent);
+        } else {
+          // Text input filter - preserve original structure and classes
+          const filterInput = document.createElement('input');
+          filterInput.type = 'text';
+          filterInput.className = 'filter-input'; // Original CSS class
+          filterInput.dataset.col = index.toString();
+          filterInput.placeholder = `Filtrar ${column.label}...`;
+          th.appendChild(filterInput);
+        }
+      }
+      
+      filterRow.appendChild(th);
+    });
+
+    thead.appendChild(filterRow);
+
+    // Restore filter values from persistent storage
+    this.columns.forEach((column, index) => {
+      if (this.currentTextFilters[column.field]) {
+        const input = thead.querySelector<HTMLInputElement>(`input.filter-input[data-col="${index}"]`);
+        if (input) {
+          input.value = this.currentTextFilters[column.field];
+        }
+      }
+    });
+
+    // Restore focus state if needed
+    if (this.focusState) {
+      setTimeout(() => {
+        const inputToFocus = thead.querySelector<HTMLInputElement>(`input.filter-input[data-col="${this.focusState!.col}"]`);
+        if (inputToFocus) {
+          console.log('🔄 Restoring focus to col:', this.focusState!.col);
+          inputToFocus.focus();
+          setTimeout(() => {
+            inputToFocus.setSelectionRange(this.focusState!.position, this.focusState!.position);
+            // Clear focus state after restoration
+            this.focusState = null;
+          }, 10);
+        }
+      }, 100);
+    }
+  }
+
+  public async renderTable(remitos: any[], pagination?: any): Promise<void> {
+    // Ensure columns are loaded
+    await this.loadTableConfig();
+    
+    const tabla = document.getElementById(this.tableId) as HTMLTableElement;
+    
+    // Only generate headers if they don't exist, columns changed, or forced
+    const thead = tabla.querySelector('thead');
+    const existingHeaders = thead?.querySelectorAll('th');
+    const needsHeaderUpdate = !existingHeaders || existingHeaders.length !== this.columns.length || this.forceHeaderRegeneration;
+    
+    if (needsHeaderUpdate) {
+      console.log('🔄 Regenerating headers - needed:', { 
+        noHeaders: !existingHeaders, 
+        countChanged: existingHeaders?.length !== this.columns.length,
+        forced: this.forceHeaderRegeneration 
+      });
+      this.generateTableHeaders();
+      this.forceHeaderRegeneration = false; // Reset flag after use
+    } else {
+      console.log('✅ Keeping existing headers - just updating data');
+    }
+    
     const tbody = tabla.querySelector('tbody')!;
     tbody.innerHTML = "";
 
@@ -219,19 +375,27 @@ export class TableHandler {
       tr.dataset.remito = String(r.SDHNUM_0 || "");
       tr.style.cursor = "pointer";
 
-      // Usar XX6FLSIGN_0 directamente: 1 = No firmado, 2 = Firmado
+      // Check if signed first (needed for button logic)
       const isSigned = r.XX6FLSIGN_0 === 2;
-
-      tr.innerHTML = `
-        <td>${r.SDHNUM_0 || ""}</td>
-        <td>${r.DLVDAT_0 || ""}</td>
-        <td>${r.BPCORD_0 || ""}</td>
-        <td>${r.BPDNAM_0 || ""}</td>
-        <td class="firmado-column ${isSigned ? 'signed-true' : 'signed-false'}">
+      
+      // Generate table cells dynamically based on column configuration
+      let rowHTML = '';
+      this.columns.forEach(column => {
+        const value = r[column.field] || "";
+        
+        if (column.field === 'XX6FLSIGN_0') {
+          // Special handling for firmado column
+          rowHTML += `<td class="firmado-column ${isSigned ? 'signed-true' : 'signed-false'}">
             <span class="status-indicator">${isSigned ? '✓' : '✗'}</span>
             <span class="button-container"></span>
-        </td>
-      `;
+          </td>`;
+        } else {
+          // Regular column
+          rowHTML += `<td>${value}</td>`;
+        }
+      });
+      
+      tr.innerHTML = rowHTML;
       tbody.appendChild(tr);
 
       const tdBoton = tr.querySelector(".button-container") as HTMLElement;
@@ -405,22 +569,8 @@ export class TableHandler {
     
     console.log('🔄 goToPage - Using stored filter:', currentFilter);
     
-    // Get current text filters
-    const filterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
-    const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
-    
-    filterInputs.forEach(input => {
-      const colIndex = Number(input.dataset.col);
-      const value = input.value.trim();
-      if (value) {
-        switch (colIndex) {
-          case 0: textFilters.remito = value; break;
-          case 1: textFilters.fecha = value; break;
-          case 2: textFilters.codigo = value; break;
-          case 3: textFilters.razon = value; break;
-        }
-      }
-    });
+    // Use persistent text filters
+    const textFilters = { ...this.currentTextFilters };
     
     try {
       const remitosHandler = (window as any).remitosHandler;
@@ -438,7 +588,9 @@ export class TableHandler {
         
         // Restore filter button state after re-render
         setTimeout(() => {
-          const newFilterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+          // Find the firmado column dynamically
+          const firmadoColumnIndex = this.columns.findIndex(col => col.field === 'XX6FLSIGN_0');
+          const newFilterContainer = document.querySelector(`.firmado-filter-options[data-col="${firmadoColumnIndex}"]`) as HTMLElement;
           if (newFilterContainer) {
             // Remove all selected classes
             newFilterContainer.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('selected'));
@@ -460,27 +612,14 @@ export class TableHandler {
   public async refreshWithPageSize(page: number = 1, pageSize: number): Promise<void> {
     if (!this.currentParams) return;
     
-    // Get current firmado filter
-    const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+    // Get current firmado filter dynamically
+    const firmadoColumnIndex = this.columns.findIndex(col => col.field === 'XX6FLSIGN_0');
+    const filterContainer = document.querySelector(`.firmado-filter-options[data-col="${firmadoColumnIndex}"]`) as HTMLElement;
     const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
     const currentFilter = selectedOption?.dataset.value || 'no-firmados';
     
-    // Get current text filters
-    const filterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
-    const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
-    
-    filterInputs.forEach(input => {
-      const colIndex = Number(input.dataset.col);
-      const value = input.value.trim();
-      if (value) {
-        switch (colIndex) {
-          case 0: textFilters.remito = value; break;
-          case 1: textFilters.fecha = value; break;
-          case 2: textFilters.codigo = value; break;
-          case 3: textFilters.razon = value; break;
-        }
-      }
-    });
+    // Use persistent text filters
+    const textFilters = { ...this.currentTextFilters };
     
     try {
       const remitosHandler = (window as any).remitosHandler;
@@ -507,7 +646,7 @@ export class TableHandler {
   }
 
   // New method to refresh with filters (both firmado and text filters)
-  public async refreshWithFilters(firmadoFilter: string, textFilters?: { remito?: string, fecha?: string, codigo?: string, razon?: string }): Promise<void> {
+  public async refreshWithFilters(firmadoFilter: string, textFilters?: Record<string, string>): Promise<void> {
     if (!this.currentParams) return;
     
     try {
@@ -534,5 +673,38 @@ export class TableHandler {
   // Legacy method for compatibility - now uses the new method
   public async refreshWithFilter(filterValue: string): Promise<void> {
     await this.refreshWithFilters(filterValue);
+  }
+
+  // Method to clear all text filters
+  public clearTextFilters(): void {
+    this.currentTextFilters = {};
+    // Clear the input values in DOM as well
+    const filterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
+    filterInputs.forEach(input => {
+      input.value = '';
+    });
+  }
+
+  // Method to refresh table configuration and re-render
+  public async refreshTableConfig(): Promise<void> {
+    await this.loadTableConfig();
+    
+    // Re-render the table with new configuration if we have current data
+    if (this.currentParams) {
+      const remitosHandler = (window as any).remitosHandler;
+      if (remitosHandler) {
+        const pageSize = (window as any).userPreferences?.getPageSize() || 50;
+        const result = await remitosHandler.fetchRemitos(
+          this.currentParams.company,
+          this.currentParams.facility,
+          this.currentParams.fechaDesde,
+          1,
+          pageSize,
+          this.currentFirmadoFilter,
+          {}
+        );
+        await this.renderTable(result.remitos, result.pagination);
+      }
+    }
   }
 }

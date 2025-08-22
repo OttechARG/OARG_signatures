@@ -2,7 +2,50 @@ import { queryRemitosDynamic } from "../graphql/queries.js";
 
 
 export class RemitosHandler {
-  async fetchRemitos(company: string, facility: string, desde?: string, page: number = 1, pageSize: number = 50, firmadoFilter?: string, textFilters?: { remito?: string, fecha?: string, codigo?: string, razon?: string }) {
+  private columns: any[] = [];
+
+  constructor() {
+    this.loadTableConfig();
+  }
+
+  private async loadTableConfig(): Promise<void> {
+    try {
+      // Get merged config from ClientTableConfigManager
+      if ((window as any).clientTableConfigManager) {
+        this.columns = (window as any).clientTableConfigManager.getAllVisibleColumns();
+      }
+      
+      // Fallback to default columns if no config available
+      if (this.columns.length === 0) {
+        this.columns = [
+          { field: 'CPY_0' },
+          { field: 'DLVDAT_0' },
+          { field: 'STOFCY_0' },
+          { field: 'SDHNUM_0' },
+          { field: 'BPCORD_0' },
+          { field: 'BPDNAM_0' },
+          { field: 'XX6FLSIGN_0' }
+        ];
+      }
+    } catch (error) {
+      console.error('Error loading table config:', error);
+      // Use fallback columns
+      this.columns = [
+        { field: 'CPY_0' },
+        { field: 'DLVDAT_0' },
+        { field: 'STOFCY_0' },
+        { field: 'SDHNUM_0' },
+        { field: 'BPCORD_0' },
+        { field: 'BPDNAM_0' },
+        { field: 'XX6FLSIGN_0' }
+      ];
+    }
+  }
+
+  async fetchRemitos(company: string, facility: string, desde?: string, page: number = 1, pageSize: number = 50, firmadoFilter?: string, textFilters?: Record<string, string>) {
+    // Ensure config is loaded
+    await this.loadTableConfig();
+    
     // Build dynamic filters based on text filters
     const filters = [];
     if (firmadoFilter === "no-firmados") {
@@ -10,18 +53,18 @@ export class RemitosHandler {
     } else if (firmadoFilter === "si-firmados") {
       filters.push({ field: "XX6FLSIGN_0", operator: "EQUALS", value: "2" });
     }
-    if (textFilters?.remito) {
-      filters.push({ field: "SDHNUM_0", operator: "LIKE", value: textFilters.remito });
+    
+    // Apply text filters dynamically based on column configuration
+    if (textFilters) {
+      Object.entries(textFilters).forEach(([key, value]) => {
+        if (value) {
+          filters.push({ field: key, operator: "LIKE", value: value });
+        }
+      });
     }
-    if (textFilters?.fecha) {
-      filters.push({ field: "DLVDAT_0", operator: "LIKE", value: textFilters.fecha });
-    }
-    if (textFilters?.codigo) {
-      filters.push({ field: "BPCORD_0", operator: "LIKE", value: textFilters.codigo });
-    }
-    if (textFilters?.razon) {
-      filters.push({ field: "BPDNAM_0", operator: "LIKE", value: textFilters.razon });
-    }
+
+    // Get dynamic columns from configuration
+    const columnFields = this.columns.map(col => col.field);
 
     const response = await fetch('/graphql', {
       method: 'POST',
@@ -31,7 +74,7 @@ export class RemitosHandler {
         variables: { 
           cpy: company, 
           stofcy: facility,
-          columns: ['CPY_0', 'DLVDAT_0', 'STOFCY_0', 'SDHNUM_0', 'BPCORD_0', 'BPDNAM_0', 'XX6FLSIGN_0'],
+          columns: columnFields,
           filters: filters,
           desde: desde, 
           page: page, 

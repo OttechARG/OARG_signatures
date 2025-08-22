@@ -511,8 +511,8 @@ class ClientTableConfigManager {
   private async refreshTable(): Promise<void> {
     // Trigger table refresh with new configuration
     if ((window as any).tableHandler) {
-      // Force reload of table with new configuration
-      location.reload();
+      // Use the new dynamic refresh method instead of reloading the page
+      await (window as any).tableHandler.refreshTableConfig();
     }
   }
 
