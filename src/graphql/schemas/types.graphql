@@ -22,6 +22,7 @@ type DynamicRemito {
 
 type DynamicRemitosResponse {
   remitos: [DynamicRemito]!
+  columns: [String!]!
   pagination: PaginationInfo!
 }
 
@@ -70,6 +71,6 @@ type Mutation {
 type Query {
   companies(search: String): [Company!]!
   facilities(legcpy: String): [Facility!]!
-  remitosDynamic(cpy: String!, stofcy: String!, columns: [String!]!, filters: [FilterInput!], desde: String, page: Int = 1, pageSize: Int = 50): DynamicRemitosResponse!
+  remitosDynamic(cpy: String!, stofcy: String!, filters: [FilterInput!], desde: String, page: Int = 1, pageSize: Int = 50): DynamicRemitosResponse!
   testDB: [Company!]!
 }

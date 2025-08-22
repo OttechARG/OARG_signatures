@@ -72,6 +72,7 @@ class ClientTableConfigManager {
   private standardConfig: StandardConfig | null = null;
   private specificConfig: SpecificConfig | null = null;
   private mergedConfig: MergedConfig | null = null;
+  private draggedElement: HTMLElement | null = null; // Global drag state
 
   constructor() {
     this.init();
@@ -164,6 +165,9 @@ class ClientTableConfigManager {
   }
 
   private createConfigModal(): void {
+    // Add CSS styles for drag & drop
+    this.addDragDropStyles();
+    
     const modalHTML = `
       <div id="tableConfigModal" class="modal table-config-modal">
         <div class="modal-content">
@@ -300,15 +304,28 @@ class ClientTableConfigManager {
     const container = document.getElementById('dbColumnsList');
     if (!container || !this.mergedConfig) return;
 
-    container.innerHTML = '';
+    container.innerHTML = `
+      <div class="drag-instructions">
+        <p>💡 <strong>Arrastra las columnas</strong> para cambiar el orden en la tabla</p>
+      </div>
+    `;
 
-    this.mergedConfig.dbColumns.forEach((column, index) => {
+    // Sort columns by position for display
+    const sortedColumns = [...this.mergedConfig.dbColumns].sort((a, b) => a.position - b.position);
+
+    sortedColumns.forEach((column, index) => {
       const columnDiv = document.createElement('div');
-      columnDiv.className = 'column-config-item';
+      columnDiv.className = 'column-config-item draggable';
+      columnDiv.draggable = true;
+      columnDiv.dataset.field = column.field;
+      columnDiv.dataset.position = column.position.toString();
+      
       columnDiv.innerHTML = `
         <div class="column-header">
+          <div class="drag-handle">⋮⋮</div>
           <input type="checkbox" id="visible_${column.field}" ${column.visible ? 'checked' : ''}>
           <label for="visible_${column.field}">${column.label} (${column.field})</label>
+          <div class="position-indicator">#${column.position + 1}</div>
         </div>
         <div class="column-details">
           <div class="form-row">
@@ -326,6 +343,9 @@ class ClientTableConfigManager {
         </div>
       `;
       container.appendChild(columnDiv);
+
+      // Add drag & drop event listeners
+      this.addDragDropListeners(columnDiv);
     });
   }
 
@@ -429,6 +449,135 @@ class ClientTableConfigManager {
     }
   }
 
+  private addDragDropListeners(element: HTMLElement): void {
+    element.addEventListener('dragstart', (e) => {
+      this.draggedElement = element; // Use class property
+      element.classList.add('dragging');
+      e.dataTransfer!.effectAllowed = 'move';
+      e.dataTransfer!.setData('text/plain', element.dataset.field || '');
+      console.log('🟢 Drag started:', element.dataset.field);
+    });
+
+    element.addEventListener('dragend', (e) => {
+      element.classList.remove('dragging');
+      // Remove all drag-over indicators
+      document.querySelectorAll('.column-config-item').forEach(item => {
+        item.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over');
+      });
+      console.log('🔴 Drag ended:', element.dataset.field);
+      this.draggedElement = null; // Clear global state
+    });
+
+    element.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer!.dropEffect = 'move';
+      
+      if (this.draggedElement && this.draggedElement !== element) {
+        const rect = element.getBoundingClientRect();
+        const midPoint = rect.top + (rect.height / 2);
+        
+        // Clear previous classes
+        element.classList.remove('drag-over-top', 'drag-over-bottom');
+        
+        if (e.clientY < midPoint) {
+          element.classList.add('drag-over-top');
+        } else {
+          element.classList.add('drag-over-bottom');
+        }
+      }
+    });
+
+    element.addEventListener('dragleave', (e) => {
+      // Only remove if leaving the element completely
+      const rect = element.getBoundingClientRect();
+      const x = e.clientX;
+      const y = e.clientY;
+      
+      if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+        element.classList.remove('drag-over-top', 'drag-over-bottom');
+      }
+    });
+
+    element.addEventListener('drop', (e) => {
+      e.preventDefault();
+      element.classList.remove('drag-over-top', 'drag-over-bottom');
+      
+      console.log('🎯 Drop event triggered');
+      console.log('   Dragged element:', this.draggedElement?.dataset.field);
+      console.log('   Target element:', element.dataset.field);
+      
+      if (this.draggedElement && this.draggedElement !== element) {
+        const rect = element.getBoundingClientRect();
+        const midPoint = rect.top + (rect.height / 2);
+        const dropPosition = e.clientY < midPoint ? 'before' : 'after';
+        
+        console.log(`   Drop position: ${dropPosition} (clientY: ${e.clientY}, midPoint: ${midPoint})`);
+        
+        this.reorderColumns(this.draggedElement, element, dropPosition);
+      } else {
+        console.log('❌ Drop ignored: no dragged element or same element');
+      }
+    });
+  }
+
+  private reorderColumns(draggedElement: HTMLElement, targetElement: HTMLElement, dropPosition: 'before' | 'after'): void {
+    const draggedField = draggedElement.dataset.field!;
+    const targetField = targetElement.dataset.field!;
+    
+    if (!this.mergedConfig || draggedField === targetField) {
+      console.log('❌ No reorder: same element or no config');
+      return;
+    }
+
+    console.log(`🔄 Attempting reorder: ${draggedField} → ${dropPosition} ${targetField}`);
+
+    // Create a simple array with field names in current order
+    const currentOrder = this.mergedConfig.dbColumns
+      .sort((a, b) => a.position - b.position)
+      .map(col => col.field);
+    
+    console.log('📋 Current order:', currentOrder);
+
+    // Find indices
+    const draggedIndex = currentOrder.indexOf(draggedField);
+    const targetIndex = currentOrder.indexOf(targetField);
+    
+    if (draggedIndex === -1 || targetIndex === -1) {
+      console.log('❌ Field not found in order');
+      return;
+    }
+
+    // Remove dragged item from array
+    const [draggedItem] = currentOrder.splice(draggedIndex, 1);
+    
+    // Calculate new insertion index
+    let insertIndex = targetIndex;
+    if (draggedIndex < targetIndex) {
+      insertIndex--; // Adjust because we removed an item before target
+    }
+    if (dropPosition === 'after') {
+      insertIndex++;
+    }
+    
+    // Insert at new position
+    currentOrder.splice(insertIndex, 0, draggedItem);
+    
+    console.log('📋 New order:', currentOrder);
+
+    // Update positions in the actual columns
+    currentOrder.forEach((field, index) => {
+      const column = this.mergedConfig!.dbColumns.find(col => col.field === field);
+      if (column) {
+        column.position = index;
+      }
+    });
+
+    // Re-populate to show changes
+    this.populateDbColumns();
+    
+    console.log(`✅ Successfully reordered: ${draggedField} moved ${dropPosition} ${targetField}`);
+  }
+
   private async saveConfiguration(): Promise<void> {
     try {
       // Collect all changes from UI
@@ -474,25 +623,27 @@ class ClientTableConfigManager {
       const widthInput = document.getElementById(`width_${column.field}`) as HTMLInputElement;
       const filterableCheckbox = document.getElementById(`filterable_${column.field}`) as HTMLInputElement;
 
-      if (visibleCheckbox || labelInput || widthInput || filterableCheckbox) {
-        const overrides: Partial<DbColumn> = {};
+      // Always save overrides for all fields (to capture position changes from drag & drop)
+      const overrides: Partial<DbColumn> = {};
 
-        if (visibleCheckbox && visibleCheckbox.checked !== column.visible) {
-          overrides.visible = visibleCheckbox.checked;
-        }
-        if (labelInput && labelInput.value !== column.label) {
-          overrides.label = labelInput.value;
-        }
-        if (widthInput && widthInput.value !== column.width) {
-          overrides.width = widthInput.value;
-        }
-        if (filterableCheckbox && filterableCheckbox.checked !== column.filterable) {
-          overrides.filterable = filterableCheckbox.checked;
-        }
+      if (visibleCheckbox) {
+        overrides.visible = visibleCheckbox.checked;
+      }
+      if (labelInput) {
+        overrides.label = labelInput.value;
+      }
+      if (widthInput) {
+        overrides.width = widthInput.value;
+      }
+      if (filterableCheckbox) {
+        overrides.filterable = filterableCheckbox.checked;
+      }
+      
+      // Always save position (important for drag & drop reordering)
+      overrides.position = column.position;
 
-        if (Object.keys(overrides).length > 0 && this.specificConfig) {
-          this.specificConfig.table.columnOverrides[column.field] = overrides;
-        }
+      if (this.specificConfig) {
+        this.specificConfig.table.columnOverrides[column.field] = overrides;
       }
     });
 
@@ -531,6 +682,193 @@ class ClientTableConfigManager {
     ];
 
     return allColumns.sort((a, b) => a.position - b.position);
+  }
+
+  // Public method to get visible columns filtered by SQL columns
+  public getVisibleColumnsFilteredBySql(sqlColumns: string[]): (DbColumn | CustomColumn)[] {
+    if (!this.mergedConfig) return [];
+
+    // Filter DB columns to only include those that exist in SQL
+    const filteredDbColumns = this.mergedConfig.dbColumns.filter(col => 
+      col.visible && sqlColumns.includes(col.field)
+    );
+
+    // Custom columns are not SQL-based, so include all visible ones
+    const visibleCustomColumns = this.mergedConfig.customColumns.filter(col => col.visible);
+
+    const allColumns = [...filteredDbColumns, ...visibleCustomColumns];
+    return allColumns.sort((a, b) => a.position - b.position);
+  }
+
+  // Update configuration with SQL columns
+  public updateConfigWithSqlColumns(sqlColumns: string[]): void {
+    if (!this.standardConfig) return;
+
+    // Create/update DB columns based on SQL columns (no automatic ordering)
+    this.standardConfig.table.dbColumns = sqlColumns.map((field, index) => ({
+      field,
+      label: this.getDefaultLabelForField(field),
+      type: 'text',
+      width: '120px',
+      visible: this.getDefaultVisibilityForField(field), // CPY_0 and STOFCY_0 hidden by default
+      position: index,
+      filterable: true,
+      filterType: field === 'XX6FLSIGN_0' ? 'select' : 'text',
+      ...(field === 'XX6FLSIGN_0' ? {
+        filterOptions: [
+          { value: 'no-firmados', label: 'No' },
+          { value: 'si-firmados', label: 'Sí' },
+          { value: '', label: 'Todos' }
+        ]
+      } : {}),
+      sortable: true
+    }));
+
+    // Re-merge configurations
+    this.mergeConfigurations();
+  }
+
+  private getDefaultLabelForField(field: string): string {
+    const labelMappings: { [key: string]: string } = {
+      'SDHNUM_0': 'Remito',
+      'DLVDAT_0': 'Fecha', 
+      'BPCORD_0': 'Código',
+      'BPDNAM_0': 'Razón',
+      'CPY_0': 'CPY_0',
+      'STOFCY_0': 'STOFCY_0',
+      'XX6FLSIGN_0': 'Firmado'
+    };
+    return labelMappings[field] || field;
+  }
+
+  private getDefaultVisibilityForField(field: string): boolean {
+    // Hide CPY_0 and STOFCY_0 by default, but show them in config for optional activation
+    const hiddenByDefault = ['CPY_0', 'STOFCY_0'];
+    return !hiddenByDefault.includes(field);
+  }
+
+  private addDragDropStyles(): void {
+    // Only add styles once
+    if (document.getElementById('drag-drop-styles')) return;
+
+    const styles = document.createElement('style');
+    styles.id = 'drag-drop-styles';
+    styles.textContent = `
+      .drag-instructions {
+        background: #e8f4fd;
+        border: 1px solid #b8daff;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: #0c5460;
+      }
+
+      .column-config-item.draggable {
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+
+      .column-config-item.dragging {
+        opacity: 0.5;
+        transform: scale(0.95);
+        border-color: #007bff;
+        background-color: #f8f9fa;
+      }
+
+      .column-config-item.drag-over {
+        border-color: #28a745;
+        background-color: #d4edda;
+        transform: scale(1.02);
+      }
+
+      .column-config-item.drag-over-top {
+        border-top: 4px solid #007bff;
+        background-color: #e3f2fd;
+        position: relative;
+      }
+
+      .column-config-item.drag-over-top::before {
+        content: "⬆ Soltar ANTES de esta columna";
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+      }
+
+      .column-config-item.drag-over-bottom {
+        border-bottom: 4px solid #28a745;
+        background-color: #e8f5e8;
+        position: relative;
+      }
+
+      .column-config-item.drag-over-bottom::after {
+        content: "⬇ Soltar DESPUÉS de esta columna";
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #28a745;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+      }
+
+      .column-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
+
+      .drag-handle {
+        cursor: grab;
+        font-size: 16px;
+        color: #6c757d;
+        user-select: none;
+        padding: 4px;
+        border-radius: 2px;
+      }
+
+      .drag-handle:hover {
+        background-color: #dee2e6;
+        color: #495057;
+      }
+
+      .drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .position-indicator {
+        background: #007bff;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 12px;
+        margin-left: auto;
+      }
+
+      .column-config-item label {
+        flex: 1;
+        font-weight: 500;
+      }
+    `;
+    document.head.appendChild(styles);
   }
 }
 

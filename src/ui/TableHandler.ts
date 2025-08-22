@@ -27,8 +27,7 @@ export class TableHandler {
     this.currentFirmadoFilter = 'no-firmados';
     this.currentTextFilters = {};
     
-    // Load table configuration
-    this.loadTableConfig();
+    // Don't load table configuration on init - wait for first data fetch with dynamic columns
     
     // Add CSS animation for spinner
     if (!document.getElementById('spinner-style')) {
@@ -59,34 +58,8 @@ export class TableHandler {
   }
 
   private async loadTableConfig(): Promise<void> {
-    try {
-      // Get merged config from ClientTableConfigManager
-      if ((window as any).clientTableConfigManager) {
-        const config = (window as any).clientTableConfigManager.getMergedConfig();
-        if (config) {
-          this.columns = (window as any).clientTableConfigManager.getAllVisibleColumns();
-        }
-      }
-      
-      // Fallback to default columns if no config available
-      if (this.columns.length === 0) {
-        this.columns = [
-          { field: 'SDHNUM_0', label: 'Remito', filterable: true, filterType: 'text' },
-          { field: 'DLVDAT_0', label: 'Fecha', filterable: true, filterType: 'text' },
-          { field: 'BPCORD_0', label: 'Código', filterable: true, filterType: 'text' },
-          { field: 'BPDNAM_0', label: 'Razón', filterable: true, filterType: 'text' },
-          { field: 'XX6FLSIGN_0', label: 'Firmado', filterable: true, filterType: 'select', 
-            filterOptions: [
-              { value: 'no-firmados', label: 'No' },
-              { value: 'si-firmados', label: 'Sí' },
-              { value: '', label: 'Todos' }
-            ]
-          }
-        ];
-      }
-    } catch (error) {
-      console.error('Error loading table config:', error);
-    }
+    // NO CONFIG - Table columns come purely from SQL query
+    console.log("🚫 loadTableConfig() called but ignoring - using SQL columns only");
   }
 
   private resetAllButtons(): void {
@@ -230,7 +203,7 @@ export class TableHandler {
         const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, currentFilter, {});
         // Force header regeneration on refresh to reset filter UI
         this.forceHeaderRegeneration = true;
-        await this.renderTable(result.remitos, result.pagination);
+        await this.renderTable(result.remitos, result.pagination, result.columns);
         
         console.log('Table refreshed and reset to no firmados');
       }
@@ -291,7 +264,15 @@ export class TableHandler {
             filterOptionsContainer.appendChild(optionEl);
           });
           
+          // Add refresh button to the Firmado column
+          const refreshBtn = document.createElement('button');
+          refreshBtn.id = 'refreshTableBtn';
+          refreshBtn.className = 'refresh-btn';
+          refreshBtn.type = 'button';
+          refreshBtn.innerHTML = '<img src="assets/Refresh.png" alt="Refresh" class="refresh-icon">';
+          
           filterCellContent.appendChild(filterOptionsContainer);
+          filterCellContent.appendChild(refreshBtn);
           th.appendChild(filterCellContent);
         } else {
           // Text input filter - preserve original structure and classes
@@ -336,9 +317,57 @@ export class TableHandler {
     }
   }
 
-  public async renderTable(remitos: any[], pagination?: any): Promise<void> {
-    // Ensure columns are loaded
-    await this.loadTableConfig();
+  // Mapping from database column names to nice labels and config
+  private getColumnConfig(field: string) {
+    const columnMappings: { [key: string]: any } = {
+      'SDHNUM_0': { label: 'Remito', filterable: true, filterType: 'text' },
+      'DLVDAT_0': { label: 'Fecha', filterable: true, filterType: 'text' },
+      'BPCORD_0': { label: 'Código', filterable: true, filterType: 'text' },
+      'BPDNAM_0': { label: 'Razón', filterable: true, filterType: 'text' },
+      'CPY_0': { label: 'CPY_0', filterable: true, filterType: 'text' },
+      'STOFCY_0': { label: 'STOFCY_0', filterable: true, filterType: 'text' },
+      'XX6FLSIGN_0': { 
+        label: 'Firmado', 
+        filterable: true, 
+        filterType: 'select',
+        filterOptions: [
+          { value: 'no-firmados', label: 'No' },
+          { value: 'si-firmados', label: 'Sí' },
+          { value: '', label: 'Todos' }
+        ]
+      }
+    };
+
+    return columnMappings[field] || { 
+      label: field, // Fallback to field name if not mapped
+      filterable: true, 
+      filterType: 'text' 
+    };
+  }
+
+  public async renderTable(remitos: any[], pagination?: any, dynamicColumns?: string[]): Promise<void> {
+    // ALWAYS use SQL columns directly - but map to nice labels and config
+    if (dynamicColumns && dynamicColumns.length > 0) {
+      
+      // Update ClientTableConfigManager with SQL columns
+      if ((window as any).clientTableConfigManager) {
+        (window as any).clientTableConfigManager.updateConfigWithSqlColumns(dynamicColumns);
+        // Get filtered columns (only visible ones)
+        this.columns = (window as any).clientTableConfigManager.getVisibleColumnsFilteredBySql(dynamicColumns);
+      } else {
+        // Fallback: use direct mapping
+        this.columns = dynamicColumns.map(field => ({
+          field,
+          ...this.getColumnConfig(field)
+        }));
+      }
+      
+      console.log("🔥 USING SQL COLUMNS WITH VISIBILITY CONTROL:", this.columns);
+    } else {
+      // If no SQL columns, use empty array (no table)
+      this.columns = [];
+      console.log("⚠️ NO SQL COLUMNS - EMPTY TABLE");
+    }
     
     const tabla = document.getElementById(this.tableId) as HTMLTableElement;
     
@@ -584,7 +613,7 @@ export class TableHandler {
           currentFilter,
           textFilters
         );
-        await this.renderTable(result.remitos, result.pagination);
+        await this.renderTable(result.remitos, result.pagination, result.columns);
         
         // Restore filter button state after re-render
         setTimeout(() => {
@@ -633,7 +662,7 @@ export class TableHandler {
           currentFilter,
           textFilters
         );
-        await this.renderTable(result.remitos, result.pagination);
+        await this.renderTable(result.remitos, result.pagination, result.columns);
       }
     } catch (error) {
       console.error('Error al actualizar con el tamaño de página:', error);
@@ -663,7 +692,7 @@ export class TableHandler {
           firmadoFilter,
           textFilters
         );
-        await this.renderTable(result.remitos, result.pagination);
+        await this.renderTable(result.remitos, result.pagination, result.columns);
       }
     } catch (error) {
       console.error('Error al actualizar con los filtros:', error);
@@ -703,7 +732,7 @@ export class TableHandler {
           this.currentFirmadoFilter,
           {}
         );
-        await this.renderTable(result.remitos, result.pagination);
+        await this.renderTable(result.remitos, result.pagination, result.columns);
       }
     }
   }

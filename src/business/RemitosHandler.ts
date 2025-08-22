@@ -9,42 +9,13 @@ export class RemitosHandler {
   }
 
   private async loadTableConfig(): Promise<void> {
-    try {
-      // Get merged config from ClientTableConfigManager
-      if ((window as any).clientTableConfigManager) {
-        this.columns = (window as any).clientTableConfigManager.getAllVisibleColumns();
-      }
-      
-      // Fallback to default columns if no config available
-      if (this.columns.length === 0) {
-        this.columns = [
-          { field: 'CPY_0' },
-          { field: 'DLVDAT_0' },
-          { field: 'STOFCY_0' },
-          { field: 'SDHNUM_0' },
-          { field: 'BPCORD_0' },
-          { field: 'BPDNAM_0' },
-          { field: 'XX6FLSIGN_0' }
-        ];
-      }
-    } catch (error) {
-      console.error('Error loading table config:', error);
-      // Use fallback columns
-      this.columns = [
-        { field: 'CPY_0' },
-        { field: 'DLVDAT_0' },
-        { field: 'STOFCY_0' },
-        { field: 'SDHNUM_0' },
-        { field: 'BPCORD_0' },
-        { field: 'BPDNAM_0' },
-        { field: 'XX6FLSIGN_0' }
-      ];
-    }
+    // NO CONFIG - All columns come from SQL query only
+    console.log("🚫 RemitosHandler.loadTableConfig() - ignoring, using SQL columns only");
+    this.columns = []; // Empty - not used anymore
   }
 
   async fetchRemitos(company: string, facility: string, desde?: string, page: number = 1, pageSize: number = 50, firmadoFilter?: string, textFilters?: Record<string, string>) {
-    // Ensure config is loaded
-    await this.loadTableConfig();
+    // No config loading - columns come from SQL
     
     // Build dynamic filters based on text filters
     const filters = [];
@@ -63,8 +34,7 @@ export class RemitosHandler {
       });
     }
 
-    // Get dynamic columns from configuration
-    const columnFields = this.columns.map(col => col.field);
+    // Columns will be extracted automatically from SQL by the resolver
 
     const response = await fetch('/graphql', {
       method: 'POST',
@@ -74,7 +44,6 @@ export class RemitosHandler {
         variables: { 
           cpy: company, 
           stofcy: facility,
-          columns: columnFields,
           filters: filters,
           desde: desde, 
           page: page, 
@@ -108,6 +77,7 @@ export class RemitosHandler {
 
     return {
       remitos: formattedRemitos,
+      columns: result.columns || [],
       pagination: result.pagination
     };
   }

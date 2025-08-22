@@ -3,9 +3,29 @@ import { GraphQLDate, GraphQLJSON } from 'graphql-scalars';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import ini from 'ini';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function extractColumnsFromSQL(sqlQuery: string): string[] {
+  const selectMatch = sqlQuery.match(/SELECT\s+(.*?)\s+FROM/i);
+  if (!selectMatch) return [];
+  
+  const columnsStr = selectMatch[1].trim();
+  return columnsStr.split(',')
+    .map(col => col.trim())
+    .filter(col => !col.includes('COUNT(') && !col.includes('OVER('));
+}
+
+function readSQLFromConfig() {
+  const configPath = path.join(__dirname, '../../../signatures.ini');
+  const configContent = fs.readFileSync(configPath, 'utf8');
+  const config = ini.parse(configContent);
+  return {
+    remitosQuery: config.sql?.remitos_query || ''
+  };
+}
 
 export const remitoResolvers = {
   Date: GraphQLDate,
@@ -13,31 +33,35 @@ export const remitoResolvers = {
 
   Query: {
 
-    async remitosDynamic(_: any, { cpy, stofcy, columns, filters = [], desde, page = 1, pageSize = 50 }: {
+    async remitosDynamic(_: any, { cpy, stofcy, filters = [], desde, page = 1, pageSize = 50 }: {
       cpy: string;
       stofcy: string;
-      columns: string[];
       filters?: Array<{ field: string; operator: string; value: string }>;
       desde?: string;
       page?: number;
       pageSize?: number;
     }) {
       console.log("🔄 USANDO QUERY DINAMICA - remitosDynamic");
-      console.log("Dynamic remitos parameters:", { cpy, stofcy, columns, filters, desde, page, pageSize });
+      console.log("Dynamic remitos parameters:", { cpy, stofcy, filters, desde, page, pageSize });
       
       const pool = await getConnection();
       
+      // Read SQL queries from config
+      const { remitosQuery } = readSQLFromConfig();
+      
+      // Extract columns from SQL
+      const columns = extractColumnsFromSQL(remitosQuery);
+      console.log("📊 SQL QUERY:", remitosQuery);
+      console.log("📊 EXTRACTED COLUMNS:", columns);
+      
       // Sanitize column names to prevent SQL injection
-      const sanitizedColumns = columns.filter(col => /^[A-Za-z0-9_]+$/.test(col));
+      const sanitizedColumns = columns.filter(col => /^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)?$/.test(col));
       if (sanitizedColumns.length !== columns.length) {
         throw new Error("Invalid column names detected");
       }
       
-      // Build SELECT clause
-      const selectClause = sanitizedColumns.join(', ');
-      
-      // Build base WHERE clause
-      let whereClause = "WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy";
+      // Build additional filters for dynamic WHERE conditions
+      let additionalFilters = "";
       const parameters: any = {
         cpy,
         stofcy,
@@ -47,7 +71,7 @@ export const remitoResolvers = {
       // Build dynamic filters
       filters.forEach((filter, index) => {
         // Sanitize field name
-        if (!/^[A-Za-z0-9_]+$/.test(filter.field)) {
+        if (!/^[A-Za-z0-9_.]+$/.test(filter.field)) {
           throw new Error(`Invalid field name: ${filter.field}`);
         }
         
@@ -55,29 +79,29 @@ export const remitoResolvers = {
         
         switch (filter.operator.toLowerCase()) {
           case 'equals':
-            whereClause += ` AND ${filter.field} = @${paramName}`;
+            additionalFilters += ` AND ${filter.field} = @${paramName}`;
             parameters[paramName] = filter.value;
             break;
           case 'like':
-            whereClause += ` AND UPPER(CAST(${filter.field} AS NVARCHAR)) LIKE UPPER(@${paramName})`;
+            additionalFilters += ` AND UPPER(CAST(${filter.field} AS NVARCHAR)) LIKE UPPER(@${paramName})`;
             parameters[paramName] = `%${filter.value}%`;
             break;
           case 'not_equals':
-            whereClause += ` AND ${filter.field} != @${paramName}`;
+            additionalFilters += ` AND ${filter.field} != @${paramName}`;
             parameters[paramName] = filter.value;
             break;
           case 'greater_than':
-            whereClause += ` AND ${filter.field} > @${paramName}`;
+            additionalFilters += ` AND ${filter.field} > @${paramName}`;
             parameters[paramName] = filter.value;
             break;
           case 'less_than':
-            whereClause += ` AND ${filter.field} < @${paramName}`;
+            additionalFilters += ` AND ${filter.field} < @${paramName}`;
             parameters[paramName] = filter.value;
             break;
           case 'in':
             const values = filter.value.split(',').map(v => v.trim());
             const inParams = values.map((_, i) => `@${paramName}_${i}`).join(',');
-            whereClause += ` AND ${filter.field} IN (${inParams})`;
+            additionalFilters += ` AND ${filter.field} IN (${inParams})`;
             values.forEach((value, i) => {
               parameters[`${paramName}_${i}`] = value;
             });
@@ -87,23 +111,9 @@ export const remitoResolvers = {
         }
       });
       
-      // Count query
-      const countRequest = pool.request();
-      Object.keys(parameters).forEach(key => {
-        countRequest.input(key, parameters[key]);
-      });
-      
-      const countResult = await countRequest.query(`
-        SELECT COUNT(*) as total
-        FROM SDELIVERY
-        ${whereClause}
-      `);
-      
-      const totalCount = countResult.recordset[0]?.total || 0;
-      const totalPages = Math.ceil(totalCount / pageSize);
       const offset = (page - 1) * pageSize;
       
-      // Main query
+      // Single query with COUNT(*) OVER() for pagination
       const mainRequest = pool.request();
       Object.keys(parameters).forEach(key => {
         mainRequest.input(key, parameters[key]);
@@ -111,19 +121,17 @@ export const remitoResolvers = {
       mainRequest.input("offset", offset);
       mainRequest.input("pageSize", pageSize);
       
-      const result = await mainRequest.query(`
-        SELECT ${selectClause}
-        FROM SDELIVERY
-        ${whereClause}
-        ORDER BY DLVDAT_0 DESC
-        OFFSET @offset ROWS
-        FETCH NEXT @pageSize ROWS ONLY
-      `);
+      const finalMainQuery = remitosQuery.replace('{additionalFilters}', additionalFilters);
+      const result = await mainRequest.query(finalMainQuery);
+      
+      const totalCount = result.recordset[0]?.total_count || 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
       
       console.log("Dynamic SQL result:", result.recordset);
       
       return {
         remitos: result.recordset.map(row => ({ data: row })),
+        columns: sanitizedColumns,
         pagination: {
           currentPage: page,
           pageSize: pageSize,

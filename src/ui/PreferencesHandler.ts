@@ -432,7 +432,7 @@ class UserPreferences {
             facility: this.workSession.selectedFacility, 
             fechaDesde 
           };
-          (window as any).tableHandler.renderTable(result.remitos, result.pagination);
+          (window as any).tableHandler.renderTable(result.remitos, result.pagination, result.columns);
           
           // Ensure "No" filter is selected after auto-reload
           setTimeout(() => {
