@@ -10,6 +10,8 @@ export class TableHandler {
   public currentParams: any = null; // Store current search params
   private lastFilterClickTime: number = 0; // Track last filter click time
   private filterClickDelay: number = 2000; // 2 second delay between filter clicks
+  private filterTimeout: NodeJS.Timeout | null = null; // Debounce timeout for text filters
+  private listenersSetup = false; // Track if listeners are already set up
 
   constructor(tableId: string) {
     this.tableId = tableId;
@@ -54,22 +56,23 @@ export class TableHandler {
   }
 
   public setupColumnFilters(): void {
+    // Only setup listeners once to avoid duplicates that cause infinite loops
+    if (this.listenersSetup) return;
+    
     const table = document.getElementById(this.tableId) as HTMLTableElement;
     if (!table) return;
 
     const filterInputs = table.querySelectorAll<HTMLInputElement>('thead input.filter-input');
     const filterOptions = table.querySelectorAll<HTMLElement>('thead .firmado-filter-options');
 
-    // Store current timeout for debouncing
-    let filterTimeout: NodeJS.Timeout | null = null;
-
     const applyServerSideFilters = () => {
       if (!this.currentParams) return;
       
-      // Collect text filter values
+      // Collect text filter values from current DOM state
+      const currentFilterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
       const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
       
-      filterInputs.forEach(input => {
+      currentFilterInputs.forEach(input => {
         const colIndex = Number(input.dataset.col);
         const value = input.value.trim();
         if (value) {
@@ -94,11 +97,11 @@ export class TableHandler {
     // Add debounced input listeners for text filters
     filterInputs.forEach(input => {
       input.addEventListener('input', () => {
-        if (filterTimeout) {
-          clearTimeout(filterTimeout);
+        if (this.filterTimeout) {
+          clearTimeout(this.filterTimeout);
         }
         // Debounce text filter requests by 500ms
-        filterTimeout = setTimeout(applyServerSideFilters, 500);
+        this.filterTimeout = setTimeout(applyServerSideFilters, 500);
       });
     });
 
@@ -134,6 +137,9 @@ export class TableHandler {
         this.refreshTableWithNoFirmados();
       });
     }
+    
+    // Mark listeners as setup to prevent duplicates
+    this.listenersSetup = true;
   }
 
   private async refreshTableWithNoFirmados(): Promise<void> {
