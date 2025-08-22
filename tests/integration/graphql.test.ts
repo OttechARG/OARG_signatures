@@ -263,16 +263,17 @@ describe('GraphQL API Integration Tests', () => {
      * - Date parameter processing
      * - Business logic query patterns
      */
-    test('should fetch remitos with required parameters', async () => {
+    test('should fetch remitos with dynamic query', async () => {
       const query = `
-        query GetRemitos($cpy: String!, $stofcy: String!, $desde: String) {
-          remitos(cpy: $cpy, stofcy: $stofcy, desde: $desde) {
-            CPY_0
-            DLVDAT_0
-            STOFCY_0
-            SDHNUM_0
-            BPCORD_0
-            BPDNAM_0
+        query GetRemitosDynamic($cpy: String!, $stofcy: String!, $columns: [String!]!, $desde: String) {
+          remitosDynamic(cpy: $cpy, stofcy: $stofcy, columns: $columns, desde: $desde) {
+            remitos {
+              data
+            }
+            pagination {
+              currentPage
+              totalCount
+            }
           }
         }
       `;
@@ -284,14 +285,15 @@ describe('GraphQL API Integration Tests', () => {
           variables: {
             cpy: 'TEST',
             stofcy: 'FAC01',
+            columns: ['CPY_0', 'DLVDAT_0', 'STOFCY_0', 'SDHNUM_0', 'BPCORD_0', 'BPDNAM_0'],
             desde: '2023-01-01'
           }
         })
         .expect(200);
 
       expect(response.body).toHaveProperty('data');
-      expect(response.body.data).toHaveProperty('remitos');
-      expect(Array.isArray(response.body.data.remitos)).toBe(true);
+      expect(response.body.data).toHaveProperty('remitosDynamic');
+      expect(Array.isArray(response.body.data.remitosDynamic.remitos)).toBe(true);
     });
 
     /**
@@ -310,12 +312,13 @@ describe('GraphQL API Integration Tests', () => {
      * - Graceful degradation
      * - System robustness
      */
-    test('should handle missing required parameters', async () => {
+    test('should handle missing required parameters in dynamic query', async () => {
       const query = `
         query {
-          remitos(cpy: "", stofcy: "") {
-            CPY_0
-            SDHNUM_0
+          remitosDynamic(cpy: "", stofcy: "", columns: ["CPY_0", "SDHNUM_0"]) {
+            remitos {
+              data
+            }
           }
         }
       `;

@@ -12,6 +12,7 @@ export class TableHandler {
   private filterClickDelay: number = 2000; // 2 second delay between filter clicks
   private filterTimeout: NodeJS.Timeout | null = null; // Debounce timeout for text filters
   private listenersSetup = false; // Track if listeners are already set up
+  private currentFirmadoFilter: string = 'no-firmados'; // Track current firmado filter state
 
   constructor(tableId: string) {
     this.tableId = tableId;
@@ -85,11 +86,11 @@ export class TableHandler {
         }
       });
 
-      // Get current firmado filter
-      const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
-      const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
-      const firmadoFilter = selectedOption?.dataset.value || 'no-firmados';
+      // Use stored firmado filter instead of reading from DOM
+      const firmadoFilter = this.currentFirmadoFilter;
 
+      console.log('🔍 Text filter applied - combining with firmado filter:', firmadoFilter, 'textFilters:', textFilters);
+      
       // Refresh data from server with filters
       this.refreshWithFilters(firmadoFilter, textFilters);
     };
@@ -123,9 +124,29 @@ export class TableHandler {
           // Add selected class to clicked option
           option.classList.add('selected');
           
-          // Get the filter value and refresh data from backend
-          const filterValue = (option as HTMLElement).dataset.value;
-          this.refreshWithFilter(filterValue || '');
+          // Get the filter value and store it
+          const filterValue = (option as HTMLElement).dataset.value || '';
+          this.currentFirmadoFilter = filterValue; // Store current filter
+          
+          // Collect current text filters from input fields
+          const currentFilterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
+          const textFilters: { remito?: string, fecha?: string, codigo?: string, razon?: string } = {};
+          
+          currentFilterInputs.forEach(input => {
+            const colIndex = Number(input.dataset.col);
+            const value = input.value.trim();
+            if (value) {
+              switch (colIndex) {
+                case 0: textFilters.remito = value; break;
+                case 1: textFilters.fecha = value; break;
+                case 2: textFilters.codigo = value; break;
+                case 3: textFilters.razon = value; break;
+              }
+            }
+          });
+          
+          console.log('🎯 Filter clicked, stored:', filterValue, 'preserving text filters:', textFilters);
+          this.refreshWithFilters(filterValue, textFilters);
         });
       });
     });
@@ -162,27 +183,15 @@ export class TableHandler {
         this.currentParams = { company, facility, fechaDesde };
         
         const pageSize = (window as any).userPreferences?.getPageSize() || 50;
-        // Get current filter value
-        const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
-        const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
-        const currentFilter = selectedOption?.dataset.value || 'no-firmados'; // Default to no-firmados
+        // Use default filter for initial load/refresh
+        const currentFilter = 'no-firmados';
+        this.currentFirmadoFilter = currentFilter; // Store default filter
+        console.log('🏠 Initial load - Using default filter:', currentFilter);
         
         const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, currentFilter, {});
         await this.renderTable(result.remitos, result.pagination);
         
-        // Ensure "No" filter is selected after refresh
-        setTimeout(() => {
-          const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
-          if (filterContainer) {
-            // Remove selected class from all options
-            filterContainer.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('selected'));
-            // Add selected class to "No" option
-            const noOption = filterContainer.querySelector('.filter-option[data-value="no-firmados"]') as HTMLElement;
-            if (noOption) {
-              noOption.classList.add('selected');
-            }
-          }
-        }, 100);
+        // Keep current filter selection after refresh (don't force "no-firmados")
         
         console.log('Table refreshed and filtered to show no firmados');
       }
@@ -391,10 +400,10 @@ export class TableHandler {
     
     const pageSize = (window as any).userPreferences?.getPageSize() || 50;
     
-    // Get current firmado filter
-    const filterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
-    const selectedOption = filterContainer?.querySelector('.filter-option.selected') as HTMLElement;
-    const currentFilter = selectedOption?.dataset.value || 'no-firmados';
+    // Use stored filter state instead of reading from DOM
+    const currentFilter = this.currentFirmadoFilter;
+    
+    console.log('🔄 goToPage - Using stored filter:', currentFilter);
     
     // Get current text filters
     const filterInputs = document.querySelectorAll<HTMLInputElement>('thead input.filter-input');
@@ -426,6 +435,21 @@ export class TableHandler {
           textFilters
         );
         await this.renderTable(result.remitos, result.pagination);
+        
+        // Restore filter button state after re-render
+        setTimeout(() => {
+          const newFilterContainer = document.querySelector('.firmado-filter-options[data-col="4"]') as HTMLElement;
+          if (newFilterContainer) {
+            // Remove all selected classes
+            newFilterContainer.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to the stored filter
+            const correctOption = newFilterContainer.querySelector(`.filter-option[data-value="${this.currentFirmadoFilter}"]`) as HTMLElement;
+            if (correctOption) {
+              correctOption.classList.add('selected');
+              console.log('✅ Filter state restored to:', this.currentFirmadoFilter);
+            }
+          }
+        }, 50);
       }
     } catch (error) {
       console.error('Error al cambiar de página:', error);

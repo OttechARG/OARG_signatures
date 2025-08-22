@@ -1,5 +1,5 @@
 import { createButton } from '../ui/ButtonsHandler.js';
-import { GET_COMPANIES, queryFacilities, queryRemitos } from "../graphql/queries.js";
+import { GET_COMPANIES, queryFacilities } from "../graphql/queries.js";
 import { Puestos } from "../business/HiddenValues.js";
 import { SettingsMenuHandler } from '../ui/SettingsMenuHandler.js';
 import { RemitosHandler } from '../business/RemitosHandler.js';
