@@ -2,21 +2,11 @@ import sql from 'mssql';
 import * as ini from "ini";
 import * as fs from "fs";
 
-
-/*const config: sql.config = {
-    user: 'SGETO',
-    password: 'tiger',
-    server: '172.20.1.69',
-    database: 'x3db',
-    options: {
-    instanceName: 'sage',
-    encrypt: false,
-    trustServerCertificate: true,
-  },
-};*/
-
+// Load configuration once
 let config_ini = ini.parse(fs.readFileSync("signatures.ini", "utf-8"));
 const config: sql.config = config_ini.db;
+
+// Backend-only exports (contains Node.js modules)
 export async function getConnection(): Promise<sql.ConnectionPool> {
   try {
     const pool = await sql.connect(config);
@@ -31,3 +21,6 @@ export async function getConnection(): Promise<sql.ConnectionPool> {
     }
   }
 }
+
+// Frontend-safe exports (no Node.js modules)
+export const report = config_ini.rpt;

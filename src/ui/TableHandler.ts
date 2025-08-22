@@ -1,5 +1,6 @@
 import { createButton } from "./ButtonsHandler.js";
 import { getDocumentBase64WithRetries } from "../pdf/PDFHandler.js";
+import { getReport } from "../core/ReportConfig.js";
 
 export class TableHandler {
   private tableId: string;
@@ -253,7 +254,8 @@ export class TableHandler {
             sessionStorage.setItem('currentRemito', JSON.stringify(remitoData));
             console.log("Datos del remito guardados:", remitoData);
 
-            const url = `/proxy-getrpt?PRPT=ZREMITOAI&POBJ=SDH&POBJORI=SDH&PCLE=${encodeURIComponent(r.SDHNUM_0)}&WSIGN=2&PIMPRIMANTE=WSPRINT`;
+            const report = await getReport();
+            const url = `/proxy-getrpt?PRPT=${report.remito}&POBJ=SDH&POBJORI=SDH&PCLE=${encodeURIComponent(r.SDHNUM_0)}&WSIGN=2&PIMPRIMANTE=WSPRINT`;
             try {
               // Fetch JSON response with base64 PDF
               const response = await fetch(url);

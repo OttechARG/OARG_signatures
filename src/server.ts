@@ -6,7 +6,7 @@ import fs from 'fs';
 import * as ini from 'ini';
 import * as soap from 'soap';
 import winston from 'winston';
-import { getConnection } from './core/configDB.js';
+import { getConnection, report } from './core/AppConfig.js';
 import { graphqlHTTP } from 'express-graphql';
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { companyResolvers } from "./graphql/resolvers/CompanyResolvers.js";
@@ -98,7 +98,7 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
 
     let inputXML: string =
       '<PARAM><GRP ID="GRP1">\
-					<FLD NAME="PRPT"    	TYPE="Char">ZREMITOAI</FLD>\
+					<FLD NAME="PRPT"    	TYPE="Char">' + report.remito + '</FLD>\
           <FLD NAME="PIMPRIMANTE"  TYPE="Char">WSPRINT</FLD>\
           <FLD NAME="POBJ"    	TYPE="Char">SDH</FLD>\
 					<FLD NAME="POBJORI" 	TYPE="Char">SDH</FLD>\
@@ -334,6 +334,11 @@ app.use("/graphql", graphqlHTTP({
   schema,
   graphiql: true, // habilita interfaz para pruebas
 }));
+
+// Report configuration endpoint for frontend
+app.get('/api/config/report', (req: Request, res: Response) => {
+  res.json({ report });
+});
 
 // Visual preferences endpoints
 app.get('/api/visual-preferences', (req: Request, res: Response) => {
