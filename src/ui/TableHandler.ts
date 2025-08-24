@@ -27,7 +27,8 @@ export class TableHandler {
     this.currentFirmadoFilter = 'no-firmados';
     this.currentTextFilters = {};
     
-    // Don't load table configuration on init - wait for first data fetch with dynamic columns
+    // Initialize with saved configuration even when empty
+    this.initializeWithSavedConfig();
     
     // Add CSS animation for spinner
     if (!document.getElementById('spinner-style')) {
@@ -60,6 +61,58 @@ export class TableHandler {
   private async loadTableConfig(): Promise<void> {
     // NO CONFIG - Table columns come purely from SQL query
     console.log("🚫 loadTableConfig() called but ignoring - using SQL columns only");
+  }
+
+  private async waitForConfigManagerAndApply(dynamicColumns: string[]): Promise<void> {
+    const maxAttempts = 20; // 2 seconds max wait
+    let attempts = 0;
+    
+    return new Promise<void>((resolve) => {
+      const checkAndApply = () => {
+        attempts++;
+        const manager = (window as any).clientTableConfigManager;
+        
+        if (manager && manager.getMergedConfig()) {
+          console.log("🎯 Using ClientTableConfigManager with saved configuration");
+          manager.updateConfigWithSqlColumns(dynamicColumns);
+          // Get filtered columns (only visible ones) 
+          this.columns = manager.getVisibleColumnsFilteredBySql(dynamicColumns);
+          console.log("📋 Applied configured columns:", this.columns);
+          resolve();
+          return;
+        }
+        
+        if (attempts < maxAttempts) {
+          setTimeout(checkAndApply, 100);
+        } else {
+          console.log("⚠️ ClientTableConfigManager timeout, using fallback");
+          // Fallback: use direct mapping
+          this.columns = dynamicColumns.map(field => ({
+            field,
+            ...this.getColumnConfig(field)
+          }));
+          resolve();
+        }
+      };
+      
+      checkAndApply();
+    });
+  }
+
+  private async initializeWithSavedConfig(): Promise<void> {
+    // Wait for ClientTableConfigManager to be ready, then show saved column structure
+    setTimeout(async () => {
+      const manager = (window as any).clientTableConfigManager;
+      if (manager && manager.getMergedConfig()) {
+        const savedColumns = manager.getAllVisibleColumns();
+        if (savedColumns && savedColumns.length > 0) {
+          console.log("🎨 Showing saved column configuration on empty table:", savedColumns);
+          this.columns = savedColumns;
+          this.generateTableHeaders();
+          this.setupColumnFilters();
+        }
+      }
+    }, 200); // Small delay to ensure ClientTableConfigManager is loaded
   }
 
   private resetAllButtons(): void {
@@ -349,24 +402,14 @@ export class TableHandler {
     // ALWAYS use SQL columns directly - but map to nice labels and config
     if (dynamicColumns && dynamicColumns.length > 0) {
       
-      // Update ClientTableConfigManager with SQL columns
-      if ((window as any).clientTableConfigManager) {
-        (window as any).clientTableConfigManager.updateConfigWithSqlColumns(dynamicColumns);
-        // Get filtered columns (only visible ones)
-        this.columns = (window as any).clientTableConfigManager.getVisibleColumnsFilteredBySql(dynamicColumns);
-      } else {
-        // Fallback: use direct mapping
-        this.columns = dynamicColumns.map(field => ({
-          field,
-          ...this.getColumnConfig(field)
-        }));
-      }
+      // Wait for ClientTableConfigManager and apply saved configuration
+      await this.waitForConfigManagerAndApply(dynamicColumns);
       
       console.log("🔥 USING SQL COLUMNS WITH VISIBILITY CONTROL:", this.columns);
     } else {
-      // If no SQL columns, use empty array (no table)
-      this.columns = [];
-      console.log("⚠️ NO SQL COLUMNS - EMPTY TABLE");
+      // If no SQL columns, don't render anything - wait for proper data
+      console.log("⚠️ NO SQL COLUMNS - WAITING FOR DATA, NOT RENDERING TABLE");
+      return; // Exit early, don't render empty table
     }
     
     const tabla = document.getElementById(this.tableId) as HTMLTableElement;

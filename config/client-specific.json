@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "client": "specific",
-  "lastModified": "2025-08-22T19:48:53.336Z",
+  "lastModified": "2025-08-24T23:48:43.270Z",
   "table": {
     "customColumns": [],
     "columnOverrides": {
@@ -10,7 +10,7 @@
         "label": "Remito",
         "width": "120px",
         "filterable": true,
-        "position": 0
+        "position": 1
       },
       "CPY_0": {
         "visible": false,
@@ -38,21 +38,21 @@
         "label": "STOFCY_0",
         "width": "120px",
         "filterable": true,
-        "position": 5
+        "position": 6
       },
       "DLVDAT_0": {
         "visible": true,
         "label": "Fecha",
         "width": "120px",
         "filterable": true,
-        "position": 1
+        "position": 0
       },
       "XX6FLSIGN_0": {
         "visible": true,
         "label": "Firmado",
         "width": "120px",
         "filterable": true,
-        "position": 6
+        "position": 5
       }
     },
     "customFilters": [],

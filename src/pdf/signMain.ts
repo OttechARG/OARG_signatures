@@ -184,7 +184,7 @@ function createSaveButton() {
         const pageSize = window.userPreferences?.getPageSize() || 50;
         const result = await remitosHandler.fetchRemitos(workSession.selectedCompany, workSession.selectedFacility, fechaDesde, 1, pageSize, 'no-firmados');
         tableHandler.currentParams = { company: workSession.selectedCompany, facility: workSession.selectedFacility, fechaDesde };
-        tableHandler.renderTable(result.remitos, result.pagination);
+        tableHandler.renderTable(result.remitos, result.pagination, result.columns);
       }
       
       sessionStorage.setItem("userSelection", JSON.stringify(dataToSave));
@@ -249,7 +249,7 @@ window.addEventListener('message', async (event) => {
         const pageSize = window.userPreferences?.getPageSize() || 50;
         const result = await remitosHandler.fetchRemitos(company, facility, fechaDesde, 1, pageSize, 'no-firmados');
         tableHandler.currentParams = { company, facility, fechaDesde };
-        tableHandler.renderTable(result.remitos, result.pagination);
+        tableHandler.renderTable(result.remitos, result.pagination, result.columns);
         console.log('Tabla actualizada exitosamente');
       } catch (error) {
         console.error('Error actualizando tabla:', error);
