@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "client": "specific",
-  "lastModified": "2025-08-25T00:26:21.229Z",
+  "lastModified": "2025-08-25T01:18:32.343Z",
   "table": {
     "customColumns": [],
     "columnOverrides": {
@@ -10,7 +10,7 @@
         "label": "Remito",
         "width": "120px",
         "filterable": true,
-        "position": 0
+        "position": 2
       },
       "CPY_0": {
         "visible": false,
@@ -31,7 +31,7 @@
         "label": "Cod. Cliente",
         "width": "120px",
         "filterable": true,
-        "position": 2
+        "position": 1
       },
       "STOFCY_0": {
         "visible": false,
@@ -45,14 +45,14 @@
         "label": "Fecha",
         "width": "120px",
         "filterable": true,
-        "position": 1
+        "position": 0
       },
       "XX6FLSIGN_0": {
         "visible": true,
         "label": "Firmado",
         "width": "120px",
         "filterable": true,
-        "position": 4
+        "position": 5
       }
     },
     "customFilters": [],

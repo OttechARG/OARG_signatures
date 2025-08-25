@@ -343,21 +343,36 @@ app.get('/api/config/report', (req: Request, res: Response) => {
 // Visual preferences endpoints
 app.get('/api/visual-preferences', (req: Request, res: Response) => {
   try {
-    const configPath = path.join(__dirname, '..', 'visual-preferences-config.json');
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      res.json(config.visualPreferences);
+    // Load defaults from config folder
+    const defaultsPath = path.join(__dirname, '..', 'config', 'visual-defaults.json');
+    const specificPath = path.join(__dirname, '..', 'specific', 'visual-preferences.json');
+    
+    let preferences = {};
+    
+    // Load defaults
+    if (fs.existsSync(defaultsPath)) {
+      const defaults = JSON.parse(fs.readFileSync(defaultsPath, 'utf-8'));
+      preferences = defaults.visualPreferences;
     } else {
-      // Return default preferences if file doesn't exist
-      const defaultPreferences = {
+      // Fallback hardcoded defaults
+      preferences = {
         theme: 'default',
         background: 'white',
         backgroundImage: null,
         customLogo: null,
+        customThemeColor: null,
+        customBackgroundColor: null,
         pageSize: 50
       };
-      res.json(defaultPreferences);
     }
+    
+    // Override with user-specific preferences
+    if (fs.existsSync(specificPath)) {
+      const specific = JSON.parse(fs.readFileSync(specificPath, 'utf-8'));
+      preferences = { ...preferences, ...specific.visualPreferences };
+    }
+    
+    res.json(preferences);
   } catch (error) {
     logger.error('Error al cargar las preferencias visuales:', error);
     res.status(500).json({ error: 'Error al cargar las preferencias visuales' });
@@ -366,8 +381,14 @@ app.get('/api/visual-preferences', (req: Request, res: Response) => {
 
 app.post('/api/visual-preferences', (req: Request, res: Response) => {
   try {
-    const configPath = path.join(__dirname, '..', 'visual-preferences-config.json');
+    const configPath = path.join(__dirname, '..', 'specific', 'visual-preferences.json');
+    const configDir = path.dirname(configPath);
     const preferences = req.body;
+    
+    // Ensure directory exists
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
     
     const config = {
       version: '1.0.0',
@@ -390,37 +411,36 @@ app.post('/api/visual-preferences', (req: Request, res: Response) => {
 });
 
 // Client Table Configuration API endpoints
-app.get('/api/config/client-standard', (req: Request, res: Response) => {
+app.get('/api/config/table-defaults', (req: Request, res: Response) => {
   try {
-    const configPath = path.join(__dirname, '..', 'config', 'client-standard.json');
-    console.log('Looking for client-standard.json at:', configPath);
+    const configPath = path.join(__dirname, '..', 'config', 'table-defaults.json');
+    console.log('Looking for table-defaults.json at:', configPath);
     console.log('File exists:', fs.existsSync(configPath));
     
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
       res.json(config);
     } else {
-      logger.warn('client-standard.json not found at:', configPath);
-      res.status(404).json({ error: 'Standard configuration not found', path: configPath });
+      logger.warn('table-defaults.json not found at:', configPath);
+      res.status(404).json({ error: 'Default table configuration not found', path: configPath });
     }
   } catch (error) {
-    logger.error('Error al cargar la configuración estándar del cliente:', error);
+    logger.error('Error al cargar la configuración estándar de tabla:', error);
     res.status(500).json({ error: 'Error al cargar la configuración estándar' });
   }
 });
 
-app.get('/api/config/client-specific', (req: Request, res: Response) => {
+app.get('/api/config/table-customizations', (req: Request, res: Response) => {
   try {
-    const configPath = path.join(__dirname, '..', 'config', 'client-specific.json');
+    const configPath = path.join(__dirname, '..', 'specific', 'table-customizations.json');
     
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
       res.json(config);
     } else {
-      // Return default empty specific config
+      // Return default empty customizations
       const defaultConfig = {
         version: "1.0",
-        client: "specific",
         lastModified: new Date().toISOString(),
         table: {
           customColumns: [],
@@ -432,14 +452,14 @@ app.get('/api/config/client-specific', (req: Request, res: Response) => {
       res.json(defaultConfig);
     }
   } catch (error) {
-    logger.error('Error al cargar la configuración específica del cliente:', error);
-    res.status(500).json({ error: 'Error al cargar la configuración específica' });
+    logger.error('Error al cargar las customizaciones de tabla:', error);
+    res.status(500).json({ error: 'Error al cargar las customizaciones' });
   }
 });
 
-app.post('/api/config/client-specific', (req: Request, res: Response) => {
+app.post('/api/config/table-customizations', (req: Request, res: Response) => {
   try {
-    const configPath = path.join(__dirname, '..', 'config', 'client-specific.json');
+    const configPath = path.join(__dirname, '..', 'specific', 'table-customizations.json');
     const configDir = path.dirname(configPath);
     
     // Ensure directory exists
@@ -451,11 +471,11 @@ app.post('/api/config/client-specific', (req: Request, res: Response) => {
     config.lastModified = new Date().toISOString();
     
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    logger.info('Client specific configuration saved successfully');
-    res.json({ success: true, message: 'Configuration saved successfully' });
+    logger.info('Table customizations saved successfully');
+    res.json({ success: true, message: 'Customizations saved successfully' });
   } catch (error) {
-    logger.error('Error al guardar la configuración específica del cliente:', error);
-    res.status(500).json({ error: 'Error al guardar la configuración' });
+    logger.error('Error al guardar las customizaciones de tabla:', error);
+    res.status(500).json({ error: 'Error al guardar las customizaciones' });
   }
 });
 

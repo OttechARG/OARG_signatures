@@ -86,7 +86,7 @@ class ClientTableConfigManager {
   private async loadConfigurations(): Promise<void> {
     try {
       // Load standard configuration
-      const standardResponse = await fetch('/api/config/client-standard');
+      const standardResponse = await fetch('/api/config/table-defaults');
       if (standardResponse.ok) {
         this.standardConfig = await standardResponse.json();
       } else {
@@ -94,7 +94,7 @@ class ClientTableConfigManager {
       }
 
       // Load specific configuration  
-      const specificResponse = await fetch('/api/config/client-specific');
+      const specificResponse = await fetch('/api/config/table-customizations');
       if (specificResponse.ok) {
         this.specificConfig = await specificResponse.json();
       } else {
@@ -584,7 +584,7 @@ class ClientTableConfigManager {
       this.collectUIChanges();
 
       // Save specific configuration
-      const response = await fetch('/api/config/client-specific', {
+      const response = await fetch('/api/config/table-customizations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
