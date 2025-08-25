@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "queries": {},
+  "metadata": {
+    "description": "User's custom SQL queries - overrides defaults when present",
+    "lastModified": "2025-08-25T01:25:00.000Z",
+    "createdAt": "2025-08-25T01:25:00.000Z"
+  }
+}

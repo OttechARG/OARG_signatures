@@ -1,4 +1,5 @@
 import { getConnection } from "../../core/AppConfig.js";
+import { getSqlQuery } from "../../core/configDB.js";
 import { GraphQLDate, GraphQLJSON } from 'graphql-scalars';
 import path from 'path';
 import fs from 'fs';
@@ -19,11 +20,8 @@ function extractColumnsFromSQL(sqlQuery: string): string[] {
 }
 
 function readSQLFromConfig() {
-  const configPath = path.join(__dirname, '../../../signatures.ini');
-  const configContent = fs.readFileSync(configPath, 'utf8');
-  const config = ini.parse(configContent);
   return {
-    remitosQuery: config.sql?.remitos_query || ''
+    remitosQuery: getSqlQuery('remitos_query')
   };
 }
 

@@ -29,10 +29,12 @@ A TypeScript-based PDF signing application that integrates with SAGE X3 ERP syst
 ├── public/                # Static web assets
 ├── config/                # Standard configurations (distributed with updates)
 │   ├── table-defaults.json    # Default table structure & columns
-│   └── visual-defaults.json   # Default visual preferences
+│   ├── visual-defaults.json   # Default visual preferences
+│   └── sql-defaults.json      # Default SQL queries
 ├── specific/              # User-specific configurations
 │   ├── table-customizations.json  # User table customizations
-│   └── visual-preferences.json    # User visual preferences
+│   ├── visual-preferences.json    # User visual preferences
+│   └── sql-customizations.json    # User custom SQL queries
 ├── tests/                 # Jest test suites
 ├── backup_changes/        # Configuration backups
 └── signatures.ini         # Main configuration file
@@ -46,11 +48,13 @@ The system uses a two-tier configuration approach:
 **Standard Configurations (`config/` folder):**
 - `table-defaults.json` - Default table structure and column definitions
 - `visual-defaults.json` - Default visual preferences and themes
+- `sql-defaults.json` - Default SQL queries and database operations
 - These files are distributed with application updates
 
 **User-Specific Configurations (`specific/` folder):**
 - `table-customizations.json` - User's table customizations and overrides
-- `visual-preferences.json` - User's visual preference overrides
+- `visual-preferences.json` - User's visual preference overrides  
+- `sql-customizations.json` - User's custom SQL queries and database modifications
 - These files contain user customizations and are preserved during updates
 
 ### Main Configuration (`signatures.ini`)
