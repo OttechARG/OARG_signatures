@@ -1,4 +1,4 @@
-# Claudia PDF Signing System
+# Signatures - PDF Signing System
 
 ## Overview
 A TypeScript-based PDF signing application that integrates with SAGE X3 ERP system to handle digital document signatures for delivery notes (remitos). The system provides both a web interface and API endpoints for PDF processing, signing, and document management.
@@ -56,6 +56,7 @@ The system uses a two-tier configuration approach:
 - `visual-preferences.json` - User's visual preference overrides  
 - `sql-customizations.json` - User's custom SQL queries and database modifications
 - These files contain user customizations and are preserved during updates
+- **Priority**: User-specific configurations always take precedence over standard configurations
 
 ### Main Configuration (`signatures.ini`)
 ```ini
@@ -150,6 +151,8 @@ npm run test:watch
 - **Companies**: Query company information
 - **Facilities**: Query facility data by company
 - **Remitos**: Dynamic querying with filtering and pagination
+- **Dynamic SQL**: Custom user queries merged with required system columns
+- **Column Extraction**: Automatic column detection from SQL queries with clean name mapping
 - **Mutations**: PDF upload and processing
 
 ## 🔧 Development Tools
@@ -190,9 +193,10 @@ npm run test:watch
 
 ### User Interface
 - Web-based signing interface
-- Table configuration and management
-- Visual preferences customization
-- Responsive design components
+- Dynamic table configuration with drag-and-drop column reordering
+- Visual preferences customization with real-time preview
+- Responsive design components with ellipsis text overflow
+- Priority-based configuration loading (specific overrides standard)
 
 ### Security & Logging
 - Winston-based logging system
@@ -251,4 +255,27 @@ npm run test:watch
 - **ts-jest**: TypeScript Jest integration
 - **@types/***: Type definitions
 
-This README provides comprehensive information for developers working with the Claudia PDF signing system, covering architecture, setup, configuration, and development workflows.
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+**Empty Table Columns:**
+- Check column name mapping between SQL results and table configuration
+- Verify `extractColumnsFromSQL` returns clean column names (e.g., `XARGTYPCOB_0` not `BPC.XARGTYPCOB_0`)
+- Ensure `specific/table-customizations.json` uses correct column keys
+
+**Configuration Not Loading:**
+- System prioritizes `specific/` configurations over `config/` defaults
+- Check browser console for "🎯 Using specific configuration as primary source"
+- Verify configuration files have valid JSON syntax
+
+**Text Overflow Issues:**
+- CSS handles text overflow with ellipsis (`...`) automatically
+- Check `layout-components.css` for `text-overflow: ellipsis` rules
+
+**SQL Query Issues:**
+- User queries are automatically merged with required system columns
+- System adds WHERE clauses, pagination, and ORDER BY automatically
+- Custom queries only need SELECT and FROM clauses
+
+This README provides comprehensive information for developers working with the signatures system, covering architecture, setup, configuration, and development workflows.
