@@ -110,11 +110,15 @@ class UserPreferences {
   }
 
   private async init(): Promise<void> {
+    // Apply basic theme immediately to prevent flash
+    this.applyBasicTheme();
+    
     await this.loadPreferences();
     this.loadWorkSession();
     this.attachEventListeners();
-    this.applyTheme();
+    this.applyTheme(); // Apply full theme after preferences are loaded
     this.restoreWorkSessionUI();
+    this.showUI(); // Show UI elements after everything is ready
   }
 
   private async loadPreferences(): Promise<void> {
@@ -166,6 +170,25 @@ class UserPreferences {
       sessionStorage.setItem('workSession', JSON.stringify(this.workSession));
     } catch (error) {
       console.error('Error al guardar la sesión de trabajo:', error);
+    }
+  }
+
+  private applyBasicTheme(): void {
+    // Apply minimal styling immediately to prevent flash
+    const root = document.documentElement;
+    
+    // Use default theme colors immediately
+    const defaultTheme = this.themes.default;
+    root.style.setProperty('--theme-primary', defaultTheme.primary);
+    root.style.setProperty('--theme-primary-light', defaultTheme.primaryLight);
+    root.style.setProperty('--theme-primary-hover', defaultTheme.primaryHover);
+  }
+
+  private showUI(): void {
+    // Show UI elements after theme is applied
+    const settingsDropdown = document.querySelector('.settings-dropdown');
+    if (settingsDropdown) {
+      settingsDropdown.classList.add('loaded');
     }
   }
 

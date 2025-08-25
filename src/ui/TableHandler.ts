@@ -64,7 +64,7 @@ export class TableHandler {
   }
 
   private async waitForConfigManagerAndApply(dynamicColumns: string[]): Promise<void> {
-    const maxAttempts = 20; // 2 seconds max wait
+    const maxAttempts = 30; // 3 seconds max wait (increased for config loading)
     let attempts = 0;
     
     return new Promise<void>((resolve) => {
@@ -72,8 +72,9 @@ export class TableHandler {
         attempts++;
         const manager = (window as any).clientTableConfigManager;
         
-        if (manager && manager.getMergedConfig()) {
-          console.log("🎯 Using ClientTableConfigManager with saved configuration");
+        // Wait for both manager and config to be fully ready
+        if (manager && manager.isReady() && manager.getMergedConfig()) {
+          console.log("🎯 Using ClientTableConfigManager with fully loaded configuration");
           manager.updateConfigWithSqlColumns(dynamicColumns);
           // Get filtered columns (only visible ones) 
           this.columns = manager.getVisibleColumnsFilteredBySql(dynamicColumns);
@@ -100,10 +101,10 @@ export class TableHandler {
   }
 
   private async initializeWithSavedConfig(): Promise<void> {
-    // Wait for ClientTableConfigManager to be ready, then show saved column structure
-    setTimeout(async () => {
+    // Wait for ClientTableConfigManager to be fully ready before showing anything
+    const checkConfigReady = () => {
       const manager = (window as any).clientTableConfigManager;
-      if (manager && manager.getMergedConfig()) {
+      if (manager && manager.isReady() && manager.getMergedConfig()) {
         const savedColumns = manager.getAllVisibleColumns();
         if (savedColumns && savedColumns.length > 0) {
           console.log("🎨 Showing saved column configuration on empty table:", savedColumns);
@@ -111,8 +112,14 @@ export class TableHandler {
           this.generateTableHeaders();
           this.setupColumnFilters();
         }
+      } else {
+        // Keep checking until config is ready
+        setTimeout(checkConfigReady, 50);
       }
-    }, 200); // Small delay to ensure ClientTableConfigManager is loaded
+    };
+    
+    // Start checking after a minimal delay
+    setTimeout(checkConfigReady, 100);
   }
 
   private resetAllButtons(): void {

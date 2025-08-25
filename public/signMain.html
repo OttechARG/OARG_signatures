@@ -33,7 +33,13 @@
     <img src="assets/logo-fondo-blanco.jpg" alt="Ottech ARG" class="logo" />
        <!-- Tabla de remitos en contenido principal -->
     <div class="table-container"> 
-  <table id="remitosTable">
+      <!-- Configuration Loading Overlay -->
+      <div id="configLoadingOverlay" class="config-loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando configuración...</div>
+      </div>
+      
+      <table id="remitosTable" style="opacity: 0; transition: opacity 0.3s ease-in-out;">
     <!-- Colgroup para definir ancho máximo de columnas -->
     <thead>
       <tr>

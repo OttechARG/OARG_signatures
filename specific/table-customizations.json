@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "client": "specific",
-  "lastModified": "2025-08-25T03:38:42.916Z",
+  "lastModified": "2025-08-25T04:47:25.012Z",
   "table": {
     "customColumns": [],
     "columnOverrides": {
@@ -31,7 +31,7 @@
         "label": "Cod. Cliente",
         "width": "120px",
         "filterable": true,
-        "position": 0
+        "position": 1
       },
       "STOFCY_0": {
         "visible": false,
@@ -45,7 +45,7 @@
         "label": "Fecha",
         "width": "120px",
         "filterable": true,
-        "position": 2
+        "position": 0
       },
       "XX6FLSIGN_0": {
         "visible": true,
@@ -59,7 +59,7 @@
         "label": "XARGTYPCOB",
         "width": "120px",
         "filterable": true,
-        "position": 1
+        "position": 2
       }
     },
     "customFilters": [],

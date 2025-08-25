@@ -11,20 +11,6 @@ interface DbColumn {
   sortable: boolean;
 }
 
-interface CustomColumn {
-  id: string;
-  label: string;
-  type: string;
-  width: string;
-  visible: boolean;
-  position: number;
-  filterable: boolean;
-  filterType?: string;
-  filterOptions?: FilterOption[];
-  options?: string[];
-  defaultValue?: string;
-  maxLength?: number;
-}
 
 interface FilterOption {
   value: string;
@@ -55,7 +41,6 @@ interface SpecificConfig {
   client: string;
   lastModified: string;
   table: {
-    customColumns: CustomColumn[];
     columnOverrides: { [key: string]: Partial<DbColumn> };
     customFilters: any[];
     settings: Partial<TableSettings>;
@@ -64,7 +49,6 @@ interface SpecificConfig {
 
 interface MergedConfig {
   dbColumns: DbColumn[];
-  customColumns: CustomColumn[];
   settings: TableSettings;
 }
 
@@ -73,8 +57,10 @@ class ClientTableConfigManager {
   private specificConfig: SpecificConfig | null = null;
   private mergedConfig: MergedConfig | null = null;
   private draggedElement: HTMLElement | null = null; // Global drag state
+  private isConfigReady: boolean = false; // Flag to track if config is fully loaded
 
   constructor() {
+    this.showLoadingOverlay();
     this.init();
   }
 
@@ -85,26 +71,35 @@ class ClientTableConfigManager {
 
   private async loadConfigurations(): Promise<void> {
     try {
-      // Load standard configuration
-      const standardResponse = await fetch('/api/config/table-defaults');
+      // Load both configurations in parallel to avoid flash
+      const [standardResponse, specificResponse] = await Promise.all([
+        fetch('/api/config/table-defaults'),
+        fetch('/api/config/table-customizations')
+      ]);
+
+      // Process standard configuration
       if (standardResponse.ok) {
         this.standardConfig = await standardResponse.json();
       } else {
         console.error('Error al cargar la configuración estándar');
       }
 
-      // Load specific configuration  
-      const specificResponse = await fetch('/api/config/table-customizations');
+      // Process specific configuration
       if (specificResponse.ok) {
         this.specificConfig = await specificResponse.json();
       } else {
         console.error('Error al cargar la configuración específica');
       }
 
-      // Merge configurations
+      // Only merge and show after BOTH configs are loaded
       this.mergeConfigurations();
+      this.isConfigReady = true; // Mark config as ready
+      this.hideLoadingOverlay(); // Hide overlay and show table
+      console.log("✅ Configuration loading complete - ready to display");
     } catch (error) {
       console.error('Error al cargar las configuraciones:', error);
+      this.isConfigReady = true; // Mark as ready even on error to prevent infinite waiting
+      this.hideLoadingOverlay(); // Hide overlay even on error
     }
   }
 
@@ -156,10 +151,6 @@ class ClientTableConfigManager {
       // Sort columns by position
       dbColumns.sort((a, b) => a.position - b.position);
 
-      // Get custom columns and sort by position
-      const customColumns = [...this.specificConfig.table.customColumns];
-      customColumns.sort((a, b) => a.position - b.position);
-
       // Merge settings (specific overrides standard)
       const settings = {
         ...(this.standardConfig?.table.settings || {}),
@@ -168,7 +159,6 @@ class ClientTableConfigManager {
 
       this.mergedConfig = {
         dbColumns,
-        customColumns,
         settings
       };
       
@@ -178,7 +168,6 @@ class ClientTableConfigManager {
       
       this.mergedConfig = {
         dbColumns: [...this.standardConfig.table.dbColumns].sort((a, b) => a.position - b.position),
-        customColumns: [],
         settings: this.standardConfig.table.settings
       };
     }
@@ -223,42 +212,11 @@ class ClientTableConfigManager {
           <div class="modal-body">
             <div class="tabs">
               <button class="tab-btn active" data-tab="columns">Columnas Actuales</button>
-              <button class="tab-btn" data-tab="custom">Columnas Personalizadas</button>
-              <button class="tab-btn" data-tab="filters">Filtros</button>
             </div>
             
             <!-- Current Columns Tab -->
             <div id="columnsTab" class="tab-content active">
               <div class="columns-list" id="dbColumnsList">
-                <!-- Dynamic content -->
-              </div>
-            </div>
-            
-            <!-- Custom Columns Tab -->
-            <div id="customTab" class="tab-content">
-              <h3>Columnas Personalizadas</h3>
-              <div class="custom-columns-list" id="customColumnsList">
-                <!-- Dynamic content -->
-              </div>
-              <div class="add-column-section">
-                <h4>Agregar Nueva Columna</h4>
-                <div class="form-row">
-                  <input type="text" id="newColumnLabel" placeholder="Nombre de columna">
-                  <select id="newColumnType">
-                    <option value="text">Texto</option>
-                    <option value="select">Lista</option>
-                    <option value="date">Fecha</option>
-                    <option value="number">Número</option>
-                  </select>
-                  <button id="addCustomColumn">Agregar</button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Filters Tab -->
-            <div id="filtersTab" class="tab-content">
-              <h3>Configuración de Filtros</h3>
-              <div id="filtersConfigList">
                 <!-- Dynamic content -->
               </div>
             </div>
@@ -295,25 +253,7 @@ class ClientTableConfigManager {
       });
     }
 
-    // Tab switching
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const target = e.target as HTMLButtonElement;
-        const tabName = target.dataset.tab;
-        if (tabName) {
-          this.switchTab(tabName);
-        }
-      });
-    });
-
-    // Add custom column
-    const addCustomBtn = document.getElementById('addCustomColumn');
-    if (addCustomBtn) {
-      addCustomBtn.addEventListener('click', () => {
-        this.addCustomColumn();
-      });
-    }
+    // No tab switching needed - only one tab remains
 
     // Save changes
     const saveBtn = document.getElementById('saveTableConfig');
@@ -324,24 +264,11 @@ class ClientTableConfigManager {
     }
   }
 
-  private switchTab(tabName: string): void {
-    // Remove active class from all tabs and contents
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-    // Add active class to selected tab and content
-    const activeTabBtn = document.querySelector(`[data-tab="${tabName}"]`);
-    const activeTabContent = document.getElementById(`${tabName}Tab`);
-
-    if (activeTabBtn) activeTabBtn.classList.add('active');
-    if (activeTabContent) activeTabContent.classList.add('active');
-  }
 
   private populateModalData(): void {
     if (!this.mergedConfig) return;
 
     this.populateDbColumns();
-    this.populateCustomColumns();
   }
 
   private populateDbColumns(): void {
@@ -360,7 +287,7 @@ class ClientTableConfigManager {
     sortedColumns.forEach((column, index) => {
       const columnDiv = document.createElement('div');
       columnDiv.className = 'column-config-item draggable';
-      columnDiv.draggable = true;
+      // Don't set draggable on the main div - only on drag handle
       columnDiv.dataset.field = column.field;
       columnDiv.dataset.position = column.position.toString();
       
@@ -388,113 +315,20 @@ class ClientTableConfigManager {
       `;
       container.appendChild(columnDiv);
 
-      // Add drag & drop event listeners
-      this.addDragDropListeners(columnDiv);
-    });
-  }
-
-  private populateCustomColumns(): void {
-    const container = document.getElementById('customColumnsList');
-    if (!container || !this.mergedConfig) return;
-
-    container.innerHTML = '';
-
-    this.mergedConfig.customColumns.forEach((column, index) => {
-      const columnDiv = document.createElement('div');
-      columnDiv.className = 'custom-column-item';
-      columnDiv.innerHTML = `
-        <div class="column-header">
-          <span>${column.label}</span>
-          <button class="delete-btn" data-column-id="${column.id}">Eliminar</button>
-        </div>
-        <div class="column-details">
-          <div class="form-row">
-            <label>Etiqueta:</label>
-            <input type="text" value="${column.label}" data-field="label" data-column-id="${column.id}">
-          </div>
-          <div class="form-row">
-            <label>Tipo:</label>
-            <select data-field="type" data-column-id="${column.id}">
-              <option value="text" ${column.type === 'text' ? 'selected' : ''}>Texto</option>
-              <option value="select" ${column.type === 'select' ? 'selected' : ''}>Lista</option>
-              <option value="date" ${column.type === 'date' ? 'selected' : ''}>Fecha</option>
-              <option value="number" ${column.type === 'number' ? 'selected' : ''}>Número</option>
-            </select>
-          </div>
-        </div>
-      `;
-      container.appendChild(columnDiv);
-
-      // Add delete functionality
-      const deleteBtn = columnDiv.querySelector('.delete-btn');
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-          this.deleteCustomColumn(column.id);
-        });
+      // Add drag & drop event listeners only to the drag handle
+      const dragHandle = columnDiv.querySelector('.drag-handle') as HTMLElement;
+      if (dragHandle) {
+        this.addDragDropListeners(columnDiv, dragHandle);
       }
     });
   }
 
 
-  private addCustomColumn(): void {
-    const labelInput = document.getElementById('newColumnLabel') as HTMLInputElement;
-    const typeSelect = document.getElementById('newColumnType') as HTMLSelectElement;
-
-    if (!labelInput || !typeSelect) return;
-
-    const label = labelInput.value.trim();
-    const type = typeSelect.value;
-
-    if (!label) {
-      alert('Por favor ingrese un nombre para la columna');
-      return;
-    }
-
-    // Generate unique ID
-    const id = 'custom_' + Date.now();
+  private addDragDropListeners(element: HTMLElement, dragHandle: HTMLElement): void {
+    // Make the drag handle draggable
+    dragHandle.draggable = true;
     
-    // Get next position
-    const nextPosition = Math.max(
-      ...this.mergedConfig!.dbColumns.map(col => col.position),
-      ...this.mergedConfig!.customColumns.map(col => col.position)
-    ) + 1;
-
-    const newColumn: CustomColumn = {
-      id,
-      label,
-      type,
-      width: '120px',
-      visible: true,
-      position: nextPosition,
-      filterable: true,
-      filterType: type === 'select' ? 'select' : 'text',
-      options: type === 'select' ? ['Opción 1', 'Opción 2'] : undefined,
-      defaultValue: ''
-    };
-
-    // Add to merged config
-    this.mergedConfig!.customColumns.push(newColumn);
-
-    // Clear inputs
-    labelInput.value = '';
-    typeSelect.value = 'text';
-
-    // Refresh display
-    this.populateCustomColumns();
-  }
-
-  private deleteCustomColumn(columnId: string): void {
-    if (confirm('¿Estás seguro de que quieres eliminar esta columna?')) {
-      const index = this.mergedConfig!.customColumns.findIndex(col => col.id === columnId);
-      if (index > -1) {
-        this.mergedConfig!.customColumns.splice(index, 1);
-        this.populateCustomColumns();
-      }
-    }
-  }
-
-  private addDragDropListeners(element: HTMLElement): void {
-    element.addEventListener('dragstart', (e) => {
+    dragHandle.addEventListener('dragstart', (e) => {
       this.draggedElement = element; // Use class property
       element.classList.add('dragging');
       e.dataTransfer!.effectAllowed = 'move';
@@ -649,8 +483,6 @@ class ClientTableConfigManager {
       // Refresh table with new configuration
       await this.refreshTable();
 
-      alert('Configuración guardada exitosamente');
-
     } catch (error) {
       console.error('Error al guardar la configuración:', error);
       alert('Error al guardar la configuración');
@@ -691,12 +523,6 @@ class ClientTableConfigManager {
       }
     });
 
-    // Update custom columns
-    if (this.specificConfig && this.mergedConfig) {
-      this.specificConfig.table.customColumns = [...this.mergedConfig.customColumns];
-    }
-
-
     // Update timestamp
     if (this.specificConfig) {
       this.specificConfig.lastModified = new Date().toISOString();
@@ -716,20 +542,46 @@ class ClientTableConfigManager {
     return this.mergedConfig;
   }
 
-  // Public method to get all visible columns (DB + Custom)
-  public getAllVisibleColumns(): (DbColumn | CustomColumn)[] {
+  // Public method to check if configuration is ready
+  public isReady(): boolean {
+    return this.isConfigReady;
+  }
+
+  private showLoadingOverlay(): void {
+    const overlay = document.getElementById('configLoadingOverlay');
+    const table = document.getElementById('remitosTable') as HTMLElement;
+    
+    if (overlay) {
+      overlay.classList.remove('hidden');
+    }
+    if (table) {
+      table.style.opacity = '0';
+    }
+  }
+
+  private hideLoadingOverlay(): void {
+    const overlay = document.getElementById('configLoadingOverlay');
+    const table = document.getElementById('remitosTable') as HTMLElement;
+    
+    if (overlay) {
+      overlay.classList.add('hidden');
+    }
+    if (table) {
+      table.style.opacity = '1';
+    }
+  }
+
+  // Public method to get all visible columns
+  public getAllVisibleColumns(): DbColumn[] {
     if (!this.mergedConfig) return [];
 
-    const allColumns = [
-      ...this.mergedConfig.dbColumns.filter(col => col.visible),
-      ...this.mergedConfig.customColumns.filter(col => col.visible)
-    ];
+    const allColumns = this.mergedConfig.dbColumns.filter(col => col.visible);
 
     return allColumns.sort((a, b) => a.position - b.position);
   }
 
   // Public method to get visible columns filtered by SQL columns
-  public getVisibleColumnsFilteredBySql(sqlColumns: string[]): (DbColumn | CustomColumn)[] {
+  public getVisibleColumnsFilteredBySql(sqlColumns: string[]): DbColumn[] {
     if (!this.mergedConfig) return [];
 
     // Filter DB columns to only include those that exist in SQL
@@ -737,11 +589,7 @@ class ClientTableConfigManager {
       col.visible && sqlColumns.includes(col.field)
     );
 
-    // Custom columns are not SQL-based, so include all visible ones
-    const visibleCustomColumns = this.mergedConfig.customColumns.filter(col => col.visible);
-
-    const allColumns = [...filteredDbColumns, ...visibleCustomColumns];
-    return allColumns.sort((a, b) => a.position - b.position);
+    return filteredDbColumns.sort((a, b) => a.position - b.position);
   }
 
   // Update configuration with SQL columns
@@ -910,6 +758,20 @@ class ClientTableConfigManager {
       .column-config-item label {
         flex: 1;
         font-weight: 500;
+      }
+
+      /* Ensure input fields work normally */
+      .column-details input,
+      .column-details select {
+        pointer-events: auto;
+        user-select: text;
+        cursor: text;
+      }
+      
+      .column-details input:focus,
+      .column-details select:focus {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: 2px;
       }
     `;
     document.head.appendChild(styles);
