@@ -340,6 +340,85 @@ app.get('/api/config/report', (req: Request, res: Response) => {
   res.json({ report });
 });
 
+// Check if client IP matches server IP
+app.get('/api/ip-match', (req: Request, res: Response) => {
+  try {
+    // Get client IP
+    let clientIP = '127.0.0.1'; // default fallback
+    
+    if (req.ip) {
+      clientIP = req.ip;
+    } else if (req.headers['x-forwarded-for']) {
+      const forwardedIps = (req.headers['x-forwarded-for'] as string).split(',');
+      clientIP = forwardedIps[0].trim();
+    } else if (req.connection && req.connection.remoteAddress) {
+      clientIP = req.connection.remoteAddress;
+    } else if ((req as any).socket && (req as any).socket.remoteAddress) {
+      clientIP = (req as any).socket.remoteAddress;
+    }
+    
+    // Use require for synchronous import
+    const os = require('os');
+    const networkInterfaces = os.networkInterfaces();
+    let serverIPs: string[] = [];
+    
+    // Get all network interface IPs
+    try {
+      Object.keys(networkInterfaces).forEach(interfaceName => {
+        const addresses = networkInterfaces[interfaceName];
+        if (addresses) {
+          addresses.forEach((address: any) => {
+            if (!address.internal && address.family === 'IPv4') {
+              serverIPs.push(address.address);
+            }
+          });
+        }
+      });
+    } catch (interfaceError) {
+      logger.warn('Error reading network interfaces:', interfaceError);
+    }
+    
+    // Always add localhost variants
+    serverIPs.push('127.0.0.1', '::1', 'localhost');
+    
+    // Normalize client IP (remove IPv6 prefix if present)
+    const normalizedClientIP = clientIP.replace(/^::ffff:/, '');
+    
+    // Check if client IP matches any server IP
+    const isMatch = serverIPs.includes(normalizedClientIP) || 
+                    serverIPs.includes(clientIP);
+    
+    logger.info(`IP match check - Client: ${clientIP}, Normalized: ${normalizedClientIP}, ServerIPs: ${serverIPs.join(',')}, Match: ${isMatch}`);
+    
+    res.json({ 
+      isMatch,
+      clientIP: normalizedClientIP,
+      serverIPs: serverIPs,
+      debug: {
+        originalClientIP: clientIP,
+        normalizedClientIP: normalizedClientIP,
+        serverNetworkIPs: serverIPs.filter(ip => ip !== '127.0.0.1' && ip !== '::1' && ip !== 'localhost')
+      }
+    });
+    
+  } catch (error) {
+    logger.error('Error in IP match endpoint:', error);
+    // Fallback for any error - just check if it's localhost
+    const clientIP = req.ip || '127.0.0.1';
+    const normalizedClientIP = clientIP.replace(/^::ffff:/, '');
+    const isLocalhost = normalizedClientIP === '127.0.0.1' || clientIP === '127.0.0.1' || 
+                       normalizedClientIP === 'localhost' || clientIP === 'localhost' ||
+                       normalizedClientIP === '::1' || clientIP === '::1';
+    
+    res.json({ 
+      isMatch: isLocalhost,
+      clientIP: normalizedClientIP,
+      serverIPs: ['127.0.0.1'],
+      error: 'Fallback mode - localhost only'
+    });
+  }
+});
+
 // Visual preferences endpoints
 app.get('/api/visual-preferences', (req: Request, res: Response) => {
   try {
