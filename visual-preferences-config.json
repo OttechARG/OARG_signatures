@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "visualPreferences": {
-    "theme": "custom",
+    "theme": "rose",
     "background": "white",
     "backgroundImage": null,
     "customLogo": null,
@@ -11,7 +11,7 @@
     "customColorCode": "#AAAAAA"
   },
   "metadata": {
-    "lastModified": "2025-08-22T17:48:06.341Z",
+    "lastModified": "2025-08-25T00:26:07.942Z",
     "createdAt": "2025-08-19T18:57:31.136Z"
   }
 }

@@ -6,6 +6,63 @@ import { RemitosHandler } from '../business/RemitosHandler.js';
 import { TableHandler } from "../ui/TableHandler.js";
 import { setPdfContainer, setCurrentPage } from './PDFHandler.js';
 
+// Error popup utility function
+function showErrorPopup(message: string) {
+  // Create popup overlay
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+  overlay.style.zIndex = '9999';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  
+  // Create popup content - clean and simple
+  const popup = document.createElement('div');
+  popup.style.backgroundColor = 'white';
+  popup.style.padding = '30px';
+  popup.style.borderRadius = '6px';
+  popup.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
+  popup.style.maxWidth = '420px';
+  popup.style.width = '90%';
+  popup.style.textAlign = 'center';
+  popup.style.border = '1px solid #e5e5e5';
+  
+  // Create error message - simple and clear
+  const messageEl = document.createElement('p');
+  messageEl.textContent = message;
+  messageEl.style.margin = '0 0 25px 0';
+  messageEl.style.color = '#333';
+  messageEl.style.fontSize = '16px';
+  messageEl.style.lineHeight = '1.4';
+  messageEl.style.fontWeight = '400';
+  
+  // Create close button with theme colors
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'Cerrar';
+  closeBtn.style.padding = '10px 20px';
+  closeBtn.style.backgroundColor = 'var(--theme-primary)';
+  closeBtn.style.color = 'white';
+  closeBtn.style.border = 'none';
+  closeBtn.style.borderRadius = '4px';
+  closeBtn.style.cursor = 'pointer';
+  closeBtn.style.fontSize = '14px';
+  closeBtn.style.fontWeight = '500';
+  
+  closeBtn.onclick = () => {
+    document.body.removeChild(overlay);
+  };
+  
+  popup.appendChild(messageEl);
+  popup.appendChild(closeBtn);
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+}
+
 const pdfContainerEl = document.getElementById("pdfContainer") as HTMLDivElement;
 setPdfContainer(pdfContainerEl);
 
@@ -141,7 +198,7 @@ function createSaveButton() {
       
       // Check if puesto is available
       if (!requirements.isAvailable) {
-        alert(requirements.message);
+        showErrorPopup(requirements.message);
         return;
       }
       
@@ -169,7 +226,7 @@ function createSaveButton() {
       }
       
       if (missingFields.length > 0) {
-        alert(requirements.message);
+        showErrorPopup(requirements.message);
         return;
       }
 
@@ -188,8 +245,7 @@ function createSaveButton() {
       }
       
       sessionStorage.setItem("userSelection", JSON.stringify(dataToSave));
-      alert("Selección guardada en la sesión.");
-      // Close the side menu and show table view
+      // On success, just close menu and show table view (no popup)
       menuHandler.toggleMenu();
     },
     

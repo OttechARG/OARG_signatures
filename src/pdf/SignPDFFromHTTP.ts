@@ -9,6 +9,63 @@ import { getMousePos, getTouchPos } from "./signUtils.js";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { cajas, createInputForBox, getTextBoxes } from "../ui/TextBox.js";
 
+// Error popup utility function
+function showErrorPopup(message: string) {
+  // Create popup overlay
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+  overlay.style.zIndex = '9999';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  
+  // Create popup content - clean and simple
+  const popup = document.createElement('div');
+  popup.style.backgroundColor = 'white';
+  popup.style.padding = '30px';
+  popup.style.borderRadius = '6px';
+  popup.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
+  popup.style.maxWidth = '420px';
+  popup.style.width = '90%';
+  popup.style.textAlign = 'center';
+  popup.style.border = '1px solid #e5e5e5';
+  
+  // Create error message - simple and clear
+  const messageEl = document.createElement('p');
+  messageEl.textContent = message;
+  messageEl.style.margin = '0 0 25px 0';
+  messageEl.style.color = '#333';
+  messageEl.style.fontSize = '16px';
+  messageEl.style.lineHeight = '1.4';
+  messageEl.style.fontWeight = '400';
+  
+  // Create close button with theme colors
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'Cerrar';
+  closeBtn.style.padding = '10px 20px';
+  closeBtn.style.backgroundColor = 'var(--theme-primary)';
+  closeBtn.style.color = 'white';
+  closeBtn.style.border = 'none';
+  closeBtn.style.borderRadius = '4px';
+  closeBtn.style.cursor = 'pointer';
+  closeBtn.style.fontSize = '14px';
+  closeBtn.style.fontWeight = '500';
+  
+  closeBtn.onclick = () => {
+    document.body.removeChild(overlay);
+  };
+  
+  popup.appendChild(messageEl);
+  popup.appendChild(closeBtn);
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+}
+
 // Obtener la referencia global a la librería PDF.js (pdfjsLib) que
 // se carga como un script externo en el navegador. Esta librería nos permite
 // cargar, visualizar y manipular PDFs en el lado del cliente. 
@@ -393,22 +450,26 @@ export async function saveSignature(): Promise<void> {
 
       const soapResult = await soapResponse.json();
       if (soapResult.success) {
-        alert("✅ PDF enviado exitosamente via SOAP");
+        // On success, redirect without showing popup
+        console.log("PDF enviado exitosamente via SOAP");
       } else {
-        alert("❌ Error enviando PDF via SOAP");
+        showErrorPopup("Error enviando PDF via SOAP");
+        return; // Don't redirect on error
       }
     } else {
-      alert("⚠️ No se encontró número de remito, omitiendo envío SOAP");
+      showErrorPopup("No se encontró número de remito, omitiendo envío SOAP");
+      return; // Don't redirect on error
     }
   } catch (error) {
-    console.error('❌ Error calling SOAP endpoint:', error);
-    alert("❌ Error llamando endpoint SOAP");
-  } finally {
-    sessionStorage.removeItem('pdfToSign');
-    sessionStorage.removeItem('currentRemito');
-    // Redirigir siempre después de mostrar el alert
-    window.location.href = "/";
+    console.error('Error calling SOAP endpoint:', error);
+    showErrorPopup("Error llamando endpoint SOAP");
+    return; // Don't redirect on error
   }
+  
+  // Only clean up and redirect if we reach here (success case)
+  sessionStorage.removeItem('pdfToSign');
+  sessionStorage.removeItem('currentRemito');
+  window.location.href = "/";
 }
 
 
