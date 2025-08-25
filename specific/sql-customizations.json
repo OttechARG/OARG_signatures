@@ -1,9 +1,11 @@
 {
   "version": "1.0.0",
-  "queries": {},
+  "queries": {
+    "remitos_query": "SELECT BPC.XARGTYPCOB_0 FROM SDELIVERY SDH INNER JOIN BPCUSTOMER BPC ON BPC.BPCNUM_0 = SDH.BPCORD_0"
+  },
   "metadata": {
-    "description": "User's custom SQL queries - overrides defaults when present",
-    "lastModified": "2025-08-25T01:25:00.000Z",
+    "description": "Custom SQL queries",
+    "lastModified": "2025-08-25T02:25:00.000Z",
     "createdAt": "2025-08-25T01:25:00.000Z"
   }
 }

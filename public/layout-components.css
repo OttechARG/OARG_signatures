@@ -542,6 +542,9 @@ body::before {
   padding: var(--space-xs) var(--space-sm);
   text-align: left;
   border-bottom: var(--border-width) solid var(--gray-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #remitosTable tbody tr:nth-child(even) {
@@ -729,6 +732,7 @@ body::before {
   min-height: 60px;
   vertical-align: top;
   position: relative;
+  white-space: normal;
 }
 
 .firmado-column .status-indicator {

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "client": "specific",
-  "lastModified": "2025-08-25T01:44:11.715Z",
+  "lastModified": "2025-08-25T03:38:42.916Z",
   "table": {
     "customColumns": [],
     "columnOverrides": {
@@ -10,21 +10,21 @@
         "label": "Remito",
         "width": "120px",
         "filterable": true,
-        "position": 3
+        "position": 4
       },
       "CPY_0": {
         "visible": false,
         "label": "CPY_0",
         "width": "120px",
         "filterable": true,
-        "position": 5
+        "position": 6
       },
       "BPDNAM_0": {
         "visible": true,
         "label": "Razón Social",
         "width": "120px",
         "filterable": true,
-        "position": 4
+        "position": 5
       },
       "BPCORD_0": {
         "visible": true,
@@ -38,21 +38,28 @@
         "label": "STOFCY_0",
         "width": "120px",
         "filterable": true,
-        "position": 6
+        "position": 7
       },
       "DLVDAT_0": {
         "visible": true,
         "label": "Fecha",
         "width": "120px",
         "filterable": true,
-        "position": 1
+        "position": 2
       },
       "XX6FLSIGN_0": {
         "visible": true,
         "label": "Firmado",
         "width": "120px",
         "filterable": true,
-        "position": 2
+        "position": 3
+      },
+      "XARGTYPCOB_0": {
+        "visible": true,
+        "label": "XARGTYPCOB",
+        "width": "120px",
+        "filterable": true,
+        "position": 1
       }
     },
     "customFilters": [],

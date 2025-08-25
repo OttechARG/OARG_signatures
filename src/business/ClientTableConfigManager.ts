@@ -109,35 +109,79 @@ class ClientTableConfigManager {
   }
 
   private mergeConfigurations(): void {
-    if (!this.standardConfig || !this.specificConfig) return;
+    // If we have specific configuration, prioritize it
+    if (this.specificConfig) {
+      console.log("🎯 Using specific configuration as primary source");
+      
+      let dbColumns: DbColumn[] = [];
+      
+      // If we also have standard config, use it as base
+      if (this.standardConfig) {
+        dbColumns = [...this.standardConfig.table.dbColumns];
+      }
+      
+      // Apply ALL overrides from specific config (this is the saved user config)
+      Object.keys(this.specificConfig.table.columnOverrides).forEach(field => {
+        const override = this.specificConfig!.table.columnOverrides[field];
+        const existingIndex = dbColumns.findIndex(col => col.field === field);
+        
+        if (existingIndex >= 0) {
+          // Update existing column
+          dbColumns[existingIndex] = { ...dbColumns[existingIndex], ...override };
+        } else if (override) {
+          // Create new column from override (for new fields from SQL)
+          const newColumn: DbColumn = {
+            field,
+            label: override.label || field,
+            type: 'text',
+            width: override.width || '120px',
+            visible: override.visible !== undefined ? override.visible : true,
+            position: override.position || 0,
+            filterable: override.filterable !== undefined ? override.filterable : true,
+            filterType: 'text',
+            sortable: true,
+            ...(field === 'XX6FLSIGN_0' ? {
+              filterType: 'select',
+              filterOptions: [
+                { value: 'no-firmados', label: 'No' },
+                { value: 'si-firmados', label: 'Sí' },
+                { value: '', label: 'Todos' }
+              ]
+            } : {})
+          };
+          dbColumns.push(newColumn);
+        }
+      });
 
-    // Start with standard DB columns
-    let dbColumns = [...this.standardConfig.table.dbColumns];
+      // Sort columns by position
+      dbColumns.sort((a, b) => a.position - b.position);
 
-    // Apply column overrides from specific config
-    dbColumns = dbColumns.map(col => {
-      const override = this.specificConfig!.table.columnOverrides[col.field];
-      return override ? { ...col, ...override } : col;
-    });
+      // Get custom columns and sort by position
+      const customColumns = [...this.specificConfig.table.customColumns];
+      customColumns.sort((a, b) => a.position - b.position);
 
-    // Sort columns by position
-    dbColumns.sort((a, b) => a.position - b.position);
+      // Merge settings (specific overrides standard)
+      const settings = {
+        ...(this.standardConfig?.table.settings || {}),
+        ...this.specificConfig.table.settings
+      };
 
-    // Get custom columns and sort by position
-    const customColumns = [...this.specificConfig.table.customColumns];
-    customColumns.sort((a, b) => a.position - b.position);
-
-    // Merge settings
-    const settings = {
-      ...this.standardConfig.table.settings,
-      ...this.specificConfig.table.settings
-    };
-
-    this.mergedConfig = {
-      dbColumns,
-      customColumns,
-      settings
-    };
+      this.mergedConfig = {
+        dbColumns,
+        customColumns,
+        settings
+      };
+      
+    } else if (this.standardConfig) {
+      // Fallback to standard only if no specific config
+      console.log("⚠️ Using standard configuration as fallback");
+      
+      this.mergedConfig = {
+        dbColumns: [...this.standardConfig.table.dbColumns].sort((a, b) => a.position - b.position),
+        customColumns: [],
+        settings: this.standardConfig.table.settings
+      };
+    }
   }
 
   private attachEventListeners(): void {

@@ -15,7 +15,16 @@ function extractColumnsFromSQL(sqlQuery: string): string[] {
   
   const columnsStr = selectMatch[1].trim();
   return columnsStr.split(',')
-    .map(col => col.trim())
+    .map(col => {
+      col = col.trim();
+      // Extract clean column name that SQL Server actually returns
+      // BPC.XARGTYPCOB_0 -> XARGTYPCOB_0
+      if (col.includes('.')) {
+        const parts = col.split('.');
+        return parts[parts.length - 1]; // Take the part after the last dot
+      }
+      return col;
+    })
     .filter(col => !col.includes('COUNT(') && !col.includes('OVER('));
 }
 
