@@ -62,7 +62,7 @@ The system uses a two-tier configuration approach:
 ```ini
 ; Server Configuration
 winservice='OARG_signatures'
-http_port=3112
+http_port=3111
 
 ; SAGE X3 SOAP Integration
 urlsoap='http://172.20.1.69:8124/soap-wsdl/...'

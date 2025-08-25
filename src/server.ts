@@ -14,7 +14,36 @@ import { facilityResolvers } from "./graphql/resolvers/FacilityResolvers.js";
 import { remitoResolvers, GraphQLDate} from "./graphql/resolvers/RemitoResolvers.js"
 
 const app = express();
-let config = ini.parse(fs.readFileSync("signatures.ini", "utf-8"));
+// Load configuration with property-level fallback
+function loadConfiguration(): any {
+  // Load defaults first
+  let config: any = {};
+  const defaultsPath = path.join("config", "signatures-defaults.ini");
+  if (fs.existsSync(defaultsPath)) {
+    config = ini.parse(fs.readFileSync(defaultsPath, "utf-8"));
+  }
+
+  // Override with specific customizations (property by property)
+  const customizationsPath = path.join("specific", "signatures-customizations.ini");
+  if (fs.existsSync(customizationsPath)) {
+    const customConfig: any = ini.parse(fs.readFileSync(customizationsPath, "utf-8"));
+    
+    // Merge root level properties
+    Object.keys(customConfig).forEach(key => {
+      if (typeof customConfig[key] === 'object' && config[key]) {
+        // Merge section properties (like [db])
+        config[key] = { ...config[key], ...customConfig[key] };
+      } else {
+        // Override root properties
+        config[key] = customConfig[key];
+      }
+    });
+  }
+
+  return config;
+}
+
+let config: any = loadConfiguration();
 
 // In-memory storage for PDF data
 const pdfMemoryStore = new Map<string, Buffer>();
@@ -89,7 +118,7 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
   }
 
   try {
-    const config = ini.parse(fs.readFileSync(path.join(__dirname, "..", "signatures.ini"), "utf-8"));
+    const config = loadConfiguration();
 
     const options = {
       disableCache: true,
@@ -215,7 +244,7 @@ app.post("/send-signed-pdf", async (req: Request, res: Response) => {
   }
 
   try {
-    const config = ini.parse(fs.readFileSync(path.join(__dirname, "..", "signatures.ini"), "utf-8"));
+    const config = loadConfiguration();
 
     const options = {
       disableCache: true,
