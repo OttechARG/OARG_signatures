@@ -24,3 +24,19 @@ export async function getReport(): Promise<ReportConfig> {
     return { remito: 'ZREMITOAI' };
   }
 }
+
+// Get report template with 3-level hierarchy fallback
+export async function getReportTemplate(codsoc?: string, type?: string): Promise<string> {
+  try {
+    const params = new URLSearchParams();
+    if (codsoc) params.append('codsoc', codsoc);
+    if (type) params.append('type', type);
+    
+    const response = await fetch(`/api/config/report-template?${params.toString()}`);
+    const data = await response.json();
+    return data.template;
+  } catch (error) {
+    console.warn('Failed to fetch report template, using fallback:', error);
+    return 'ZREMITOAI';
+  }
+}

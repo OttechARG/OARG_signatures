@@ -1,6 +1,6 @@
 import { createButton } from "./ButtonsHandler.js";
 import { getDocumentBase64WithRetries } from "../pdf/PDFHandler.js";
-import { getReport } from "../core/ReportConfig.js";
+import { getReport, getReportTemplate } from "../core/ReportConfig.js";
 
 export class TableHandler {
   private tableId: string;
@@ -512,8 +512,12 @@ export class TableHandler {
             sessionStorage.setItem('currentRemito', JSON.stringify(remitoData));
             console.log("Datos del remito guardados:", remitoData);
 
-            const report = await getReport();
-            const url = `/proxy-getrpt?PRPT=${report.remito}&POBJ=SDH&POBJORI=SDH&PCLE=${encodeURIComponent(r.SDHNUM_0)}&WSIGN=2&PIMPRIMANTE=WSPRINT`;
+            // Use 3-level hierarchy for report template
+            const codsoc = r.CPY_0; // Company code from data
+            const type = r.SDHTYP_0; // Type from data (if available)
+            
+            const template = await getReportTemplate(codsoc, type);
+            const url = `/proxy-getrpt?PRPT=${template}&POBJ=SDH&POBJORI=SDH&PCLE=${encodeURIComponent(r.SDHNUM_0)}&WSIGN=2&PIMPRIMANTE=WSPRINT`;
             try {
               // Fetch JSON response with base64 PDF
               const response = await fetch(url);

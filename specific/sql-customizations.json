@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "queries": {
-    "remitos_query": "SELECT BPC.XARGTYPCOB_0 FROM SDELIVERY SDH INNER JOIN BPCUSTOMER BPC ON BPC.BPCNUM_0 = SDH.BPCORD_0"
+    "remitos_query": "SELECT BPC.XARGTYPCOB_0, SDH.SDHTYP_0 FROM SDELIVERY SDH INNER JOIN BPCUSTOMER BPC ON BPC.BPCNUM_0 = SDH.BPCORD_0"
   },
   "metadata": {
     "description": "Custom SQL queries",

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "client": "specific",
-  "lastModified": "2025-08-25T04:47:25.012Z",
+  "lastModified": "2025-08-26T03:43:52.838Z",
   "table": {
     "customColumns": [],
     "columnOverrides": {
@@ -60,6 +60,13 @@
         "width": "120px",
         "filterable": true,
         "position": 2
+      },
+      "SDHTYP_0": {
+        "visible": false,
+        "label": "SDHTYP_0",
+        "width": "120px",
+        "filterable": true,
+        "position": 1
       }
     },
     "customFilters": [],

@@ -6,7 +6,7 @@ import fs from 'fs';
 import * as ini from 'ini';
 import * as soap from 'soap';
 import winston from 'winston';
-import { getConnection, report } from './core/AppConfig.js';
+import { getConnection, report, getReportTemplate } from './core/AppConfig.js';
 import { graphqlHTTP } from 'express-graphql';
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { companyResolvers } from "./graphql/resolvers/CompanyResolvers.js";
@@ -127,7 +127,7 @@ app.get("/proxy-getrpt", async (req: Request, res: Response) => {
 
     let inputXML: string =
       '<PARAM><GRP ID="GRP1">\
-					<FLD NAME="PRPT"    	TYPE="Char">' + report.remito + '</FLD>\
+					<FLD NAME="PRPT"    	TYPE="Char">' + PRPT + '</FLD>\
           <FLD NAME="PIMPRIMANTE"  TYPE="Char">WSPRINT</FLD>\
           <FLD NAME="POBJ"    	TYPE="Char">SDH</FLD>\
 					<FLD NAME="POBJORI" 	TYPE="Char">SDH</FLD>\
@@ -367,6 +367,20 @@ app.use("/graphql", graphqlHTTP({
 // Report configuration endpoint for frontend
 app.get('/api/config/report', (req: Request, res: Response) => {
   res.json({ report });
+});
+
+// Report template endpoint with 3-level hierarchy fallback
+app.get('/api/config/report-template', (req: Request, res: Response) => {
+  try {
+    const codsoc = req.query.codsoc as string;
+    const type = req.query.type as string;
+    
+    const template = getReportTemplate(codsoc, type);
+    res.json({ template });
+  } catch (error) {
+    logger.error('Error getting report template:', error);
+    res.status(500).json({ error: 'Failed to get report template' });
+  }
 });
 
 // Check if client IP matches server IP
