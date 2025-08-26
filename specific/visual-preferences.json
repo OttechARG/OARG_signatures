@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
   "visualPreferences": {
-    "theme": "default",
-    "background": "white",
+    "theme": "rose",
+    "background": "blue-gradient",
     "backgroundImage": null,
     "customLogo": null,
     "customThemeColor": null,
@@ -10,7 +10,7 @@
     "pageSize": 15
   },
   "metadata": {
-    "lastModified": "2025-08-26T03:43:36.833Z",
+    "lastModified": "2025-08-26T04:22:43.306Z",
     "createdAt": "2025-08-19T18:57:31.136Z"
   }
 }

@@ -1,11 +1,10 @@
 {
   "version": "1.0.0",
+  "_note": "CUSTOM QUERIES: These completely replace defaults",
+  "_required_columns": "SDHNUM_0, BPCORD_0, BPDNAM_0, CPY_0, STOFCY_0, DLVDAT_0, XX6FLSIGN_0, COUNT(*) OVER() as total_count",
+  "_required_params": "@dlvdat, @cpy, @stofcy, {additionalFilters}, @offset, @pageSize",
+  
   "queries": {
-    "remitos_query": "SELECT BPC.XARGTYPCOB_0, SDH.SDHTYP_0 FROM SDELIVERY SDH INNER JOIN BPCUSTOMER BPC ON BPC.BPCNUM_0 = SDH.BPCORD_0"
-  },
-  "metadata": {
-    "description": "Custom SQL queries",
-    "lastModified": "2025-08-25T02:25:00.000Z",
-    "createdAt": "2025-08-25T01:25:00.000Z"
+    "remitos_query": "SELECT BPC.XARGTYPCOB_0, SDH.SDHTYP_0, SDHNUM_0, BPCORD_0, BPDNAM_0, CPY_0, STOFCY_0, DLVDAT_0, XX6FLSIGN_0, COUNT(*) OVER() as total_count FROM SDELIVERY SDH INNER JOIN BPCUSTOMER BPC ON BPC.BPCNUM_0 = SDH.BPCORD_0 WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy {additionalFilters} ORDER BY DLVDAT_0 DESC OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY"
   }
 }

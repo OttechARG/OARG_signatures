@@ -1,35 +1,14 @@
 {
   "version": "1.0.0",
+  "_note": "COMPLETE OVERRIDE: Custom queries in specific/sql-customizations.json replace these entirely",
+  "_required_columns": "SDHNUM_0, BPCORD_0, BPDNAM_0, CPY_0, STOFCY_0, DLVDAT_0, XX6FLSIGN_0, COUNT(*) OVER() as total_count",
+  "_required_params": "@dlvdat, @cpy, @stofcy, {additionalFilters}, @offset, @pageSize",
+  
   "queries": {
     "remitos_query": "SELECT SDHNUM_0, BPCORD_0, BPDNAM_0, CPY_0, STOFCY_0, DLVDAT_0, XX6FLSIGN_0, COUNT(*) OVER() as total_count FROM SDELIVERY WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy {additionalFilters} ORDER BY DLVDAT_0 DESC OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY",
     
     "companies_query": "SELECT CPY_0, CPYNAM_0 FROM COMPANY WHERE CPY_0 LIKE @search ORDER BY CPYNAM_0",
     
     "facilities_query": "SELECT FCY_0, FCYSHO_0 FROM FACILITY WHERE LEGCPY_0 = @company ORDER BY FCYSHO_0"
-  },
-  "required_columns": {
-    "remitos_query": [
-      "SDHNUM_0",
-      "BPCORD_0", 
-      "BPDNAM_0",
-      "CPY_0",
-      "STOFCY_0", 
-      "DLVDAT_0",
-      "XX6FLSIGN_0",
-      "COUNT(*) OVER() as total_count"
-    ]
-  },
-  "required_structure": {
-    "remitos_query": {
-      "from_table": "SDELIVERY",
-      "where_clause": "WHERE DLVDAT_0 > @dlvdat AND CFMFLG_0 = 2 AND CPY_0 = @cpy AND STOFCY_0 = @stofcy {additionalFilters}",
-      "order_clause": "ORDER BY DLVDAT_0 DESC",
-      "pagination": "OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY"
-    }
-  },
-  "metadata": {
-    "description": "Default SQL queries with required structure - system merges with customizations",
-    "lastModified": "2025-08-25T02:20:00.000Z",
-    "createdAt": "2025-08-25T00:00:00.000Z"
   }
 }
